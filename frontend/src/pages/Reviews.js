@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import { auth } from '../firebase';
+import Navbar from '../components/layout/Navbar';
+import { AuthContext } from '../context/AuthContext';
+import API from '../services/api';
 
 const Reviews = () => {
   const { carId } = useParams(); // معرف السيارة (اختياري)
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user } = useContext(AuthContext);
   const [reviews, setReviews] = useState([]);
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,54 +21,39 @@ const Reviews = () => {
   const [completedBookings, setCompletedBookings] = useState([]); // الحجوزات المكتملة التي يمكن تقييمها
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
-      if (!currentUser) {
-        navigate('/login');
-        return;
-      }
-      setUser(currentUser);
-      await fetchData(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [navigate, carId]);
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    fetchData();
+  }, [user, navigate, carId]);
 
-  const fetchData = async (currentUser) => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const token = await currentUser.getIdToken();
-      
       // جلب التقييمات (إذا كان هناك carId، نجلب تقييمات سيارة معينة)
       let reviewsUrl = carId 
-        ? `http://localhost:5000/api/reviews/car/${carId}`
-        : 'http://localhost:5000/api/reviews/my-reviews';
+        ? `/reviews/car/${carId}`
+        : '/reviews/my-reviews';
       
-      const reviewsRes = await fetch(reviewsUrl, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const reviewsData = await reviewsRes.json();
-      if (reviewsRes.ok) {
-        setReviews(reviewsData.data || []);
+      const reviewsRes = await API.get(reviewsUrl);
+      if (reviewsRes.data.success) {
+        setReviews(reviewsRes.data.data || []);
       }
 
       // إذا كان هناك carId، نجلب بيانات السيارة
       if (carId) {
-        const carRes = await fetch(`http://localhost:5000/api/cars/${carId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const carData = await carRes.json();
-        if (carRes.ok) {
-          setCar(carData.data);
+        const carRes = await API.get(`/cars/${carId}`);
+        if (carRes.data.success) {
+          setCar(carRes.data.data);
         }
       }
 
       // جلب الحجوزات المكتملة التي يمكن تقييمها (للمستخدم)
-      const bookingsRes = await fetch('http://localhost:5000/api/bookings/my-bookings', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const bookingsData = await bookingsRes.json();
-      if (bookingsRes.ok) {
+      const bookingsRes = await API.get('/bookings/my-bookings');
+      if (bookingsRes.data.success) {
         // حجوزات مكتملة ولم يتم تقييمها بعد
-        const completed = bookingsData.data.filter(b => 
+        const completed = bookingsRes.data.data.filter(b => 
           b.status === 'completed' && !b.hasReview
         );
         setCompletedBookings(completed || []);
@@ -76,6 +62,8 @@ const Reviews = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('فشل تحميل البيانات');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,48 +75,22 @@ const Reviews = () => {
 
     setSubmitting(true);
     try {
-      const token = await user.getIdToken();
-      // هنا نفترض أننا نرسل التقييم لحجز معين (يمكن تحسينه لاحقاً)
-      const response = await fetch(`http://localhost:5000/api/reviews/${completedBookings[0]?._id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          rating: newRating,
-          comment: newComment
-        })
+      // هنا نفترض أننا نرسل التقييم لحجز معين
+      const response = await API.post(`/reviews/${completedBookings[0]?._id}`, {
+        rating: newRating,
+        comment: newComment
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setReviews([data.data, ...reviews]);
+      if (response.data.success) {
+        setReviews([response.data.data, ...reviews]);
         setShowAddReview(false);
         setNewRating(5);
         setNewComment('');
         alert('✅ تم إضافة التقييم بنجاح');
-      } else {
-        // بيانات وهمية للتجربة
-        const fakeReview = {
-          _id: Date.now().toString(),
-          rating: newRating,
-          comment: newComment,
-          reviewer_id: {
-            name: user.displayName || 'مستخدم',
-            photoURL: user.photoURL
-          },
-          createdAt: new Date().toISOString()
-        };
-        setReviews([fakeReview, ...reviews]);
-        setShowAddReview(false);
-        setNewRating(5);
-        setNewComment('');
-        alert('✅ تم إضافة التقييم بنجاح (تجريبي)');
       }
     } catch (error) {
       console.error('Error submitting review:', error);
-      alert('فشل إضافة التقييم');
+      alert(error.response?.data?.message || 'فشل إضافة التقييم');
     } finally {
       setSubmitting(false);
     }
@@ -291,6 +253,7 @@ const Reviews = () => {
   );
 };
 
+// الأنماط (styles) كما هي بدون تغيير
 const styles = {
   container: {
     minHeight: 'calc(100vh - 60px)',

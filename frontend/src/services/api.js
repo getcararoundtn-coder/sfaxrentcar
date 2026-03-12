@@ -13,14 +13,42 @@ const API = axios.create({
   },
 });
 
-// يمكن إضافة interceptors لمعالجة الأخطاء بشكل موحد (اختياري)
+// 🔥 **مهم جداً: Interceptor لإضافة التوكن إلى كل طلب**
+API.interceptors.request.use(
+  (config) => {
+    // جلب التوكن من localStorage
+    const token = localStorage.getItem('token');
+    
+    // إذا كان التوكن موجوداً، أضفه إلى رأس Authorization
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ Token added to request:', config.url);
+    } else {
+      console.log('⚠️ No token found for request:', config.url);
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor للردود (للمعالجة الموحدة للأخطاء)
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    // معالجة أخطاء المصادقة (مثل 401) - يمكنك توجيه المستخدم إلى صفحة تسجيل الدخول
+    // معالجة أخطاء المصادقة (مثل 401)
     if (error.response?.status === 401) {
-      // يمكنك هنا إعادة توجيه المستخدم أو تحديث الـ state
-      console.log('Unauthorized - redirect to login');
+      console.log('🔴 Unauthorized - redirect to login');
+      
+      // يمكنك إزالة التوكن إذا كان منتهياً
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // إذا لم يكن المستخدم في صفحة تسجيل الدخول، يمكن إعادة توجيهه
+      // يمكن تفعيل هذا السطر إذا أردت
+      // window.location.href = '/login';
     }
     return Promise.reject(error);
   }
