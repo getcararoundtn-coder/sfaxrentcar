@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -21,6 +22,18 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './utils/ProtectedRoute';
 
 function App() {
+  // للتأكد من تحميل الملف
+  useEffect(() => {
+    console.log('✅ App.js loaded successfully');
+    console.log('📝 Available routes:', [
+      '/', '/login', '/register', '/forgot-password', 
+      '/reset-password/:token', '/terms', '/privacy', 
+      '/about', '/cars', '/car/:id', '/upload-docs',
+      '/profile', '/my-bookings', '/owner-cars', '/add-car',
+      '/booking/:carId', '/messages/:bookingId', '/admin'
+    ]);
+  }, []);
+
   return (
     <Router>
       <Routes>
