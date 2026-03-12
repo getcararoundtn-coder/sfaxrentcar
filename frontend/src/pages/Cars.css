@@ -1,0 +1,524 @@
+/* Cars.css - تصميم متجاوب لصفحة السيارات */
+
+.cars-page-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.cars-page-title {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+/* زر الفلترة */
+.filter-toggle {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.3s;
+}
+
+.filter-toggle:hover {
+  background-color: #0056b3;
+}
+
+/* قسم الفلترة */
+.filters-section {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filters-title {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.filter-input,
+.filter-select {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+.clear-filters-button {
+  padding: 10px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.clear-filters-button:hover {
+  background-color: #5a6268;
+}
+
+/* نتائج البحث */
+.results-count {
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* شبكة السيارات */
+.cars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.car-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: white;
+  transition: transform 0.3s, box-shadow 0.3s;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.car-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.car-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.car-card:hover .car-image {
+  transform: scale(1.05);
+}
+
+.car-info {
+  padding: 15px;
+}
+
+.car-title {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.car-price {
+  font-size: 16px;
+  font-weight: bold;
+  color: #28a745;
+  margin-bottom: 5px;
+}
+
+.car-location {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.car-rating {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 13px;
+  color: #666;
+}
+
+.car-rating span:first-child {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.car-button {
+  display: inline-block;
+  width: 100%;
+  padding: 8px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  transition: background-color 0.3s;
+  border: none;
+  cursor: pointer;
+}
+
+.car-button:hover {
+  background-color: #0056b3;
+}
+
+/* حالات التحميل والخطأ */
+.loading-container {
+  text-align: center;
+  padding: 50px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-results {
+  text-align: center;
+  padding: 50px;
+  color: #666;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.no-results p {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.reset-button {
+  margin-top: 20px;
+  padding: 10px 30px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.reset-button:hover {
+  background-color: #0056b3;
+}
+
+/* زر تحميل المزيد (Pagination) */
+.load-more-container {
+  text-align: center;
+  margin-top: 40px;
+  margin-bottom: 20px;
+}
+
+.load-more-button {
+  padding: 12px 40px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 6px rgba(0,123,255,0.2);
+}
+
+.load-more-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0,123,255,0.3);
+}
+
+.load-more-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.load-more-button:disabled:hover {
+  background-color: #6c757d;
+}
+
+/* ===== التصميم المتجاوب ===== */
+
+@media (max-width: 992px) {
+  .cars-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .cars-page-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cars-page-title {
+    font-size: 28px;
+  }
+  
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .cars-grid {
+    gap: 15px;
+  }
+  
+  .car-image {
+    height: 160px;
+  }
+  
+  .car-info {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .cars-page-container {
+    padding: 0 15px;
+  }
+  
+  .cars-page-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .filter-toggle {
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .cars-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .car-card {
+    max-width: 100%;
+  }
+  
+  .car-image {
+    height: 150px;
+  }
+  
+  .reset-button {
+    width: 100%;
+    padding: 12px;
+  }
+  
+  .load-more-button {
+    width: 100%;
+    padding: 12px 20px;
+  }
+  
+  .results-count {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 320px) {
+  .cars-page-title {
+    font-size: 22px;
+  }
+  
+  .car-title {
+    font-size: 15px;
+  }
+  
+  .car-price {
+    font-size: 15px;
+  }
+  
+  .car-location {
+    font-size: 13px;
+  }
+  
+  .car-rating {
+    font-size: 12px;
+  }
+}
+/* قسم التحقق من التوفر */
+.date-filter-toggle {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 10px 0 20px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 6px rgba(23,162,184,0.2);
+}
+
+.date-filter-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(23,162,184,0.3);
+}
+
+.date-filter-section {
+  background: linear-gradient(135deg, #e7f3ff, #d1e7ff);
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  animation: slideDown 0.3s ease;
+  border: 1px solid #b8daff;
+}
+
+.date-filter-title {
+  color: #004085;
+  margin-bottom: 20px;
+  font-size: 18px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.date-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 15px;
+  align-items: end;
+}
+
+.date-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.date-filter-group label {
+  font-weight: 500;
+  color: #004085;
+  font-size: 14px;
+}
+
+.date-filter-input {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #b8daff;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.date-filter-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+.clear-dates-button {
+  padding: 12px 20px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+}
+
+.clear-dates-button:hover {
+  background-color: #c82333;
+}
+
+.date-filter-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #d4edda;
+  color: #155724;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  border: 1px solid #c3e6cb;
+}
+
+/* تحسينات للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .date-filter-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .clear-dates-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .date-filter-section {
+    padding: 20px 15px;
+  }
+  
+  .date-filter-title {
+    font-size: 16px;
+  }
+  
+  .date-filter-input {
+    padding: 10px;
+  }
+}

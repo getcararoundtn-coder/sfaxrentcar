@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+package-lock.json
+
+# environment
+.env
+.env.local
+.env.example
+
+# build
+build/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
