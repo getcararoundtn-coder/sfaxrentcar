@@ -14,7 +14,6 @@ const Home = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // التحقق من وجود مستخدم في localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -45,7 +44,6 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      {/* قسم البطل مع صورة خلفية hero_bg.jpg */}
       <div 
         className="hero" 
         style={{ 
@@ -59,21 +57,18 @@ const Home = () => {
           <h1 className="hero-title">استأجر سيارتك المفضلة بسهولة وسرعة</h1>
           <p className="hero-subtitle">منصة تونسية لكراء السيارات بين الأفراد والشركات</p>
           
-          {/* زر "ابدأ الآن" يظهر فقط للضيوف ويوجه إلى /register */}
           {!user && (
             <Link to="/register" className="hero-button">
               ابدأ الآن
             </Link>
           )}
           
-          {/* رسالة ترحيب للمستخدمين المسجلين */}
           {user && (
             <p className="welcome-message">مرحباً بعودتك، {user.name}</p>
           )}
         </div>
       </div>
 
-      {/* قسم السيارات - يظهر للجميع */}
       <div className="cars-section">
         <h2 className="section-title">السيارات المتاحة</h2>
         
