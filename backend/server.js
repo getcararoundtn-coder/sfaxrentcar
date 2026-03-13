@@ -6,28 +6,30 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
-// Middleware
+// Middleware - ترتيب مهم
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS configuration for production
+// 🔥 CORS configuration محسّنة للإنتاج
 const allowedOrigins = [
   'http://localhost:3000',
-  process.env.FRONTEND_URL // سيتم إضافته لاحقاً من Render
+  process.env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // السماح للطلبات بدون origin (مثل Postman)
+    // السماح للطلبات بدون origin (مثل Postman أو تطبيقات الخادم)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) === -1) {
+      console.warn('🚫 CORS blocked origin:', origin);
       const msg = 'سياسة CORS تمنع الوصول من هذا المصدر';
       return callback(new Error(msg), false);
     }
     return callback(null, true);
   },
-  credentials: true
+  credentials: true, // ✅ هذا يسمح بإرسال الكوكيز
+  optionsSuccessStatus: 200
 }));
 
 // Connect to MongoDB
