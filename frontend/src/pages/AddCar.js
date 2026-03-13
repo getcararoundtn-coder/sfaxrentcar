@@ -61,7 +61,8 @@ const AddCar = () => {
     if (insuranceBackFile) data.append('insuranceBack', insuranceBackFile);
 
     try {
-      // 🔥 **إضافة withCredentials: true للتأكد من إرسال الكوكيز**
+      console.log('🍪 Cookies at add car:', document.cookie); // للتأكد من وجود الكوكيز
+      
       const response = await API.post('/cars', data, {
         headers: { 
           'Content-Type': 'multipart/form-data'
@@ -75,10 +76,11 @@ const AddCar = () => {
       }
     } catch (err) {
       console.error('Error adding car:', err);
+      console.log('🍪 Cookies at error:', document.cookie);
       
-      // معالجة خاصة لحالة 401
       if (err.response?.status === 401) {
         alert('❌ انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى');
+        localStorage.removeItem('user');
         navigate('/login');
       } else {
         alert(err.response?.data?.message || 'فشل إضافة السيارة');

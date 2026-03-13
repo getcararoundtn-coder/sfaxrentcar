@@ -35,6 +35,7 @@ const Login = () => {
         
         // لا حاجة لتخزين التوكن - Backend يستخدم httpOnly cookies
         console.log('✅ Login successful, using httpOnly cookies');
+        console.log('🍪 Cookies after login:', document.cookie);
         
         showSuccess('تم تسجيل الدخول بنجاح');
         navigate('/');
