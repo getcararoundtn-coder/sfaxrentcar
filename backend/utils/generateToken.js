@@ -5,11 +5,11 @@ const generateToken = (res, userId) => {
     expiresIn: '7d'
   });
 
-  // تخزين التوكن في httpOnly cookie
+  // تخزين التوكن في httpOnly cookie - معدل للإنتاج
   res.cookie('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production', // true في الإنتاج
-    sameSite: 'strict',
+    sameSite: 'lax', // ✅ تم التغيير من strict إلى lax
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 أيام
   });
 };
