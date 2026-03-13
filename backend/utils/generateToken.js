@@ -5,12 +5,12 @@ const generateToken = (res, userId) => {
     expiresIn: '7d'
   });
 
-  // تخزين التوكن في httpOnly cookie - معدل للإنتاج
+  // تخزين التوكن في httpOnly cookie - نهائي للإنتاج
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // true في الإنتاج
-    sameSite: 'lax',
-    domain: '.onrender.com', // ✅ domain صحيح ليشمل جميع نطاقات Render
+    secure: true, // إجباري مع sameSite none
+    sameSite: 'none', // يسمح بالإرسال عبر المواقع
+    domain: '.onrender.com',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 أيام
   });
 };
