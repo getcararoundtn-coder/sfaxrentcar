@@ -1,32 +1,100 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
+import Home from './pages/Home';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import About from './pages/About';
+import UploadDocuments from './pages/UploadDocuments';
+import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
+import AddCar from './pages/AddCar';
+import CarDetails from './pages/CarDetails';
+import Booking from './pages/Booking';
+import MyBookings from './pages/MyBookings';
+import OwnerCars from './pages/OwnerCars';
+import Messages from './pages/Messages';
+import Cars from './pages/Cars';
+import NotFound from './pages/NotFound';
+import ProtectedRoute from './utils/ProtectedRoute';
 
 function App() {
   // للتأكد من تحميل الملف
   useEffect(() => {
-    console.log('✅ App.js loaded successfully (isolated mode)');
-    console.log('📝 Testing only /login route');
+    console.log('✅ App.js loaded successfully (full version)');
+    console.log('📝 Available routes:', [
+      '/', '/login', '/register', '/forgot-password', 
+      '/reset-password/:token', '/terms', '/privacy', 
+      '/about', '/cars', '/car/:id', '/upload-docs',
+      '/profile', '/my-bookings', '/owner-cars', '/add-car',
+      '/booking/:carId', '/messages/:bookingId', '/admin'
+    ]);
   }, []);
 
   return (
     <Router>
       <Routes>
-        {/* فقط مسار /login للمعاينة */}
+        {/* ========== المسارات العامة ========== */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        
-        {/* كل المسارات الأخرى تذهب إلى 404 */}
-        <Route path="*" element={
-          <div style={{ 
-            padding: '50px', 
-            textAlign: 'center',
-            fontFamily: 'Arial',
-            color: '#666'
-          }}>
-            <h1>404 - الصفحة غير موجودة</h1>
-            <p>جاري اختبار المسارات...</p>
-          </div>
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/cars" element={<Cars />} />
+        <Route path="/car/:id" element={<CarDetails />} />
+
+        {/* ========== المسارات المحمية (تتطلب تسجيل دخول) ========== */}
+        <Route path="/upload-docs" element={
+          <ProtectedRoute>
+            <UploadDocuments />
+          </ProtectedRoute>
         } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-bookings" element={
+          <ProtectedRoute>
+            <MyBookings />
+          </ProtectedRoute>
+        } />
+        <Route path="/owner-cars" element={
+          <ProtectedRoute>
+            <OwnerCars />
+          </ProtectedRoute>
+        } />
+        <Route path="/add-car" element={
+          <ProtectedRoute>
+            <AddCar />
+          </ProtectedRoute>
+        } />
+        <Route path="/booking/:carId" element={
+          <ProtectedRoute>
+            <Booking />
+          </ProtectedRoute>
+        } />
+        <Route path="/messages/:bookingId" element={
+          <ProtectedRoute>
+            <Messages />
+          </ProtectedRoute>
+        } />
+
+        {/* ========== مسارات المشرف (تتطلب دور admin) ========== */}
+        <Route path="/admin" element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+
+        {/* ========== صفحة 404 للمسارات غير الموجودة ========== */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
