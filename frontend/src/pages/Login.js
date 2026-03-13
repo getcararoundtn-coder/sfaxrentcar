@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import Navbar from '../components/layout/Navbar';
+import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
+  const { user } = useContext(AuthContext);
+  
   return (
     <>
       <Navbar />
       <div style={{ padding: '50px', textAlign: 'center' }}>
-        <h1>صفحة تسجيل دخول مع Navbar</h1>
-        <p>إذا ظهرت هذه الصفحة مع Navbar، فالمشكلة ليست في Navbar</p>
+        <h1>صفحة تسجيل دخول مع AuthContext</h1>
+        <p>المستخدم: {user ? user.name : 'غير مسجل'}</p>
       </div>
     </>
   );
