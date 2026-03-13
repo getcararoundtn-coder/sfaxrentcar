@@ -1,153 +1,208 @@
-/* Home.css - تصميم متجاوب للصفحة الرئيسية */
-
-/* قسم البطل (Hero Section) */
+/* ========== القسم الرئيسي (Hero Section) ========== */
 .hero {
-  height: 500px;
   position: relative;
+  height: 80vh;
+  min-height: 500px;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
 }
 
+/* طبقة التعتيم فوق الصورة */
 .hero-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.4) 100%);
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  text-align: center;
-  color: white;
+  justify-content: center;
   padding: 20px;
+  width: 100%;
 }
 
 .hero-title {
-  font-size: 48px;
-  margin-bottom: 20px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: fadeInUp 1s ease;
 }
 
 .hero-subtitle {
-  font-size: 20px;
-  margin-bottom: 30px;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  opacity: 0.95;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  animation: fadeInUp 1s ease 0.2s both;
 }
 
 .hero-button {
-  padding: 12px 30px;
-  background-color: #28a745;
+  display: inline-block;
+  padding: 15px 40px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
   text-decoration: none;
-  border-radius: 4px;
-  font-size: 18px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: background-color 0.3s;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  animation: fadeInUp 1s ease 0.4s both;
+  cursor: pointer;
 }
 
 .hero-button:hover {
-  background-color: #218838;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #0056b3, #003d80);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .welcome-message {
-  font-size: 18px;
-  background-color: rgba(255,255,255,0.2);
-  padding: 10px 20px;
-  border-radius: 4px;
-  backdrop-filter: blur(5px);
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 0;
+  animation: fadeInUp 1s ease 0.4s both;
 }
 
-/* قسم السيارات */
+/* ========== قسم السيارات ========== */
 .cars-section {
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 0 20px;
+  padding: 60px 20px;
+  background: #f8f9fa;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .section-title {
   text-align: center;
-  font-size: 32px;
-  margin-bottom: 30px;
+  font-size: 2.5rem;
   color: #333;
+  margin-bottom: 40px;
+  font-weight: 700;
+  position: relative;
+}
+
+.section-title:after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  margin: 15px auto 0;
+  border-radius: 2px;
 }
 
 .cars-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  padding: 20px 0;
 }
 
 .car-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 15px;
-  background-color: #f9f9fa;
-  transition: transform 0.3s, box-shadow 0.3s;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .car-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
 .car-image {
   width: 100%;
-  height: 150px;
+  height: 200px;
   object-fit: cover;
-  border-radius: 4px;
-  margin-bottom: 10px;
+  transition: transform 0.5s ease;
+}
+
+.car-card:hover .car-image {
+  transform: scale(1.05);
 }
 
 .car-title {
-  font-size: 16px;
-  margin-bottom: 5px;
+  font-size: 1.3rem;
+  font-weight: 600;
   color: #333;
+  margin: 15px 15px 10px;
 }
 
 .car-price {
-  font-size: 18px;
-  font-weight: bold;
-  color: #28a745;
-  margin-bottom: 5px;
+  font-size: 1.2rem;
+  color: #007bff;
+  margin: 0 15px 10px;
+  font-weight: 700;
 }
 
 .car-location {
-  font-size: 14px;
+  font-size: 1rem;
   color: #666;
-  margin-bottom: 10px;
+  margin: 0 15px 15px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.car-location::before {
+  content: '📍';
+  font-size: 1.1rem;
 }
 
 .car-details-button {
   display: inline-block;
-  padding: 8px 15px;
-  background-color: #007bff;
+  margin: 0 15px 20px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #28a745, #218838);
   color: white;
   text-decoration: none;
-  border-radius: 4px;
-  font-size: 14px;
-  width: 100%;
+  border-radius: 8px;
   text-align: center;
-  transition: background-color 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
 }
 
 .car-details-button:hover {
-  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+  background: linear-gradient(135deg, #218838, #1e7e34);
 }
 
-/* حالات التحميل */
+/* ========== حالات التحميل والأخطاء ========== */
 .loading-container {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 50px;
 }
 
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #007bff;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
+  margin-bottom: 20px;
 }
 
 @keyframes spin {
@@ -155,99 +210,95 @@
   100% { transform: rotate(360deg); }
 }
 
+.error-message {
+  text-align: center;
+  padding: 40px;
+  color: #dc3545;
+  font-size: 1.2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.1);
+  max-width: 500px;
+  margin: 40px auto;
+}
+
 .no-cars {
   text-align: center;
+  padding: 60px;
   color: #666;
-  font-size: 18px;
-  padding: 50px;
+  font-size: 1.2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  margin: 40px auto;
 }
 
-/* ===== التصميم المتجاوب ===== */
-
-@media (max-width: 992px) {
-  .cars-grid {
-    grid-template-columns: repeat(2, 1fr);
+/* ========== أنيميشن للعناصر ========== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
+/* ========== تحسينات للجوال ========== */
 @media (max-width: 768px) {
   .hero {
-    height: 400px;
+    height: 60vh;
+    min-height: 400px;
   }
   
   .hero-title {
-    font-size: 36px;
+    font-size: 2rem;
   }
   
   .hero-subtitle {
-    font-size: 18px;
-  }
-  
-  .section-title {
-    font-size: 28px;
-    margin: 30px 0;
-  }
-  
-  .cars-grid {
-    gap: 15px;
-  }
-}
-
-@media (max-width: 576px) {
-  .hero {
-    height: 350px;
-  }
-  
-  .hero-title {
-    font-size: 28px;
-  }
-  
-  .hero-subtitle {
-    font-size: 16px;
+    font-size: 1.2rem;
   }
   
   .hero-button {
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 12px 30px;
+    font-size: 1rem;
+  }
+  
+  .welcome-message {
+    font-size: 1.4rem;
+  }
+  
+  .section-title {
+    font-size: 2rem;
   }
   
   .cars-grid {
     grid-template-columns: 1fr;
-  }
-  
-  .section-title {
-    font-size: 24px;
-    margin: 20px 0;
-  }
-  
-  .car-card {
-    padding: 12px;
-  }
-  
-  .car-image {
-    height: 140px;
+    gap: 20px;
   }
 }
 
-@media (max-width: 320px) {
+@media (max-width: 480px) {
+  .hero {
+    height: 50vh;
+    min-height: 350px;
+  }
+  
   .hero-title {
-    font-size: 24px;
+    font-size: 1.6rem;
   }
   
   .hero-subtitle {
-    font-size: 14px;
+    font-size: 1rem;
   }
   
-  .hero-button {
-    padding: 8px 16px;
-    font-size: 14px;
+  .cars-section {
+    padding: 40px 15px;
   }
   
-  .car-card {
-    padding: 10px;
-  }
-  
-  .car-image {
-    height: 120px;
+  .section-title {
+    font-size: 1.8rem;
   }
 }
