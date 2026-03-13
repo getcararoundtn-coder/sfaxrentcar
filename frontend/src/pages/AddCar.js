@@ -61,16 +61,28 @@ const AddCar = () => {
     if (insuranceBackFile) data.append('insuranceBack', insuranceBackFile);
 
     try {
+      // 🔥 **إضافة withCredentials: true للتأكد من إرسال الكوكيز**
       const response = await API.post('/cars', data, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 
+          'Content-Type': 'multipart/form-data'
+        },
+        withCredentials: true
       });
+      
       if (response.data.success) {
         alert('✅ تم إضافة السيارة بنجاح، في انتظار موافقة المشرف');
         navigate('/');
       }
     } catch (err) {
       console.error('Error adding car:', err);
-      alert(err.response?.data?.message || 'فشل إضافة السيارة');
+      
+      // معالجة خاصة لحالة 401
+      if (err.response?.status === 401) {
+        alert('❌ انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى');
+        navigate('/login');
+      } else {
+        alert(err.response?.data?.message || 'فشل إضافة السيارة');
+      }
     } finally {
       setLoading(false);
     }
