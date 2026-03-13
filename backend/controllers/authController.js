@@ -144,7 +144,7 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// نسيت كلمة المرور - إرسال رابط إعادة التعيين
+// نسيت كلمة المرور - إرسال رابط إعادة التعيين (معدل)
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -166,8 +166,9 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 دقيقة
     await user.save();
 
-    // رابط إعادة التعيين
-    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+    // 🔥 استخدام FRONTEND_URL من المتغيرات البيئية (أو الرابط الافتراضي)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; direction: rtl;">
@@ -194,11 +195,12 @@ exports.forgotPassword = async (req, res) => {
 
       res.json({ success: true, message: 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' });
     } catch (error) {
+      console.error('❌ فشل إرسال البريد الإلكتروني:', error);
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
       await user.save();
 
-      return res.status(500).json({ message: 'فشل إرسال البريد الإلكتروني' });
+      return res.status(500).json({ message: 'فشل إرسال البريد الإلكتروني. تأكد من إعدادات البريد.' });
     }
   } catch (error) {
     console.error('Forgot password error:', error);
