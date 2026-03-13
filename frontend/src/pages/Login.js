@@ -1,13 +1,16 @@
 import React from 'react';
+import Navbar from '../components/layout/Navbar';
 
-// مكون بسيط لا يعتمد على أي شيء آخر
-const SimpleLogin = () => {
+const Login = () => {
   return (
-    <div style={{ padding: '50px', textAlign: 'center' }}>
-      <h1>صفحة تسجيل دخول مبسطة</h1>
-      <p>إذا رأيت هذه الرسالة، فالمشكلة ليست في Login.js نفسه.</p>
-    </div>
+    <>
+      <Navbar />
+      <div style={{ padding: '50px', textAlign: 'center' }}>
+        <h1>صفحة تسجيل دخول مع Navbar</h1>
+        <p>إذا ظهرت هذه الصفحة مع Navbar، فالمشكلة ليست في Navbar</p>
+      </div>
+    </>
   );
 };
 
-export default SimpleLogin;
+export default Login;
