@@ -5,10 +5,8 @@ const { protect, admin } = require('../middleware/authMiddleware');
 
 // ========== المسارات العامة (لجميع المستخدمين) ==========
 router.get('/', carController.getCars);
-
-// 🔥 علّق هذين السطرين مؤقتاً حتى نضيف الدوال
-// router.get('/featured', carController.getFeaturedCars);
-// router.get('/stats', carController.getCarStats);
+router.get('/featured', carController.getFeaturedCars); // ✅ سيارات مميزة
+router.get('/stats', carController.getCarStats); // ✅ إحصائيات
 
 // ========== المسارات الثابتة الخاصة بالمستخدم (تأتي قبل /:id) ==========
 router.get('/my-cars', protect, carController.getMyCars);

@@ -74,7 +74,6 @@ exports.addCar = async (req, res) => {
     }
   });
 };
-
 // @desc    جلب جميع السيارات المتاحة (مع تصفية حسب التاريخ)
 // @route   GET /api/cars
 // @access  Public
@@ -131,13 +130,11 @@ exports.getCars = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // @desc    جلب السيارات المميزة (Featured)
 // @route   GET /api/cars/featured
 // @access  Public
 exports.getFeaturedCars = async (req, res) => {
   try {
-    // هنا يمكنك تعديل معايير "المميزة" كما تشاء. مثال: آخر 6 سيارات معتمدة
     const cars = await Car.find({ status: 'approved' })
       .sort({ createdAt: -1 })
       .limit(6)
@@ -155,11 +152,10 @@ exports.getFeaturedCars = async (req, res) => {
 exports.getCarStats = async (req, res) => {
   try {
     const totalCars = await Car.countDocuments({ status: 'approved' });
-    // يمكنك لاحقاً حساب الأرقام الحقيقية
     const stats = {
       totalCars,
-      happyCustomers: 1200, // يمكن حسابها من عدد المستخدمين أو الحجوزات المكتملة
-      cities: 25            // يمكن حسابها من مواقع السيارات المختلفة
+      happyCustomers: 1200,
+      cities: 25
     };
     res.json({ success: true, data: stats });
   } catch (error) {
@@ -167,7 +163,6 @@ exports.getCarStats = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // @desc    جلب سيارة واحدة
 // @route   GET /api/cars/:id
 // @access  Public
@@ -211,7 +206,6 @@ exports.getAllCars = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // @desc    الموافقة على سيارة
 // @route   PATCH /api/cars/:id/approve
 // @access  Private/Admin
@@ -243,7 +237,6 @@ exports.rejectCar = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // ========== دوال المالك ==========
 
 // @desc    جلب سيارات المستخدم الحالي (المؤجر)
@@ -268,7 +261,6 @@ exports.getMyCars = async (req, res) => {
     });
   }
 };
-
 // @desc    تحديث بيانات السيارة (للمالك فقط)
 // @route   PUT /api/cars/:id
 // @access  Private
@@ -319,7 +311,6 @@ exports.deleteCar = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // @desc    تحديث حالة توفر السيارة (متاحة/غير متاحة)
 // @route   PATCH /api/cars/:id/toggle-availability
 // @access  Private (المالك فقط)
@@ -385,7 +376,6 @@ exports.getMyCarBookings = async (req, res) => {
     });
   }
 };
-
 // @desc    إلغاء حجز من قبل المؤجر
 // @route   PATCH /api/cars/cancel-booking/:bookingId
 // @access  Private (المالك فقط)

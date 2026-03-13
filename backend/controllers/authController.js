@@ -144,7 +144,7 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// نسيت كلمة المرور - إرسال رابط إعادة التعيين (معدل)
+// نسيت كلمة المرور - إرسال رابط إعادة التعيين
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -166,8 +166,8 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 دقيقة
     await user.save();
 
-    // 🔥 استخدام FRONTEND_URL من المتغيرات البيئية (أو الرابط الافتراضي)
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    // استخدام FRONTEND_URL من المتغيرات البيئية
+    const frontendUrl = process.env.FRONTEND_URL || 'https://sfaxrentcar-u0yu.onrender.com';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `

@@ -61,12 +61,8 @@ const AddCar = () => {
     if (insuranceBackFile) data.append('insuranceBack', insuranceBackFile);
 
     try {
-      console.log('🍪 Cookies at add car:', document.cookie); // للتأكد من وجود الكوكيز
-      
       const response = await API.post('/cars', data, {
-        headers: { 
-          'Content-Type': 'multipart/form-data'
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true
       });
       
@@ -76,17 +72,114 @@ const AddCar = () => {
       }
     } catch (err) {
       console.error('Error adding car:', err);
-      console.log('🍪 Cookies at error:', document.cookie);
       
       if (err.response?.status === 401) {
         alert('❌ انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى');
-        localStorage.removeItem('user');
         navigate('/login');
       } else {
         alert(err.response?.data?.message || 'فشل إضافة السيارة');
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // الأنماط (styles) كما هي دون تغيير
+  const styles = {
+    container: {
+      minHeight: 'calc(100vh - 60px)',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '40px 20px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'flex-start'
+    },
+    card: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '40px',
+      maxWidth: '600px',
+      width: '100%',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+    },
+    title: { 
+      textAlign: 'center', 
+      marginBottom: '30px', 
+      color: '#333', 
+      fontSize: '28px', 
+      fontWeight: 'bold' 
+    },
+    contractSection: {
+      backgroundColor: '#e7f3ff',
+      padding: '20px',
+      borderRadius: '8px',
+      marginBottom: '30px',
+      border: '1px solid #b8daff'
+    },
+    contractTitle: {
+      margin: '0 0 10px 0',
+      color: '#004085',
+      fontSize: '18px'
+    },
+    contractText: {
+      marginBottom: '15px',
+      color: '#004085',
+      lineHeight: '1.6'
+    },
+    downloadButton: {
+      display: 'inline-block',
+      padding: '12px 20px',
+      backgroundColor: '#28a745',
+      color: 'white',
+      textDecoration: 'none',
+      borderRadius: '4px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+      marginBottom: '15px'
+    },
+    contractNote: {
+      backgroundColor: '#fff3cd',
+      padding: '15px',
+      borderRadius: '4px',
+      border: '1px solid #ffeeba',
+      color: '#856404'
+    },
+    noteList: {
+      margin: '10px 0 0 0',
+      paddingRight: '20px'
+    },
+    formGroup: { marginBottom: '20px' },
+    input: { 
+      width: '100%', 
+      padding: '10px', 
+      borderRadius: '4px', 
+      border: '1px solid #ddd', 
+      fontSize: '16px' 
+    },
+    previewContainer: { 
+      display: 'flex', 
+      gap: '10px', 
+      marginTop: '10px', 
+      flexWrap: 'wrap' 
+    },
+    preview: { 
+      width: '100px', 
+      height: '100px', 
+      objectFit: 'cover', 
+      borderRadius: '4px', 
+      border: '1px solid #ddd' 
+    },
+    button: { 
+      width: '100%', 
+      padding: '14px', 
+      backgroundColor: '#28a745', 
+      color: 'white', 
+      border: 'none', 
+      borderRadius: '4px', 
+      fontSize: '16px', 
+      fontWeight: 'bold', 
+      cursor: 'pointer',
+      marginTop: '10px'
     }
   };
 
@@ -201,104 +294,6 @@ const AddCar = () => {
       </div>
     </>
   );
-};
-
-const styles = {
-  container: {
-    minHeight: 'calc(100vh - 60px)',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    padding: '40px 20px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-start'
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '40px',
-    maxWidth: '600px',
-    width: '100%',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
-  },
-  title: { 
-    textAlign: 'center', 
-    marginBottom: '30px', 
-    color: '#333', 
-    fontSize: '28px', 
-    fontWeight: 'bold' 
-  },
-  contractSection: {
-    backgroundColor: '#e7f3ff',
-    padding: '20px',
-    borderRadius: '8px',
-    marginBottom: '30px',
-    border: '1px solid #b8daff'
-  },
-  contractTitle: {
-    margin: '0 0 10px 0',
-    color: '#004085',
-    fontSize: '18px'
-  },
-  contractText: {
-    marginBottom: '15px',
-    color: '#004085',
-    lineHeight: '1.6'
-  },
-  downloadButton: {
-    display: 'inline-block',
-    padding: '12px 20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    textDecoration: 'none',
-    borderRadius: '4px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    marginBottom: '15px'
-  },
-  contractNote: {
-    backgroundColor: '#fff3cd',
-    padding: '15px',
-    borderRadius: '4px',
-    border: '1px solid #ffeeba',
-    color: '#856404'
-  },
-  noteList: {
-    margin: '10px 0 0 0',
-    paddingRight: '20px'
-  },
-  formGroup: { marginBottom: '20px' },
-  input: { 
-    width: '100%', 
-    padding: '10px', 
-    borderRadius: '4px', 
-    border: '1px solid #ddd', 
-    fontSize: '16px' 
-  },
-  previewContainer: { 
-    display: 'flex', 
-    gap: '10px', 
-    marginTop: '10px', 
-    flexWrap: 'wrap' 
-  },
-  preview: { 
-    width: '100px', 
-    height: '100px', 
-    objectFit: 'cover', 
-    borderRadius: '4px', 
-    border: '1px solid #ddd' 
-  },
-  button: { 
-    width: '100%', 
-    padding: '14px', 
-    backgroundColor: '#28a745', 
-    color: 'white', 
-    border: 'none', 
-    borderRadius: '4px', 
-    fontSize: '16px', 
-    fontWeight: 'bold', 
-    cursor: 'pointer',
-    marginTop: '10px'
-  }
 };
 
 export default AddCar;

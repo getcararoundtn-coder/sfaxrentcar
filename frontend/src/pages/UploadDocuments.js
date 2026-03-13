@@ -2,7 +2,6 @@ import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { AuthContext } from '../context/AuthContext';
-import API from '../services/api';
 
 const UploadDocuments = () => {
   const navigate = useNavigate();
@@ -79,15 +78,20 @@ const UploadDocuments = () => {
     formData.append('driverLicense', files.driverLicense);
 
     try {
-      const response = await API.post('/documents/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(percentCompleted);
-        }
+      // استخدام fetch بدلاً من Axios لضمان إرسال الكوكيز
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/documents/upload`, {
+        method: 'POST',
+        credentials: 'include', // ⚠️ مهم جداً: يرسل الكوكيز تلقائياً
+        body: formData
       });
 
-      if (response.data.success) {
+      // محاكاة تقدم الرفع (لأن fetch لا يدعم onUploadProgress)
+      setUploadProgress(50);
+      
+      const data = await response.json();
+      setUploadProgress(100);
+
+      if (data.success) {
         setSuccess('✅ تم رفع المستندات بنجاح! في انتظار مراجعة الإدارة.');
         
         // تحديث حالة المستخدم في السياق
@@ -99,19 +103,16 @@ const UploadDocuments = () => {
         setTimeout(() => {
           navigate('/profile');
         }, 3000);
+      } else {
+        setError(data.message || 'فشل رفع المستندات');
       }
     } catch (err) {
       console.error('Upload error:', err);
       
-      if (err.response) {
-        // خطأ من الخادم
-        setError(err.response.data?.message || `خطأ في الخادم: ${err.response.status}`);
-      } else if (err.request) {
-        // لم يتم استلام رد
-        setError('لا يمكن الاتصال بالخادم. تأكد من تشغيل الخادم.');
+      if (err.message === 'Failed to fetch') {
+        setError('لا يمكن الاتصال بالخادم. تأكد من اتصالك بالإنترنت.');
       } else {
-        // خطأ في الإعداد
-        setError('حدث خطأ في إرسال الطلب');
+        setError('حدث خطأ في إرسال الطلب: ' + err.message);
       }
     } finally {
       setLoading(false);

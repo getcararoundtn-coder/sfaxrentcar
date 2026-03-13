@@ -4,15 +4,13 @@ const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const API = axios.create({
   baseURL,
-  withCredentials: true, // 🔥 إلزامي لإرسال الكوكيز
+  withCredentials: true, // مهم جداً لإرسال الكوكيز
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 🔥 تأكيد إعدادات الكوكيز
-API.defaults.withCredentials = true;
-
+// اعتراض الطلبات للتأكد من إرسال الكوكيز
 API.interceptors.request.use(
   (config) => {
     console.log('📤 Request:', config.url);
@@ -21,6 +19,7 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// اعتراض الردود لمعالجة الأخطاء
 API.interceptors.response.use(
   (response) => response,
   (error) => {

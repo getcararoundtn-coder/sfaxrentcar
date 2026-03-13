@@ -6,19 +6,19 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
-// Middleware - ترتيب مهم
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// 🔥 CORS configuration محسّنة للإنتاج
+// CORS configuration محسّنة للإنتاج
 const allowedOrigins = [
   'http://localhost:3000',
-  process.env.FRONTEND_URL
+  'https://sfaxrentcar-u0yu.onrender.com' // ✅ الرابط الصحيح للـ Frontend
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // السماح للطلبات بدون origin (مثل Postman أو تطبيقات الخادم)
+    // السماح للطلبات بدون origin (مثل Postman)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -28,7 +28,7 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true, // ✅ هذا يسمح بإرسال الكوكيز
+  credentials: true, // هذا يسمح بإرسال الكوكيز
   optionsSuccessStatus: 200
 }));
 

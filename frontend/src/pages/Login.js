@@ -24,36 +24,20 @@ const Login = () => {
     setError('');
     
     try {
-      console.log('Attempting login with:', formData.email);
       const response = await API.post('/auth/login', formData);
-      console.log('Login response:', response.data);
       
       if (response.data.success) {
-        // تخزين بيانات المستخدم فقط
         setUser(response.data.data);
         localStorage.setItem('user', JSON.stringify(response.data.data));
-        
-        // لا حاجة لتخزين التوكن - Backend يستخدم httpOnly cookies
         console.log('✅ Login successful, using httpOnly cookies');
-        console.log('🍪 Cookies after login:', document.cookie);
-        
         showSuccess('تم تسجيل الدخول بنجاح');
         navigate('/');
       }
     } catch (err) {
       console.error('Login error:', err);
       const errorMessage = err.response?.data?.message || 'فشل تسجيل الدخول';
-      
-      if (errorMessage.includes('البريد الإلكتروني أو كلمة المرور')) {
-        setError('❌ البريد الإلكتروني أو كلمة المرور غير صحيحة');
-        showError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
-      } else if (errorMessage.includes('مطلوبان')) {
-        setError('❌ يرجى إدخال البريد الإلكتروني وكلمة المرور');
-        showError('يرجى إدخال البريد الإلكتروني وكلمة المرور');
-      } else {
-        setError('❌ ' + errorMessage);
-        showError(errorMessage);
-      }
+      setError('❌ ' + errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
