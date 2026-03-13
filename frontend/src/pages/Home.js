@@ -9,6 +9,7 @@ const Home = () => {
   const { user } = useContext(AuthContext);
   const [featuredCars, setFeaturedCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalCars: 0,
     happyCustomers: 0,
@@ -22,16 +23,18 @@ const Home = () => {
 
   const fetchFeaturedCars = async () => {
     try {
+      setLoading(true);
       const { data } = await API.get('/cars/featured');
-      setFeaturedCars(data.data || []);
+      
+      if (data.success) {
+        setFeaturedCars(data.data || []);
+      } else {
+        setError('فشل تحميل السيارات المميزة');
+      }
     } catch (err) {
       console.error('Error fetching featured cars:', err);
-      // بيانات تجريبية في حالة فشل الاتصال
-      setFeaturedCars([
-        { _id: 1, brand: 'تويوتا', model: 'كورولا', pricePerDay: 120, images: ['/default-car.jpg'] },
-        { _id: 2, brand: 'هيونداي', model: 'إلنترا', pricePerDay: 100, images: ['/default-car.jpg'] },
-        { _id: 3, brand: 'مرسيدس', model: 'C200', pricePerDay: 250, images: ['/default-car.jpg'] },
-      ]);
+      setError('حدث خطأ في تحميل البيانات');
+      setFeaturedCars([]);
     } finally {
       setLoading(false);
     }
@@ -40,11 +43,23 @@ const Home = () => {
   const fetchStats = async () => {
     try {
       const { data } = await API.get('/cars/stats');
-      setStats(data.data || { totalCars: 150, happyCustomers: 1200, cities: 25 });
+      
+      if (data.success) {
+        setStats(data.data || {
+          totalCars: 0,
+          happyCustomers: 0,
+          cities: 0
+        });
+      }
     } catch (err) {
       console.error('Error fetching stats:', err);
-      setStats({ totalCars: 150, happyCustomers: 1200, cities: 25 });
+      // في حالة الخطأ، نترك الأصفار
     }
+  };
+
+  // دالة لمعالجة أخطاء الصور
+  const handleImageError = (e) => {
+    e.target.src = 'https://via.placeholder.com/400x300?text=صورة+السيارة';
   };
 
   return (
@@ -68,11 +83,11 @@ const Home = () => {
         <section className="stats-section">
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-number">{stats.totalCars}+</div>
+              <div className="stat-number">{stats.totalCars}</div>
               <div className="stat-label">سيارة متاحة</div>
             </div>
             <div className="stat-card">
-              <div className="stat-number">{stats.happyCustomers}+</div>
+              <div className="stat-number">{stats.happyCustomers}</div>
               <div className="stat-label">مستأجر سعيد</div>
             </div>
             <div className="stat-card">
@@ -85,17 +100,26 @@ const Home = () => {
         {/* Featured Cars */}
         <section className="featured-section">
           <h2 className="section-title">سيارات مميزة</h2>
+          
           {loading ? (
             <div className="loading">جاري التحميل...</div>
+          ) : error ? (
+            <div className="error-message">{error}</div>
+          ) : featuredCars.length === 0 ? (
+            <div className="no-cars">لا توجد سيارات مميزة حالياً</div>
           ) : (
             <div className="cars-grid">
               {featuredCars.map((car) => (
                 <div key={car._id} className="car-card">
-                  <img 
-                    src={car.images?.[0] || '/default-car.jpg'} 
-                    alt={`${car.brand} ${car.model}`}
-                    className="car-image"
-                  />
+                  <div className="car-image-container">
+                    <img 
+                      src={car.images?.[0] || 'https://via.placeholder.com/400x300?text=صورة+السيارة'} 
+                      alt={`${car.brand} ${car.model}`}
+                      className="car-image"
+                      onError={handleImageError}
+                      loading="lazy"
+                    />
+                  </div>
                   <div className="car-info">
                     <h3 className="car-title">{car.brand} {car.model}</h3>
                     <p className="car-price">{car.pricePerDay} دينار/يوم</p>
