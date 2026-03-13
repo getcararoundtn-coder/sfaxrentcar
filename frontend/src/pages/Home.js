@@ -49,7 +49,7 @@ const Home = () => {
       <div 
         className="hero" 
         style={{ 
-          backgroundImage: `url('/images/hero_bg.jpg')`,
+          backgroundImage: `url(${process.env.PUBLIC_URL}/images/hero_bg.jpg)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -92,12 +92,12 @@ const Home = () => {
               <div key={car._id} className="car-card">
                 <LazyLoad height={150} offset={100} once>
                   <img 
-                    src={car.images?.[0] || '/default-car.jpg'} 
-                    alt={car.brand} 
+                    src={car.images?.[0] || `${process.env.PUBLIC_URL}/default-car.jpg`} 
+                    alt={`${car.brand} ${car.model}`} 
                     className="car-image" 
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = '/default-car.jpg';
+                      e.target.src = `${process.env.PUBLIC_URL}/default-car.jpg`;
                     }}
                   />
                 </LazyLoad>
