@@ -9,7 +9,8 @@ const generateToken = (res, userId) => {
   res.cookie('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production', // true في الإنتاج
-    sameSite: 'lax', // ✅ تم التغيير من strict إلى lax
+    sameSite: 'lax',
+    domain: '.onrender.com', // ✅ domain صحيح ليشمل جميع نطاقات Render
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 أيام
   });
 };
