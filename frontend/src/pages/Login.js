@@ -29,12 +29,34 @@ const Login = () => {
       console.log('Login response:', response.data);
       
       if (response.data.success) {
+        // تخزين بيانات المستخدم
         setUser(response.data.data);
         localStorage.setItem('user', JSON.stringify(response.data.data));
         
+        // 🔥 **تخزين التوكن - معالجة جميع الاحتمالات**
+        let token = null;
+        
         if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          console.log('✅ Token stored successfully');
+          token = response.data.token;
+        } else if (response.data.data?.token) {
+          token = response.data.data.token;
+        } else if (response.data.accessToken) {
+          token = response.data.accessToken;
+        } else if (response.data.access_token) {
+          token = response.data.access_token;
+        } else if (response.data.data?.accessToken) {
+          token = response.data.data.accessToken;
+        }
+        
+        if (token) {
+          localStorage.setItem('token', token);
+          console.log('✅ Token stored successfully:', token.substring(0, 20) + '...');
+        } else {
+          console.warn('⚠️ No token found in response. Response structure:', {
+            hasToken: 'token' in response.data,
+            hasDataToken: response.data.data && 'token' in response.data.data,
+            keys: Object.keys(response.data)
+          });
         }
         
         showSuccess('تم تسجيل الدخول بنجاح');
