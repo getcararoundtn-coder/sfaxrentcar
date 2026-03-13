@@ -14,7 +14,6 @@ const Home = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // التحقق من وجود مستخدم في localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -45,27 +44,23 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      {/* قسم البطل مع صورة خلفية hero_bg.jpg */}
+      {/* Hero section - صورة الخلفية مضبوطة في CSS */}
       <div className="hero">
         <div className="hero-overlay">
           <h1 className="hero-title">استأجر سيارتك المفضلة بسهولة وسرعة</h1>
           <p className="hero-subtitle">منصة تونسية لكراء السيارات بين الأفراد والشركات</p>
-          
-          {/* زر "ابدأ الآن" يظهر فقط للضيوف (غير المسجلين) */}
           {!user && (
             <Link to="/cars" className="hero-button">
               ابدأ الآن
             </Link>
           )}
-          
-          {/* رسالة ترحيب للمستخدمين المسجلين (تظهر بدلاً من الزر) */}
           {user && (
             <p className="welcome-message">مرحباً بعودتك، {user.name}</p>
           )}
         </div>
       </div>
 
-      {/* قسم السيارات - يظهر للجميع (مسجلين وغير مسجلين) */}
+      {/* Cars section */}
       <div className="cars-section">
         <h2 className="section-title">السيارات المتاحة</h2>
         
@@ -84,13 +79,9 @@ const Home = () => {
               <div key={car._id} className="car-card">
                 <LazyLoad height={150} offset={100} once>
                   <img 
-                    src={car.images?.[0] || '/images/default-car.jpg'} 
+                    src={car.images?.[0] || 'https://via.placeholder.com/400x300?text=صورة+السيارة'} 
                     alt={`${car.brand} ${car.model}`} 
                     className="car-image" 
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/images/default-car.jpg';
-                    }}
                   />
                 </LazyLoad>
                 <h3 className="car-title">{car.brand} {car.model} ({car.year})</h3>
