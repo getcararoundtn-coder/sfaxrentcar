@@ -75,7 +75,7 @@ exports.addCar = async (req, res) => {
   });
 };
 
-// @desc    جلب جميع السيارات المتاحة
+// @desc    جلب جميع السيارات المتاحة (مع تصفية حسب التاريخ)
 // @route   GET /api/cars
 // @access  Public
 exports.getCars = async (req, res) => {
@@ -129,6 +129,42 @@ exports.getCars = async (req, res) => {
   } catch (error) {
     console.error('❌ Error in getCars:', error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    جلب السيارات المميزة (Featured)
+// @route   GET /api/cars/featured
+// @access  Public
+exports.getFeaturedCars = async (req, res) => {
+  try {
+    // هنا يمكنك تعديل معايير "المميزة" كما تشاء. مثال: آخر 6 سيارات معتمدة
+    const cars = await Car.find({ status: 'approved' })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .populate('ownerId', 'name');
+    res.json({ success: true, data: cars });
+  } catch (error) {
+    console.error('❌ Error in getFeaturedCars:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    جلب إحصائيات السيارات
+// @route   GET /api/cars/stats
+// @access  Public
+exports.getCarStats = async (req, res) => {
+  try {
+    const totalCars = await Car.countDocuments({ status: 'approved' });
+    // يمكنك لاحقاً حساب الأرقام الحقيقية
+    const stats = {
+      totalCars,
+      happyCustomers: 1200, // يمكن حسابها من عدد المستخدمين أو الحجوزات المكتملة
+      cities: 25            // يمكن حسابها من مواقع السيارات المختلفة
+    };
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('❌ Error in getCarStats:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -489,61 +525,5 @@ exports.getOwnerStats = async (req, res) => {
       message: 'حدث خطأ في جلب الإحصائيات',
       error: error.message 
     });
-  }
-};
-// @desc    جلب جميع السيارات المتاحة مع Pagination
-// @route   GET /api/cars?page=1&limit=10
-// @access  Public
-exports.getCars = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    
-    const { startDate, endDate } = req.query;
-
-    let query = {
-      status: 'approved',
-      $or: [
-        { isAvailable: true },
-        { isAvailable: { $exists: false } }
-      ]
-    };
-
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const bookedCars = await Booking.find({
-        status: { $in: ['pending', 'approved'] },
-        $or: [
-          { startDate: { $lte: end }, endDate: { $gte: start } }
-        ]
-      }).distinct('carId');
-      query._id = { $nin: bookedCars };
-    }
-
-    const cars = await Car.find(query)
-      .populate('ownerId', 'name email role')
-      .skip(skip)
-      .limit(limit)
-      .sort('-createdAt');
-
-    const total = await Car.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: cars,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-        hasNextPage: page < Math.ceil(total / limit),
-        hasPrevPage: page > 1
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error in getCars:', error);
-    res.status(500).json({ message: error.message });
   }
 };
