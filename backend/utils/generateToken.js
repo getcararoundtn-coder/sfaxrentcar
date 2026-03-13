@@ -10,7 +10,7 @@ const generateToken = (res, userId) => {
     httpOnly: true,
     secure: true, // إجباري مع sameSite none
     sameSite: 'none', // يسمح بالإرسال عبر المواقع
-    domain: 'onrender.com', // ✅ بدون نقطة بادئة
+    domain: '.onrender.com', // ✅ النطاق الصحيح مع النقطة في البداية
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 أيام
   });
 };
