@@ -1,175 +1,110 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
 import API from '../services/api';
-import { AuthContext } from '../context/AuthContext';
+import LazyLoad from 'react-lazyload';
+import { showError } from '../utils/ToastConfig';
 import './Home.css';
 
 const Home = () => {
-  const { user } = useContext(AuthContext);
-  const [featuredCars, setFeaturedCars] = useState([]);
+  const [user, setUser] = useState(null);
+  const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    totalCars: 0,
-    happyCustomers: 0,
-    cities: 0
-  });
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchFeaturedCars();
-    fetchStats();
+    // التحقق من وجود مستخدم في localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error('خطأ في قراءة المستخدم:', e);
+        localStorage.removeItem('user');
+      }
+    }
+
+    const fetchCars = async () => {
+      try {
+        setLoading(true);
+        const { data } = await API.get('/cars');
+        console.log('Cars fetched:', data);
+        setCars(data.data || []);
+      } catch (err) {
+        console.error('Error fetching cars:', err);
+        setError('حدث خطأ في تحميل السيارات');
+        showError('❌ فشل تحميل السيارات');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCars();
   }, []);
-
-  const fetchFeaturedCars = async () => {
-    try {
-      setLoading(true);
-      const { data } = await API.get('/cars/featured');
-      
-      if (data.success) {
-        setFeaturedCars(data.data || []);
-      } else {
-        setError('فشل تحميل السيارات المميزة');
-      }
-    } catch (err) {
-      console.error('Error fetching featured cars:', err);
-      setError('حدث خطأ في تحميل البيانات');
-      setFeaturedCars([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const { data } = await API.get('/cars/stats');
-      
-      if (data.success) {
-        setStats(data.data || {
-          totalCars: 0,
-          happyCustomers: 0,
-          cities: 0
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching stats:', err);
-      // في حالة الخطأ، نترك الأصفار
-    }
-  };
-
-  // دالة لمعالجة أخطاء الصور
-  const handleImageError = (e) => {
-    e.target.src = 'https://via.placeholder.com/400x300?text=صورة+السيارة';
-  };
 
   return (
     <>
       <Navbar />
-      <div className="home-container">
-        {/* Hero Section */}
-        <section className="hero-section">
-          <div className="hero-content">
-            <h1 className="hero-title">استأجر سيارتك المفضلة بسهولة وسرعة</h1>
-            <p className="hero-subtitle">
-              منصة تونسية لكراء السيارات بين الأفراد والشركات
-            </p>
+      {/* قسم البطل مع صورة خلفية hero_bg.jpg */}
+      <div className="hero">
+        <div className="hero-overlay">
+          <h1 className="hero-title">استأجر سيارتك المفضلة بسهولة وسرعة</h1>
+          <p className="hero-subtitle">منصة تونسية لكراء السيارات بين الأفراد والشركات</p>
+          
+          {/* زر "ابدأ الآن" يظهر فقط للضيوف (غير المسجلين) */}
+          {!user && (
             <Link to="/cars" className="hero-button">
               ابدأ الآن
             </Link>
-          </div>
-        </section>
-
-        {/* Stats Section */}
-        <section className="stats-section">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-number">{stats.totalCars}</div>
-              <div className="stat-label">سيارة متاحة</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">{stats.happyCustomers}</div>
-              <div className="stat-label">مستأجر سعيد</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">{stats.cities}</div>
-              <div className="stat-label">مدينة في تونس</div>
-            </div>
-          </div>
-        </section>
-
-        {/* Featured Cars */}
-        <section className="featured-section">
-          <h2 className="section-title">سيارات مميزة</h2>
-          
-          {loading ? (
-            <div className="loading">جاري التحميل...</div>
-          ) : error ? (
-            <div className="error-message">{error}</div>
-          ) : featuredCars.length === 0 ? (
-            <div className="no-cars">لا توجد سيارات مميزة حالياً</div>
-          ) : (
-            <div className="cars-grid">
-              {featuredCars.map((car) => (
-                <div key={car._id} className="car-card">
-                  <div className="car-image-container">
-                    <img 
-                      src={car.images?.[0] || 'https://via.placeholder.com/400x300?text=صورة+السيارة'} 
-                      alt={`${car.brand} ${car.model}`}
-                      className="car-image"
-                      onError={handleImageError}
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="car-info">
-                    <h3 className="car-title">{car.brand} {car.model}</h3>
-                    <p className="car-price">{car.pricePerDay} دينار/يوم</p>
-                    <Link to={`/car/${car._id}`} className="car-button">
-                      عرض التفاصيل
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
           )}
-        </section>
+          
+          {/* رسالة ترحيب للمستخدمين المسجلين (تظهر بدلاً من الزر) */}
+          {user && (
+            <p className="welcome-message">مرحباً بعودتك، {user.name}</p>
+          )}
+        </div>
+      </div>
 
-        {/* How It Works */}
-        <section className="how-it-works">
-          <h2 className="section-title">كيف تعمل المنصة؟</h2>
-          <div className="steps-grid">
-            <div className="step-card">
-              <div className="step-icon">1️⃣</div>
-              <h3 className="step-title">ابحث عن سيارة</h3>
-              <p className="step-description">اختر السيارة التي تناسب احتياجاتك من بين مئات السيارات المتاحة</p>
-            </div>
-            <div className="step-card">
-              <div className="step-icon">2️⃣</div>
-              <h3 className="step-title">احجز بسهولة</h3>
-              <p className="step-description">اختر تواريخ الحجز وأكمل العملية بضغطة زر</p>
-            </div>
-            <div className="step-card">
-              <div className="step-icon">3️⃣</div>
-              <h3 className="step-title">استلم السيارة</h3>
-              <p className="step-description">التقي بالمالك في المكان المتفق عليه واستلم سيارتك</p>
-            </div>
+      {/* قسم السيارات - يظهر للجميع (مسجلين وغير مسجلين) */}
+      <div className="cars-section">
+        <h2 className="section-title">السيارات المتاحة</h2>
+        
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>جاري تحميل السيارات...</p>
           </div>
-        </section>
-
-        {/* CTA Section */}
-        {!user && (
-          <section className="cta-section">
-            <div className="cta-content">
-              <h2 className="cta-title">هل لديك سيارة وتريد تأجيرها؟</h2>
-              <p className="cta-text">
-                انضم إلى منصتنا الآن وابدأ في تحقيق دخل إضافي من سيارتك
-              </p>
-              <Link to="/register" className="cta-button">
-                إنشاء حساب جديد
-              </Link>
-            </div>
-          </section>
+        ) : error ? (
+          <p className="error-message">{error}</p>
+        ) : cars.length === 0 ? (
+          <p className="no-cars">لا توجد سيارات متاحة حالياً</p>
+        ) : (
+          <div className="cars-grid">
+            {cars.map(car => (
+              <div key={car._id} className="car-card">
+                <LazyLoad height={150} offset={100} once>
+                  <img 
+                    src={car.images?.[0] || '/images/default-car.jpg'} 
+                    alt={`${car.brand} ${car.model}`} 
+                    className="car-image" 
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/images/default-car.jpg';
+                    }}
+                  />
+                </LazyLoad>
+                <h3 className="car-title">{car.brand} {car.model} ({car.year})</h3>
+                <p className="car-price"><strong>{car.pricePerDay} دينار/يوم</strong></p>
+                <p className="car-location">{car.location}</p>
+                <Link to={`/car/${car._id}`} className="car-details-button">
+                  عرض التفاصيل
+                </Link>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+      <Footer />
     </>
   );
 };
