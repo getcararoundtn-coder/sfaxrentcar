@@ -1,36 +1,34 @@
-const { MailtrapClient } = require("mailtrap");
+const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-  const TOKEN = "a00f06b869be94bc5d54a004b20ec776";
-
-  const client = new MailtrapClient({
-    token: TOKEN,
+  // إعدادات Gmail SMTP
+  const transporter = nodemailer.createTransport({
+    service: 'gmail', // اختصار مدمج في Nodemailer [citation:6][citation:7]
+    auth: {
+      user: process.env.EMAIL_USER, // بريدك الإلكتروني (مثل: getcararoundtn@gmail.com)
+      pass: process.env.EMAIL_PASS  // كلمة مرور التطبيق (App Password) المكونة من 16 حرفاً [citation:3][citation:4]
+    },
+    tls: {
+      rejectUnauthorized: false // يساعد في تجاوز مشاكل الشهادات في بعض البيئات
+    }
   });
 
-  const sender = {
-    email: "hello@demomailtrap.co",
-    name: "SfaxRentCar",
+  // خيارات البريد الإلكتروني
+  const mailOptions = {
+    from: `"SfaxRentCar" <${process.env.EMAIL_USER}>`, // المستلم سيرى هذا الاسم والبريد
+    to: options.email,
+    subject: options.subject,
+    html: options.html
   };
 
-  const recipients = [
-    {
-      email: options.email,
-    }
-  ];
-
+  // إرسال البريد مع تسجيل الأخطاء للتصحيح
   try {
-    const response = await client.send({
-      from: sender,
-      to: recipients,
-      subject: options.subject,
-      html: options.html,
-      category: "Password Reset",
-    });
-    console.log("✅ Email sent via Mailtrap:", response);
-    return response;
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent via Gmail:', info.response);
+    return info;
   } catch (error) {
-    console.error("❌ Mailtrap error:", error);
-    throw error;
+    console.error('❌ Gmail error details:', error);
+    throw error; // إعادة الخطأ لمعالجته في الـ authController
   }
 };
 
