@@ -167,7 +167,7 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // استخدام FRONTEND_URL من المتغيرات البيئية
-    const frontendUrl = process.env.FRONTEND_URL || 'https://sfaxrentcar-u0yu.onrender.com';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://sfaxrentcar-frontend-x281.onrender.com';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `
