@@ -44,17 +44,8 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      {/* قسم البطل مع صورة خلفية hero.jpg (تم تغيير الاسم) */}
-      <div 
-        className="hero" 
-        style={{ 
-          // أو هذا المسار
-          backgroundImage: `url(./images/hero.jpg)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
+      {/* قسم البطل - بدون صورة خلفية، فقط لون */}
+      <div className="hero" style={{ backgroundColor: '#667eea' }}>
         <div className="hero-overlay">
           <h1 className="hero-title">استأجر سيارتك المفضلة بسهولة وسرعة</h1>
           <p className="hero-subtitle">منصة تونسية لكراء السيارات بين الأفراد والشركات</p>
@@ -89,12 +80,12 @@ const Home = () => {
               <div key={car._id} className="car-card">
                 <LazyLoad height={150} offset={100} once>
                   <img 
-                    src={car.images?.[0] || `${process.env.PUBLIC_URL}/default-car.jpg`} 
+                    src={car.images?.[0] || 'https://via.placeholder.com/400x300?text=صورة+السيارة'} 
                     alt={`${car.brand} ${car.model}`} 
                     className="car-image" 
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = `${process.env.PUBLIC_URL}/default-car.jpg`;
+                      e.target.src = 'https://via.placeholder.com/400x300?text=صورة+السيارة';
                     }}
                   />
                 </LazyLoad>
