@@ -100,3 +100,40 @@
   color: #28a745;
   text-decoration: none;
 }
+/* تحسين ظهور رابط إنشاء حساب جديد */
+.register-link {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+}
+
+.register-link a {
+  color: #007bff !important; /* أزرق بدلاً من الأخضر */
+  text-decoration: underline;
+  font-weight: 600;
+  margin-right: 5px;
+  transition: color 0.3s;
+}
+
+.register-link a:hover {
+  color: #0056b3 !important; /* أزرق غامق عند التمرير */
+  text-decoration: none;
+}
+
+/* تنسيق رابط نسيت كلمة المرور */
+.forgot-password {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.forgot-password a {
+  color: #6c757d;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.forgot-password a:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
