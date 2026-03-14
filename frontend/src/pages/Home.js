@@ -44,7 +44,7 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      {/* قسم البطل - بدون صورة خلفية، فقط لون */}
+      {/* قسم البطل - لون خلفية فقط (لا يوجد صورة) */}
       <div className="hero" style={{ backgroundColor: '#667eea' }}>
         <div className="hero-overlay">
           <h1 className="hero-title">استأجر سيارتك المفضلة بسهولة وسرعة</h1>
@@ -62,6 +62,7 @@ const Home = () => {
         </div>
       </div>
 
+      {/* قسم السيارات - يظهر للجميع */}
       <div className="cars-section">
         <h2 className="section-title">السيارات المتاحة</h2>
         
