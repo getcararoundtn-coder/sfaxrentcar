@@ -44,11 +44,11 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      {/* قسم البطل مع صورة خلفية hero_bg.jpg - باستخدام PUBLIC_URL */}
+      {/* قسم البطل مع صورة خلفية hero.jpg (تم تغيير الاسم) */}
       <div 
         className="hero" 
         style={{ 
-          backgroundImage: `url(${process.env.PUBLIC_URL}/images/hero_bg.jpg)`,
+          backgroundImage: `url(${process.env.PUBLIC_URL}/images/hero.jpg)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
