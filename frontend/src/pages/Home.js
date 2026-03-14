@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import API from '../services/api';
+console.log('✅ This is the simplified Home.js version');
 
 const Home = () => {
   const [user, setUser] = useState(null);
