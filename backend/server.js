@@ -13,7 +13,7 @@ app.use(cookieParser());
 // CORS configuration محسّنة للإنتاج
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://sfaxrentcar-u0yu.onrender.com' // ✅ الرابط الصحيح للـ Frontend
+  'https://sfaxrentcar-frontend-x281.onrender.com' // ✅ الرابط الجديد للـ Frontend
 ].filter(Boolean);
 
 app.use(cors({
