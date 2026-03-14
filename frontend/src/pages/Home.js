@@ -48,7 +48,8 @@ const Home = () => {
       <div 
         className="hero" 
         style={{ 
-          backgroundImage: `url(${process.env.PUBLIC_URL}/images/hero.jpg)`,
+          // أو هذا المسار
+          backgroundImage: `url(./images/hero.jpg)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
