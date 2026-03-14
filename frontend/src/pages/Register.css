@@ -86,19 +86,20 @@
   font-size: 18px;
 }
 
+/* تنسيق رابط تسجيل الدخول - معدل حسب الطلب */
 .login-link {
   text-align: center;
   margin-top: 20px;
-  color: #666;
+  color: white; /* النص العادي باللون الأبيض */
 }
 
 .login-link a {
-  color: #007bff;
+  color: #ffc107; /* الرابط باللون الأصفر */
   text-decoration: underline;
   font-weight: 600;
   margin-left: 5px;
 }
 
 .login-link a:hover {
-  color: #0056b3;
+  color: #ffdb6e; /* أصفر فاتح عند التمرير */
 }
