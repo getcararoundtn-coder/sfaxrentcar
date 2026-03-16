@@ -13,14 +13,12 @@ app.use(cookieParser());
 // CORS configuration محسّنة للإنتاج
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://sfaxrentcar-frontend-x281.onrender.com' // ✅ الرابط الجديد للـ Frontend
+  'https://sfaxrentcar-frontend-x281.onrender.com'
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // السماح للطلبات بدون origin (مثل Postman)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.indexOf(origin) === -1) {
       console.warn('🚫 CORS blocked origin:', origin);
       const msg = 'سياسة CORS تمنع الوصول من هذا المصدر';
@@ -28,7 +26,7 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true, // هذا يسمح بإرسال الكوكيز
+  credentials: true,
   optionsSuccessStatus: 200
 }));
 
@@ -43,7 +41,6 @@ const userRoutes = require('./routes/userRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const carRoutes = require('./routes/carRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const contractRoutes = require('./routes/contractRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
@@ -56,7 +53,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/contracts', contractRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reviews', reviewRoutes);
