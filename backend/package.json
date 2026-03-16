@@ -1,14 +1,13 @@
 {
   "name": "sfaxrentcar-backend",
   "version": "1.0.0",
-  "description": "SfaxRentCar Backend",
+  "description": "SfaxRentCar Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "axios": "^1.13.6",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.0",
     "cookie-parser": "^1.4.7",
@@ -16,12 +15,11 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",
-    "mailtrap": "^4.5.0",
     "mongoose": "^7.8.9",
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^8.0.2",
-    "pdfkit": "^0.17.2"
+    "express-validator": "^7.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

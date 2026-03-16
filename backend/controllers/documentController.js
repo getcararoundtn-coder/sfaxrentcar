@@ -3,109 +3,6 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { uploadDocuments } = require('../config/cloudinary');
 
-// @desc رفع وثائق المستخدم (مع رفع الصور)
-// @route POST /api/documents/upload
-// @access Private
-exports.uploadDocuments = async (req, res) => {
-  uploadDocuments(req, res, async (err) => {
-    if (err) {
-      return res.status(400).json({ message: err.message });
-    }
-
-    try {
-      // التحقق من وجود الملفات
-      if (!req.files || !req.files.idFront || !req.files.idBack || !req.files.driverLicense) {
-        return res.status(400).json({ message: 'جميع الصور مطلوبة' });
-      }
-
-      const idFrontUrl = req.files.idFront[0].path;
-      const idBackUrl = req.files.idBack[0].path;
-      const driverLicenseUrl = req.files.driverLicense[0].path;
-
-      let document = await Document.findOne({ userId: req.user._id });
-      if (document) {
-        document.idFront = idFrontUrl;
-        document.idBack = idBackUrl;
-        document.driverLicense = driverLicenseUrl;
-        document.status = 'pending';
-      } else {
-        document = new Document({
-          userId: req.user._id,
-          idFront: idFrontUrl,
-          idBack: idBackUrl,
-          driverLicense: driverLicenseUrl,
-          status: 'pending'
-        });
-      }
-      await document.save();
-
-      await User.findByIdAndUpdate(req.user._id, { verificationStatus: 'pending' });
-
-      res.json({ success: true, message: 'تم رفع الوثائق بنجاح' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-};
-
-// @desc جلب وثائق المستخدم
-// @route GET /api/documents/my-docs
-// @access Private
-exports.getMyDocuments = async (req, res) => {
-  try {
-    const doc = await Document.findOne({ userId: req.user._id });
-    res.json({ success: true, data: doc });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc جلب جميع الوثائق المعلقة (للمشرف)
-// @route GET /api/documents/pending
-// @access Private/Admin
-exports.getPendingDocuments = async (req, res) => {
-  try {
-    const docs = await Document.find({ status: 'pending' }).populate('userId', 'name email phone');
-    res.json({ success: true, data: docs });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc الموافقة على وثائق المستخدم
-// @route PATCH /api/documents/:userId/approve
-// @access Private/Admin
-exports.approveDocument = async (req, res) => {
-  try {
-    const doc = await Document.findOneAndUpdate(
-      { userId: req.params.userId },
-      { status: 'approved' },
-      { new: true }
-    );
-    await User.findByIdAndUpdate(req.params.userId, { verificationStatus: 'approved' });
-    res.json({ success: true, message: 'تمت الموافقة' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc رفض وثائق المستخدم
-// @route PATCH /api/documents/:userId/reject
-// @access Private/Admin
-exports.rejectDocument = async (req, res) => {
-  try {
-    const doc = await Document.findOneAndUpdate(
-      { userId: req.params.userId },
-      { status: 'rejected' },
-      { new: true }
-    );
-    await User.findByIdAndUpdate(req.params.userId, { verificationStatus: 'rejected' });
-    res.json({ success: true, message: 'تم الرفض' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 // @desc    رفع وثائق المستخدم
 // @route   POST /api/documents/upload
 // @access  Private
@@ -165,6 +62,30 @@ exports.uploadDocuments = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   });
+};
+
+// @desc جلب وثائق المستخدم
+// @route GET /api/documents/my-docs
+// @access Private
+exports.getMyDocuments = async (req, res) => {
+  try {
+    const doc = await Document.findOne({ userId: req.user._id });
+    res.json({ success: true, data: doc });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc جلب جميع الوثائق المعلقة (للمشرف)
+// @route GET /api/documents/pending
+// @access Private/Admin
+exports.getPendingDocuments = async (req, res) => {
+  try {
+    const docs = await Document.find({ status: 'pending' }).populate('userId', 'name email phone');
+    res.json({ success: true, data: docs });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // @desc    الموافقة على وثائق المستخدم

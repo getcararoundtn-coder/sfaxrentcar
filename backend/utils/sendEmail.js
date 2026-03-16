@@ -1,34 +1,31 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-  // إعدادات Gmail SMTP
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // اختصار مدمج في Nodemailer [citation:6][citation:7]
+    service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER, // بريدك الإلكتروني (مثل: getcararoundtn@gmail.com)
-      pass: process.env.EMAIL_PASS  // كلمة مرور التطبيق (App Password) المكونة من 16 حرفاً [citation:3][citation:4]
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
     },
     tls: {
-      rejectUnauthorized: false // يساعد في تجاوز مشاكل الشهادات في بعض البيئات
+      rejectUnauthorized: false // يساعد في بيئات معينة
     }
   });
 
-  // خيارات البريد الإلكتروني
   const mailOptions = {
-    from: `"SfaxRentCar" <${process.env.EMAIL_USER}>`, // المستلم سيرى هذا الاسم والبريد
+    from: `"SfaxRentCar" <${process.env.EMAIL_USER}>`,
     to: options.email,
     subject: options.subject,
     html: options.html
   };
 
-  // إرسال البريد مع تسجيل الأخطاء للتصحيح
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Email sent via Gmail:', info.response);
     return info;
   } catch (error) {
-    console.error('❌ Gmail error details:', error);
-    throw error; // إعادة الخطأ لمعالجته في الـ authController
+    console.error('❌ Gmail error:', error);
+    throw error;
   }
 };
 
