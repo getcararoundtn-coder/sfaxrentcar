@@ -13,7 +13,7 @@ app.use(cookieParser());
 // CORS configuration محسّنة للإنتاج
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://sfaxrentcar-frontend-x281.onrender.com'
+  'https://drivetunisia.onrender.com' // ✅ الرابط الجديد
 ].filter(Boolean);
 
 app.use(cors({
