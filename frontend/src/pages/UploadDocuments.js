@@ -6,16 +6,8 @@ import { AuthContext } from '../context/AuthContext';
 const UploadDocuments = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
-  const [files, setFiles] = useState({
-    idFront: null,
-    idBack: null,
-    driverLicense: null
-  });
-  const [previews, setPreviews] = useState({
-    idFront: null,
-    idBack: null,
-    driverLicense: null
-  });
+  const [driverLicenseFile, setDriverLicenseFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -28,7 +20,7 @@ const UploadDocuments = () => {
     }
   }, [user, navigate]);
 
-  const handleFileChange = (e, field) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -44,26 +36,24 @@ const UploadDocuments = () => {
       return;
     }
 
-    setError(''); // مسح أي أخطاء سابقة
-    setFiles({ ...files, [field]: file });
+    setError('');
+    setDriverLicenseFile(file);
 
     // إنشاء معاينة للصور فقط
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviews({ ...previews, [field]: reader.result });
+        setPreview(reader.result);
       };
       reader.readAsDataURL(file);
     } else {
-      // إذا كان PDF، نعرض أيقونة
-      setPreviews({ ...previews, [field]: 'pdf' });
+      setPreview('pdf');
     }
   };
 
   const handleSubmit = async () => {
-    // التحقق من رفع جميع الملفات
-    if (!files.idFront || !files.idBack || !files.driverLicense) {
-      setError('الرجاء رفع جميع الصور المطلوبة');
+    if (!driverLicenseFile) {
+      setError('الرجاء رفع رخصة القيادة');
       return;
     }
 
@@ -73,38 +63,32 @@ const UploadDocuments = () => {
     setUploadProgress(0);
 
     const formData = new FormData();
-    formData.append('idFront', files.idFront);
-    formData.append('idBack', files.idBack);
-    formData.append('driverLicense', files.driverLicense);
+    formData.append('driverLicense', driverLicenseFile);
 
     try {
-      // استخدام fetch بدلاً من Axios لضمان إرسال الكوكيز
       const response = await fetch(`${process.env.REACT_APP_API_URL}/documents/upload`, {
         method: 'POST',
-        credentials: 'include', // ⚠️ مهم جداً: يرسل الكوكيز تلقائياً
+        credentials: 'include',
         body: formData
       });
 
-      // محاكاة تقدم الرفع (لأن fetch لا يدعم onUploadProgress)
       setUploadProgress(50);
       
       const data = await response.json();
       setUploadProgress(100);
 
       if (data.success) {
-        setSuccess('✅ تم رفع المستندات بنجاح! في انتظار مراجعة الإدارة.');
+        setSuccess('✅ تم رفع رخصة القيادة بنجاح! في انتظار مراجعة الإدارة.');
         
-        // تحديث حالة المستخدم في السياق
         if (user) {
           setUser({ ...user, verificationStatus: 'pending' });
         }
         
-        // التأخير قبل التوجيه
         setTimeout(() => {
           navigate('/profile');
         }, 3000);
       } else {
-        setError(data.message || 'فشل رفع المستندات');
+        setError(data.message || 'فشل رفع رخصة القيادة');
       }
     } catch (err) {
       console.error('Upload error:', err);
@@ -120,20 +104,13 @@ const UploadDocuments = () => {
     }
   };
 
-  const getFileIcon = (field) => {
-    if (previews[field] === 'pdf') {
-      return '📄 PDF';
-    }
-    return null;
-  };
-
   return (
     <>
       <Navbar />
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>رفع وثائق التحقق</h1>
-          <p style={styles.subtitle}>يرجى رفع الصور التالية (صيغ JPG, PNG, PDF - أقصى حجم 5 ميجابايت):</p>
+          <h1 style={styles.title}>توثيق الحساب</h1>
+          <p style={styles.subtitle}>يرجى رفع صورة رخصة القيادة (JPG, PNG, PDF - أقصى حجم 5 ميجابايت):</p>
           
           {error && <div style={styles.error}>{error}</div>}
           {success && <div style={styles.success}>{success}</div>}
@@ -147,99 +124,21 @@ const UploadDocuments = () => {
           )}
 
           <div style={styles.docField}>
-            <label style={styles.label}>بطاقة التعريف (الوجه الأمامي) *</label>
-            <input 
-              type="file" 
-              accept="image/*,application/pdf" 
-              onChange={(e) => handleFileChange(e, 'idFront')}
-              disabled={loading}
-              style={styles.fileInput}
-            />
-            {previews.idFront && previews.idFront !== 'pdf' && (
-              <div style={styles.previewContainer}>
-                <img src={previews.idFront} alt="idFront" style={styles.preview} />
-                <button 
-                  onClick={() => {
-                    setFiles({...files, idFront: null});
-                    setPreviews({...previews, idFront: null});
-                  }}
-                  style={styles.removeButton}
-                >
-                  ❌ إزالة
-                </button>
-              </div>
-            )}
-            {getFileIcon('idFront') && (
-              <div style={styles.pdfPreview}>
-                <span>📄 ملف PDF تم اختياره</span>
-                <button 
-                  onClick={() => {
-                    setFiles({...files, idFront: null});
-                    setPreviews({...previews, idFront: null});
-                  }}
-                  style={styles.removeButton}
-                >
-                  ❌ إزالة
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div style={styles.docField}>
-            <label style={styles.label}>بطاقة التعريف (الوجه الخلفي) *</label>
-            <input 
-              type="file" 
-              accept="image/*,application/pdf" 
-              onChange={(e) => handleFileChange(e, 'idBack')}
-              disabled={loading}
-              style={styles.fileInput}
-            />
-            {previews.idBack && previews.idBack !== 'pdf' && (
-              <div style={styles.previewContainer}>
-                <img src={previews.idBack} alt="idBack" style={styles.preview} />
-                <button 
-                  onClick={() => {
-                    setFiles({...files, idBack: null});
-                    setPreviews({...previews, idBack: null});
-                  }}
-                  style={styles.removeButton}
-                >
-                  ❌ إزالة
-                </button>
-              </div>
-            )}
-            {getFileIcon('idBack') && (
-              <div style={styles.pdfPreview}>
-                <span>📄 ملف PDF تم اختياره</span>
-                <button 
-                  onClick={() => {
-                    setFiles({...files, idBack: null});
-                    setPreviews({...previews, idBack: null});
-                  }}
-                  style={styles.removeButton}
-                >
-                  ❌ إزالة
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div style={styles.docField}>
             <label style={styles.label}>رخصة القيادة *</label>
             <input 
               type="file" 
               accept="image/*,application/pdf" 
-              onChange={(e) => handleFileChange(e, 'driverLicense')}
+              onChange={handleFileChange}
               disabled={loading}
               style={styles.fileInput}
             />
-            {previews.driverLicense && previews.driverLicense !== 'pdf' && (
+            {preview && preview !== 'pdf' && (
               <div style={styles.previewContainer}>
-                <img src={previews.driverLicense} alt="driverLicense" style={styles.preview} />
+                <img src={preview} alt="driverLicense" style={styles.preview} />
                 <button 
                   onClick={() => {
-                    setFiles({...files, driverLicense: null});
-                    setPreviews({...previews, driverLicense: null});
+                    setDriverLicenseFile(null);
+                    setPreview(null);
                   }}
                   style={styles.removeButton}
                 >
@@ -247,13 +146,13 @@ const UploadDocuments = () => {
                 </button>
               </div>
             )}
-            {getFileIcon('driverLicense') && (
+            {preview === 'pdf' && (
               <div style={styles.pdfPreview}>
                 <span>📄 ملف PDF تم اختياره</span>
                 <button 
                   onClick={() => {
-                    setFiles({...files, driverLicense: null});
-                    setPreviews({...previews, driverLicense: null});
+                    setDriverLicenseFile(null);
+                    setPreview(null);
                   }}
                   style={styles.removeButton}
                 >
@@ -266,20 +165,20 @@ const UploadDocuments = () => {
           <div style={styles.infoBox}>
             <h4 style={styles.infoTitle}>📌 ملاحظات مهمة:</h4>
             <ul style={styles.infoList}>
-              <li>يجب أن تكون جميع المستندات سارية المفعول.</li>
-              <li>تأكد من وضوح الصور وعدم وجود انعكاسات.</li>
-              <li>الوثائق المرفوعة تخضع للمراجعة من قبل الإدارة.</li>
+              <li>يجب أن تكون رخصة القيادة سارية المفعول.</li>
+              <li>تأكد من وضوح الصورة وعدم وجود انعكاسات.</li>
+              <li>الوثيقة المرفوعة تخضع للمراجعة من قبل الإدارة.</li>
               <li>سيتم إشعارك عند اكتمال المراجعة.</li>
             </ul>
           </div>
 
           <button 
             onClick={handleSubmit} 
-            disabled={loading || !files.idFront || !files.idBack || !files.driverLicense}
+            disabled={loading || !driverLicenseFile}
             style={{
               ...styles.button,
-              backgroundColor: (loading || !files.idFront || !files.idBack || !files.driverLicense) ? '#6c757d' : '#28a745',
-              cursor: (loading || !files.idFront || !files.idBack || !files.driverLicense) ? 'not-allowed' : 'pointer'
+              backgroundColor: (loading || !driverLicenseFile) ? '#6c757d' : '#28a745',
+              cursor: (loading || !driverLicenseFile) ? 'not-allowed' : 'pointer'
             }}
           >
             {loading ? 'جاري الرفع...' : 'إرسال للمراجعة'}
