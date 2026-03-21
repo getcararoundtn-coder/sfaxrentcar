@@ -16,8 +16,14 @@ const AddCar = () => {
     pricePerDay: '',
     deposit: '',
     location: '',
+    city: '',
+    delegation: '',
     fuelType: 'petrol',
-    seats: ''
+    transmission: 'manual',
+    seats: '',
+    doors: '',
+    mileage: '',
+    features: ''
   });
   const [imageFiles, setImageFiles] = useState([]);
   const [insuranceFrontFile, setInsuranceFrontFile] = useState(null);
@@ -84,7 +90,6 @@ const AddCar = () => {
     }
   };
 
-  // الأنماط (styles) كما هي دون تغيير
   const styles = {
     container: {
       minHeight: 'calc(100vh - 60px)',
@@ -190,7 +195,6 @@ const AddCar = () => {
         <div style={styles.card}>
           <h1 style={styles.title}>إضافة سيارة جديدة</h1>
           
-          {/* قسم مهم للمالكين الأفراد */}
           {user?.role !== 'company' && (
             <div style={styles.contractSection}>
               <h3 style={styles.contractTitle}>📄 عقد الكراء - مهم للمالكين الأفراد</h3>
@@ -251,6 +255,14 @@ const AddCar = () => {
               <input type="text" name="location" value={formData.location} onChange={handleChange} required style={styles.input} />
             </div>
             <div style={styles.formGroup}>
+              <label>الولاية *</label>
+              <input type="text" name="city" value={formData.city} onChange={handleChange} required style={styles.input} />
+            </div>
+            <div style={styles.formGroup}>
+              <label>المعتمدية *</label>
+              <input type="text" name="delegation" value={formData.delegation} onChange={handleChange} required style={styles.input} />
+            </div>
+            <div style={styles.formGroup}>
               <label>نوع الوقود *</label>
               <select name="fuelType" value={formData.fuelType} onChange={handleChange} style={styles.input}>
                 <option value="petrol">بنزين</option>
@@ -260,8 +272,27 @@ const AddCar = () => {
               </select>
             </div>
             <div style={styles.formGroup}>
+              <label>ناقل الحركة *</label>
+              <select name="transmission" value={formData.transmission} onChange={handleChange} style={styles.input}>
+                <option value="manual">يدوي</option>
+                <option value="automatic">أوتوماتيك</option>
+              </select>
+            </div>
+            <div style={styles.formGroup}>
               <label>عدد المقاعد *</label>
               <input type="number" name="seats" value={formData.seats} onChange={handleChange} required style={styles.input} />
+            </div>
+            <div style={styles.formGroup}>
+              <label>عدد الأبواب *</label>
+              <input type="number" name="doors" value={formData.doors} onChange={handleChange} required min="2" max="6" style={styles.input} />
+            </div>
+            <div style={styles.formGroup}>
+              <label>الكيلومترات *</label>
+              <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} required style={styles.input} />
+            </div>
+            <div style={styles.formGroup}>
+              <label>المعدات (مفصولة بفواصل)</label>
+              <input type="text" name="features" placeholder="مثال: GPS, Bluetooth, Climatisation" value={formData.features} onChange={handleChange} style={styles.input} />
             </div>
             
             <div style={styles.formGroup}>
