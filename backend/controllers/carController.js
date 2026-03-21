@@ -15,9 +15,10 @@ exports.addCar = async (req, res) => {
     }
 
     try {
-      const { brand, model, year, licensePlate, pricePerDay, deposit, location, fuelType, seats } = req.body;
+      const { brand, model, year, licensePlate, pricePerDay, deposit, location, city, delegation, fuelType, transmission, seats, doors, mileage, features } = req.body;
       
-      if (!brand || !model || !year || !licensePlate || !pricePerDay || !deposit || !location || !fuelType || !seats) {
+      // التحقق من الحقول المطلوبة
+      if (!brand || !model || !year || !licensePlate || !pricePerDay || !deposit || !location || !city || !delegation || !fuelType || !transmission || !seats || !doors || !mileage) {
         return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
       }
 
@@ -32,6 +33,12 @@ exports.addCar = async (req, res) => {
         console.log('إضافة سيارة من قبل فرد');
       }
 
+      // معالجة الميزات (features) إذا كانت موجودة
+      let featuresArray = [];
+      if (features) {
+        featuresArray = typeof features === 'string' ? features.split(',').map(f => f.trim()) : features;
+      }
+
       const car = await Car.create({
         ownerId: req.user._id,
         brand,
@@ -44,8 +51,14 @@ exports.addCar = async (req, res) => {
         pricePerDay,
         deposit,
         location,
+        city,
+        delegation,
         fuelType,
+        transmission,
         seats,
+        doors,
+        mileage,
+        features: featuresArray,
         images,
         status: 'pending',
         isAvailable: true
@@ -74,6 +87,7 @@ exports.addCar = async (req, res) => {
     }
   });
 };
+
 // @desc    جلب جميع السيارات المتاحة (مع تصفية حسب التاريخ)
 // @route   GET /api/cars
 // @access  Public
@@ -83,7 +97,7 @@ exports.getCars = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, city, delegation, minPrice, maxPrice, transmission, fuelType, seats } = req.query;
 
     let query = {
       status: 'approved',
@@ -92,6 +106,38 @@ exports.getCars = async (req, res) => {
         { isAvailable: { $exists: false } }
       ]
     };
+
+    // فلترة حسب المدينة
+    if (city) {
+      query.city = city;
+    }
+
+    // فلترة حسب المعتمدية
+    if (delegation) {
+      query.delegation = delegation;
+    }
+
+    // فلترة حسب السعر
+    if (minPrice || maxPrice) {
+      query.pricePerDay = {};
+      if (minPrice) query.pricePerDay.$gte = parseInt(minPrice);
+      if (maxPrice) query.pricePerDay.$lte = parseInt(maxPrice);
+    }
+
+    // فلترة حسب ناقل الحركة
+    if (transmission) {
+      query.transmission = transmission;
+    }
+
+    // فلترة حسب نوع الوقود
+    if (fuelType) {
+      query.fuelType = fuelType;
+    }
+
+    // فلترة حسب عدد المقاعد
+    if (seats) {
+      query.seats = { $gte: parseInt(seats) };
+    }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -130,6 +176,7 @@ exports.getCars = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    جلب السيارات المميزة (Featured)
 // @route   GET /api/cars/featured
 // @access  Public
@@ -163,6 +210,7 @@ exports.getCarStats = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // @desc    جلب سيارة واحدة
 // @route   GET /api/cars/:id
 // @access  Public
@@ -206,6 +254,7 @@ exports.getAllCars = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    الموافقة على سيارة
 // @route   PATCH /api/cars/:id/approve
 // @access  Private/Admin
@@ -237,6 +286,7 @@ exports.rejectCar = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // ========== دوال المالك ==========
 
 // @desc    جلب سيارات المستخدم الحالي (المؤجر)
@@ -261,6 +311,7 @@ exports.getMyCars = async (req, res) => {
     });
   }
 };
+
 // @desc    تحديث بيانات السيارة (للمالك فقط)
 // @route   PUT /api/cars/:id
 // @access  Private
@@ -311,6 +362,7 @@ exports.deleteCar = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    تحديث حالة توفر السيارة (متاحة/غير متاحة)
 // @route   PATCH /api/cars/:id/toggle-availability
 // @access  Private (المالك فقط)
@@ -376,6 +428,7 @@ exports.getMyCarBookings = async (req, res) => {
     });
   }
 };
+
 // @desc    إلغاء حجز من قبل المؤجر
 // @route   PATCH /api/cars/cancel-booking/:bookingId
 // @access  Private (المالك فقط)
