@@ -19,10 +19,12 @@ const carSchema = new mongoose.Schema({
   seats: { type: Number, required: true },
   doors: { type: Number, required: true, min: 2, max: 6 },
   mileage: { type: Number, required: true },
-  features: [{ type: String }], // مثال: ['GPS', 'Bluetooth', 'Air Conditioning']
+  features: [{ type: String }],
   images: [{ type: String }],
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   isAvailable: { type: Boolean, default: true },
+  isFeatured: { type: Boolean, default: false },
+  featuredExpiresAt: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 
