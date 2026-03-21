@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, useCallback } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { AuthContext } from '../context/AuthContext';
@@ -18,7 +18,6 @@ const Booking = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [totalPrice, setTotalPrice] = useState(0);
-  const [existingBooking, setExistingBooking] = useState(null);
 
   useEffect(() => {
     if (!user) {
@@ -44,27 +43,7 @@ const Booking = () => {
     fetchCar();
   }, [carId, user, navigate]);
 
-  const checkAvailability = useCallback(async (start, end) => {
-    try {
-      // التحقق من وجود حجوزات في هذه الفترة
-      const { data } = await API.get(`/bookings/check-availability/${carId}`, {
-        params: {
-          startDate: start.toISOString(),
-          endDate: end.toISOString()
-        }
-      });
-      
-      if (data.data.isBooked) {
-        setExistingBooking(data.data.booking);
-        showWarning('⚠️ هذه السيارة محجوزة في الفترة المحددة');
-      } else {
-        setExistingBooking(null);
-      }
-    } catch (err) {
-      console.error('Error checking availability:', err);
-    }
-  }, [carId]);
-
+  // حساب السعر عند تغيير التواريخ
   useEffect(() => {
     if (startDate && endDate && car) {
       const start = new Date(startDate);
@@ -74,16 +53,13 @@ const Booking = () => {
       if (days > 0) {
         const pricePerDay = car.pricePerDay;
         const subtotal = pricePerDay * days;
-        const commission = subtotal * 0.1;
+        const commission = subtotal * 0.1; // 10% commission
         setTotalPrice(subtotal + commission);
-        
-        // التحقق من توفر السيارة في هذه الفترة
-        checkAvailability(start, end);
       } else {
         setTotalPrice(0);
       }
     }
-  }, [startDate, endDate, car, checkAvailability]);
+  }, [startDate, endDate, car]);
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -110,7 +86,8 @@ const Booking = () => {
       const response = await API.post('/bookings', {
         carId,
         startDate,
-        endDate
+        endDate,
+        totalPrice
       });
 
       console.log('✅ Booking response:', response.data);
@@ -212,18 +189,10 @@ const Booking = () => {
                 <h2>فشل إنشاء الحجز</h2>
                 <div className="error-details">
                   <p>{bookingError}</p>
-                  {bookingError.includes('محجوزة') && existingBooking && (
-                    <div className="booked-details">
-                      <h4>تفاصيل الحجز الموجود:</h4>
-                      <p>من: {new Date(existingBooking.startDate).toLocaleDateString('ar-TN')}</p>
-                      <p>إلى: {new Date(existingBooking.endDate).toLocaleDateString('ar-TN')}</p>
-                    </div>
-                  )}
                 </div>
                 <button 
                   onClick={() => {
                     setBookingError('');
-                    setExistingBooking(null);
                   }} 
                   className="try-again-button"
                 >
@@ -231,7 +200,7 @@ const Booking = () => {
                 </button>
               </div>
             ) : (
-              // نموذج الحجز العادي - كل العناصر في الوسط
+              // نموذج الحجز العادي
               <div className="booking-form-wrapper">
                 {/* صورة السيارة في الوسط */}
                 <div className="car-image-center">
@@ -271,17 +240,6 @@ const Booking = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* تحذير إذا كانت السيارة محجوزة */}
-                {existingBooking && (
-                  <div className="warning-message">
-                    <span className="warning-icon">⚠️</span>
-                    <div className="warning-text">
-                      <p>هذه السيارة محجوزة في الفترة المحددة</p>
-                      <small>من {new Date(existingBooking.startDate).toLocaleDateString('ar-TN')} إلى {new Date(existingBooking.endDate).toLocaleDateString('ar-TN')}</small>
-                    </div>
-                  </div>
-                )}
 
                 {/* نموذج الحجز في الوسط */}
                 <form onSubmit={handleBooking} className="booking-form-center">
@@ -337,7 +295,7 @@ const Booking = () => {
 
                   <button 
                     type="submit" 
-                    disabled={bookingLoading || !startDate || !endDate || existingBooking}
+                    disabled={bookingLoading || !startDate || !endDate}
                     className="book-button-center"
                   >
                     {bookingLoading ? 'جاري الحجز...' : 'تأكيد الحجز'}
