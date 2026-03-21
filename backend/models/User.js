@@ -6,9 +6,21 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String, required: true },
-  role: { type: String, enum: ['user', 'company', 'admin'], default: 'user' },
-  status: { type: String, enum: ['active', 'suspended'], default: 'active' },
-  verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  role: { 
+    type: String, 
+    enum: ['user', 'company', 'admin'], 
+    default: 'user' 
+  },
+  status: { 
+    type: String, 
+    enum: ['active', 'suspended'], 
+    default: 'active' 
+  },
+  verificationStatus: { 
+    type: String, 
+    enum: ['not_submitted', 'pending', 'approved', 'rejected'], 
+    default: 'not_submitted' 
+  },
   resetPasswordToken: { type: String },
   resetPasswordExpire: { type: Date },
   createdAt: { type: Date, default: Date.now }
