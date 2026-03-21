@@ -11,6 +11,11 @@ const bookingSchema = new mongoose.Schema({
     ref: 'User', 
     required: true 
   },
+  ownerId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
+  },
   startDate: { 
     type: Date, 
     required: true 
@@ -26,10 +31,19 @@ const bookingSchema = new mongoose.Schema({
     type: Number, 
     required: true 
   },
+  platformCommission: { 
+    type: Number, 
+    default: 0 
+  },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'completed', 'cancelled'],
+    enum: ['pending', 'accepted', 'refused', 'cancelled', 'completed'],
     default: 'pending'
+  },
+  paymentStatus: { 
+    type: String, 
+    enum: ['unpaid', 'paid'], 
+    default: 'unpaid' 
   },
   contractPdf: { 
     type: String 
@@ -64,5 +78,6 @@ bookingSchema.pre('save', function(next) {
 bookingSchema.index({ carId: 1, status: 1 });
 bookingSchema.index({ renterId: 1, createdAt: -1 });
 bookingSchema.index({ status: 1 });
+bookingSchema.index({ ownerId: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);
