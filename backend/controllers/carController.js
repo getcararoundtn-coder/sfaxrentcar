@@ -61,7 +61,8 @@ exports.addCar = async (req, res) => {
         features: featuresArray,
         images,
         status: 'pending',
-        isAvailable: true
+        isAvailable: true,
+        isFeatured: false
       });
 
       // إشعار للمشرفين بسيارة جديدة
@@ -151,11 +152,14 @@ exports.getCars = async (req, res) => {
       query._id = { $nin: bookedCars };
     }
 
+    // 🔥 ترتيب السيارات: المميزة أولاً، ثم الأحدث
+    const sort = { isFeatured: -1, createdAt: -1 };
+
     const cars = await Car.find(query)
       .populate('ownerId', 'name email role')
+      .sort(sort)
       .skip(skip)
-      .limit(limit)
-      .sort('-createdAt');
+      .limit(limit);
 
     const total = await Car.countDocuments(query);
 
@@ -182,7 +186,7 @@ exports.getCars = async (req, res) => {
 // @access  Public
 exports.getFeaturedCars = async (req, res) => {
   try {
-    const cars = await Car.find({ status: 'approved' })
+    const cars = await Car.find({ status: 'approved', isFeatured: true })
       .sort({ createdAt: -1 })
       .limit(6)
       .populate('ownerId', 'name');
@@ -283,6 +287,43 @@ exports.rejectCar = async (req, res) => {
     res.json({ success: true, data: car });
   } catch (error) {
     console.error('❌ Error in rejectCar:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    تفعيل/إلغاء تفعيل السيارة المميزة (للمشرف)
+// @route   PATCH /api/cars/:id/featured
+// @access  Private/Admin
+exports.toggleFeatured = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isFeatured, durationDays } = req.body;
+
+    const car = await Car.findById(id);
+    if (!car) {
+      return res.status(404).json({ message: 'السيارة غير موجودة' });
+    }
+
+    car.isFeatured = isFeatured !== undefined ? isFeatured : !car.isFeatured;
+    
+    // إذا تم تفعيل المميزة، قم بتعيين تاريخ الانتهاء
+    if (car.isFeatured && durationDays) {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + durationDays);
+      car.featuredExpiresAt = expiresAt;
+    } else if (!car.isFeatured) {
+      car.featuredExpiresAt = null;
+    }
+
+    await car.save();
+
+    res.json({
+      success: true,
+      data: car,
+      message: car.isFeatured ? 'السيارة مميزة الآن' : 'تم إلغاء تمييز السيارة'
+    });
+  } catch (error) {
+    console.error('❌ Error in toggleFeatured:', error);
     res.status(500).json({ message: error.message });
   }
 };
