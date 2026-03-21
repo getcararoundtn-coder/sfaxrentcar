@@ -44,7 +44,7 @@ const userRoutes = require('./routes/userRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const carRoutes = require('./routes/carRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const contractRoutes = require('./routes/contractRoutes');
+// const contractRoutes = require('./routes/contractRoutes'); // مؤقتاً
 const messageRoutes = require('./routes/messageRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
@@ -57,7 +57,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/contracts', contractRoutes);
+// app.use('/api/contracts', contractRoutes); // مؤقتاً
 app.use('/api/messages', messageRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reviews', reviewRoutes);
