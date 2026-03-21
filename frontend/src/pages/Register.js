@@ -13,6 +13,7 @@ const Register = () => {
     password: '',
     phone: ''
   });
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,6 +26,14 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // التحقق من الموافقة على الشروط
+    if (!agreedToTerms) {
+      setError('❌ يجب الموافقة على الشروط والأحكام');
+      showError('يجب الموافقة على الشروط والأحكام');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await API.post('/auth/register', formData);
@@ -112,6 +121,24 @@ const Register = () => {
               <small style={{ color: '#666', marginTop: '5px' }}>
                 يجب أن تكون كلمة المرور 6 أحرف على الأقل
               </small>
+            </div>
+
+            {/* ✅ إضافة شروط الاستخدام */}
+            <div className="terms-group">
+              <label className="terms-label">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  required
+                />
+                <span>
+                  أوافق على{' '}
+                  <Link to="/terms" target="_blank">الشروط والأحكام</Link>{' '}
+                  و{' '}
+                  <Link to="/privacy" target="_blank">سياسة الخصوصية</Link>
+                </span>
+              </label>
             </div>
 
             <button 
