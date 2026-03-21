@@ -2,7 +2,7 @@ const Booking = require('../models/Booking');
 const Car = require('../models/Car');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
-const Settings = require('../models/Settings'); // 🔥 إضافة نموذج الإعدادات
+const Setting = require('../models/Setting'); // 🔥 التعديل الصحيح (بدون s)
 
 // @desc    إنشاء حجز جديد
 // @route   POST /api/bookings
@@ -31,7 +31,7 @@ exports.createBooking = async (req, res) => {
     }
 
     // 🔥 جلب إعدادات العمولة
-    const settings = await Settings.findOne();
+    const settings = await Setting.findOne();
     const commissionRate = settings?.commissionRate || 0;
     const platformCommission = (totalPrice * commissionRate) / 100;
 
