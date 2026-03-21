@@ -1,18 +1,38 @@
 const express = require('express');
 const router = express.Router();
-const bookingController = require('../controllers/bookingController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const {
+  createBooking,
+  getMyBookings,
+  getOwnerBookings,
+  updateBookingStatus,
+  cancelBooking,
+  completeBooking,
+  getBookingById
+} = require('../controllers/bookingController');
+const { protect } = require('../middleware/authMiddleware');
 
-// مسارات المستخدمين العاديين
-router.post('/', protect, bookingController.createBooking);
-router.get('/my-bookings', protect, bookingController.getMyBookings);
+// جميع المسارات محمية (تتطلب تسجيل دخول)
+router.use(protect);
 
-// مسارات المشرف
-router.get('/pending', protect, admin, bookingController.getPendingBookings);
-router.get('/', protect, admin, bookingController.getAllBookings);
-router.patch('/:id/status', protect, admin, bookingController.updateBookingStatus);
+// إنشاء حجز جديد
+router.post('/', createBooking);
 
-// مسار عام للمستخدم أو المشرف (لابد أن يكون في النهاية)
-router.get('/:id', protect, bookingController.getBookingById);
+// جلب حجوزات المستخدم (كمستأجر)
+router.get('/my-bookings', getMyBookings);
+
+// جلب حجوزات سيارات المستخدم (كمالك)
+router.get('/owner-bookings', getOwnerBookings);
+
+// تحديث حالة الحجز (قبول/رفض)
+router.patch('/:id/status', updateBookingStatus);
+
+// إلغاء الحجز (بواسطة المستأجر)
+router.patch('/:id/cancel', cancelBooking);
+
+// إكمال الحجز (بواسطة المالك)
+router.patch('/:id/complete', completeBooking);
+
+// جلب تفاصيل حجز واحد
+router.get('/:id', getBookingById);
 
 module.exports = router;
