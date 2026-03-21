@@ -54,9 +54,20 @@ const AddCar = () => {
     e.preventDefault();
     setLoading(true);
 
+    // التأكد من أن جميع الحقول الإجبارية لها قيم
+    const finalData = {
+      ...formData,
+      city: formData.city || 'Sfax',
+      delegation: formData.delegation || 'Sfax Ville',
+      doors: formData.doors || 4,
+      mileage: formData.mileage || 0
+    };
+
     const data = new FormData();
-    Object.keys(formData).forEach(key => {
-      data.append(key, formData[key]);
+    Object.keys(finalData).forEach(key => {
+      if (finalData[key] !== undefined && finalData[key] !== '') {
+        data.append(key, finalData[key]);
+      }
     });
     
     imageFiles.forEach(file => {
@@ -82,6 +93,10 @@ const AddCar = () => {
       if (err.response?.status === 401) {
         alert('❌ انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى');
         navigate('/login');
+      } else if (err.response?.status === 400) {
+        // عرض تفاصيل الخطأ من Backend
+        const errorMessage = err.response?.data?.message || 'الرجاء تعبئة جميع الحقول المطلوبة';
+        alert(`❌ فشل إضافة السيارة: ${errorMessage}`);
       } else {
         alert(err.response?.data?.message || 'فشل إضافة السيارة');
       }
