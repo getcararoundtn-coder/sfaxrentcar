@@ -1,95 +1,84 @@
-/* CarDetails.css - تصميم محسن لصفحة تفاصيل السيارة */
-
-.car-details-page {
-  min-height: calc(100vh - 60px);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px 20px;
-}
+/* CarDetails.css - صفحة تفاصيل السيارة */
 
 .car-details-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  background-color: white;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.car-details-title {
-  text-align: center;
-  color: #333;
-  font-size: 36px;
-  margin-bottom: 30px;
-  font-weight: 600;
+/* الشبكة الرئيسية */
+.car-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 60px;
 }
 
-/* ===== معرض الصور ===== */
-.car-gallery {
-  margin-bottom: 40px;
-}
-
-.main-image-container {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto 20px;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  background-color: #f8f9fa;
+/* ========== قسم الصور ========== */
+.car-images-section {
+  position: sticky;
+  top: 80px;
 }
 
 .main-image {
   width: 100%;
   height: 400px;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.3s;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f5f5f5;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.main-image:hover {
+.main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.main-image img:hover {
   transform: scale(1.02);
 }
 
-.no-image {
-  width: 100%;
-  height: 400px;
-  background-color: #f0f0f0;
+.thumbnail-list {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-  font-size: 18px;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
 
-.image-thumbnails {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-  max-width: 600px;
-  margin: 0 auto;
+.thumbnail-list::-webkit-scrollbar {
+  height: 6px;
+}
+
+.thumbnail-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.thumbnail-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
 }
 
 .thumbnail {
   width: 80px;
-  height: 60px;
-  border-radius: 8px;
+  height: 80px;
+  border: 2px solid transparent;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.3s;
-  opacity: 0.7;
-}
-
-.thumbnail:hover {
-  opacity: 1;
-  transform: translateY(-2px);
+  background: none;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .thumbnail.active {
-  border-color: #007bff;
-  opacity: 1;
-  box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+  border-color: #6c5ce7;
+  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
 }
 
 .thumbnail img {
@@ -98,412 +87,557 @@
   object-fit: cover;
 }
 
-/* ===== معلومات السيارة في الوسط ===== */
-.car-info-center {
-  max-width: 800px;
-  margin: 0 auto 40px;
+/* ========== معلومات السيارة ========== */
+.car-info-section {
+  background: white;
+  border-radius: 16px;
+  padding: 0 20px;
 }
 
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.info-card {
-  text-align: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-radius: 12px;
-  transition: all 0.3s;
-}
-
-.info-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-.info-icon {
-  display: block;
+.car-title {
   font-size: 32px;
-  margin-bottom: 10px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #1a1a2e;
 }
 
-.info-label {
-  display: block;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-.info-value {
-  display: block;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.additional-info {
-  text-align: center;
-  margin-bottom: 30px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.additional-info p {
-  margin: 5px 0;
-  color: #555;
-}
-
-.owner-type {
-  color: #28a745 !important;
-  font-weight: 500;
-}
-
-/* ===== قسم العقد ===== */
-.contract-section {
-  text-align: center;
-  padding: 25px;
-  background: linear-gradient(135deg, #e7f3ff, #d1e7ff);
-  border-radius: 12px;
-  margin-bottom: 30px;
-}
-
-.contract-section h3 {
-  color: #004085;
-  margin-bottom: 10px;
-  font-size: 20px;
-}
-
-.contract-section p {
-  color: #004085;
-  margin-bottom: 15px;
-}
-
-.contract-button {
-  display: inline-block;
-  padding: 12px 30px;
-  background: linear-gradient(135deg, #28a745, #20c997);
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s;
-  box-shadow: 0 4px 6px rgba(40,167,69,0.2);
-}
-
-.contract-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(40,167,69,0.3);
-}
-
-/* ===== أزرار الإجراءات ===== */
-.action-buttons {
-  text-align: center;
-  margin-top: 30px;
-}
-
-.action-button {
-  display: inline-block;
-  padding: 15px 40px;
-  border-radius: 10px;
-  font-size: 18px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.3s;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.login-button {
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
-}
-
-.login-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(0,123,255,0.3);
-}
-
-.book-button {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  color: white;
-}
-
-.book-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(40,167,69,0.3);
-}
-
-.verify-button {
-  background: linear-gradient(135deg, #ffc107, #e0a800);
-  color: #333;
-}
-
-.verify-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(255,193,7,0.3);
-}
-
-.owner-message {
-  display: inline-block;
-  padding: 15px 40px;
-  background-color: #e2e3e5;
-  color: #383d41;
-  border-radius: 10px;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.verification-warning {
-  background-color: #fff3cd;
-  border: 1px solid #ffeeba;
-  border-radius: 10px;
-  padding: 20px;
-  color: #856404;
-}
-
-.verification-warning p {
-  margin-bottom: 15px;
-  font-size: 16px;
-}
-
-/* ===== قسم التقييمات ===== */
-.reviews-section {
-  margin-top: 50px;
-  padding-top: 30px;
-  border-top: 2px solid #eee;
-}
-
-.reviews-section h3 {
-  text-align: center;
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-.reviews-summary {
-  background-color: #f8f9fa;
-  padding: 30px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-}
-
-.average-rating {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.average-number {
-  font-size: 48px;
-  font-weight: bold;
-  color: #333;
-}
-
-.average-stars {
-  display: flex;
-  gap: 5px;
-}
-
-.star-filled {
-  color: #ffc107;
-  font-size: 24px;
-}
-
-.star-empty {
-  color: #ddd;
-  font-size: 24px;
-}
-
-.rating-distribution {
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.distribution-row {
+/* التقييم */
+.car-rating {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.rating-label {
-  width: 40px;
+.stars {
+  display: flex;
+  gap: 4px;
+}
+
+.star {
+  color: #e0e0e0;
+  font-size: 18px;
+}
+
+.star.filled {
+  color: #ffc107;
+}
+
+.rating-value {
+  font-weight: 600;
+  color: #333;
+  font-size: 15px;
+}
+
+.review-count {
+  color: #777;
   font-size: 14px;
-  color: #666;
 }
 
-.progress-bar {
+/* الموقع */
+.car-location {
+  color: #666;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.car-location .icon {
+  font-size: 18px;
+}
+
+/* سعر السيارة */
+.car-price-box {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.price {
+  font-size: 36px;
+  font-weight: 800;
+  color: #6c5ce7;
+}
+
+.per-day {
+  font-size: 16px;
+  color: #777;
+  margin-left: 4px;
+}
+
+/* المواصفات */
+.car-specs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  padding: 24px 0;
+}
+
+.spec-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spec-icon {
+  font-size: 22px;
+  width: 32px;
+}
+
+.spec-label {
+  color: #888;
+  font-size: 13px;
   flex: 1;
-  height: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
 }
 
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ffc107, #ffdb7e);
-  transition: width 0.3s;
-}
-
-.rating-count {
-  width: 40px;
-  text-align: right;
+.spec-value {
+  font-weight: 600;
+  color: #333;
   font-size: 14px;
+}
+
+/* المعدات */
+.car-features {
+  margin-bottom: 28px;
+}
+
+.car-features h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.features-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.feature-badge {
+  background: #f0f0f5;
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-size: 13px;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.feature-badge:hover {
+  background: #6c5ce7;
+  color: white;
+}
+
+/* المالك */
+.car-owner {
+  margin-bottom: 28px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+}
+
+.car-owner h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.owner-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.owner-avatar {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #8b74ff 100%);
+  color: white;
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+}
+
+.owner-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.owner-name {
+  font-weight: 700;
+  color: #333;
+  font-size: 16px;
+}
+
+.owner-rating {
+  font-size: 13px;
+  color: #777;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ========== قسم الحجز ========== */
+.booking-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  border: 1px solid #f0f0f0;
+}
+
+.booking-section h3 {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.date-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.date-field label {
+  font-size: 13px;
+  font-weight: 500;
   color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-field input {
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 15px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.date-field input:focus {
+  outline: none;
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+/* تفاصيل السعر */
+.price-breakdown {
+  background: #f8f9fc;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.breakdown-item.total {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 18px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* زر الحجز */
+.book-button {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 12px;
+}
+
+.book-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+}
+
+.book-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.booking-note {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+/* ========== قسم التقييمات ========== */
+.reviews-section {
+  margin-top: 60px;
+  padding-top: 40px;
+  border-top: 1px solid #eee;
+}
+
+.reviews-section h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 30px;
+  color: #1a1a2e;
+  position: relative;
+  display: inline-block;
+}
+
+.reviews-section h2:after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #6c5ce7, #8b74ff);
+  border-radius: 3px;
 }
 
 .reviews-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
 .review-card {
-  background-color: #f8f9fa;
+  background: #ffffff;
+  border-radius: 16px;
   padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  transition: transform 0.3s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+  transition: all 0.2s;
 }
 
 .review-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .review-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.reviewer-name {
-  color: #333;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.review-rating {
+.reviewer-info {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: 12px;
 }
 
-.review-comment {
-  margin: 10px 0;
-  color: #555;
-  line-height: 1.6;
+.reviewer-avatar {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #8b74ff 100%);
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.review-stars {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
 }
 
 .review-date {
-  color: #999;
   font-size: 12px;
+  color: #aaa;
+}
+
+.review-comment {
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 14px;
 }
 
 .no-reviews {
   text-align: center;
-  color: #666;
-  padding: 30px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  color: #888;
+  padding: 60px 20px;
+  background: #fafafc;
+  border-radius: 16px;
+  font-size: 15px;
 }
 
-.loading-reviews {
-  text-align: center;
-  color: #666;
-  padding: 20px;
+/* ========== حالات التحميل والأخطاء ========== */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
 }
 
-.loading {
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #6c5ce7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container {
   text-align: center;
-  padding: 50px;
+  padding: 80px 20px;
+  min-height: 60vh;
+}
+
+.error-container p {
   font-size: 18px;
-  color: white;
+  color: #666;
+  margin-bottom: 20px;
 }
 
-/* ===== التصميم المتجاوب ===== */
+.back-button {
+  display: inline-block;
+  padding: 12px 30px;
+  background: #6c5ce7;
+  color: white;
+  text-decoration: none;
+  border-radius: 30px;
+  transition: all 0.3s;
+}
 
-@media (max-width: 768px) {
+.back-button:hover {
+  background: #5a4ad1;
+  transform: translateY(-2px);
+}
+
+/* ========== تحسينات للجوال ========== */
+@media (max-width: 900px) {
+  .car-details-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .car-images-section {
+    position: static;
+  }
+  
+  .booking-section {
+    position: static;
+  }
+  
+  .car-title {
+    font-size: 26px;
+  }
+  
+  .price {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 600px) {
   .car-details-container {
-    padding: 30px 20px;
+    padding: 0 16px;
+    margin: 20px auto;
   }
-
-  .car-details-title {
-    font-size: 28px;
+  
+  .car-title {
+    font-size: 22px;
   }
-
-  .info-grid {
-    grid-template-columns: repeat(2, 1fr);
+  
+  .car-specs {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
-
+  
+  .thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+  
   .main-image {
-    height: 300px;
+    height: 280px;
   }
-
-  .average-rating {
-    flex-direction: column;
-    gap: 10px;
+  
+  .booking-section {
+    padding: 20px;
   }
-
-  .star-filled,
-  .star-empty {
-    font-size: 20px;
+  
+  .reviews-section h2 {
+    font-size: 22px;
+  }
+  
+  .review-card {
+    padding: 16px;
+  }
+  
+  .reviewer-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
 }
 
 @media (max-width: 480px) {
-  .car-details-container {
-    padding: 20px 15px;
-  }
-
-  .car-details-title {
+  .price {
     font-size: 24px;
   }
-
-  .info-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
+  
+  .car-price-box {
+    padding: 15px;
   }
-
-  .main-image {
-    height: 250px;
-  }
-
-  .thumbnail {
-    width: 60px;
-    height: 45px;
-  }
-
-  .action-button {
-    width: 100%;
-    padding: 12px 20px;
+  
+  .book-button {
+    padding: 14px;
     font-size: 16px;
   }
-
-  .owner-message {
-    width: 100%;
-    padding: 12px 20px;
-    font-size: 16px;
-  }
-
-  .average-number {
-    font-size: 36px;
-  }
-
-  .star-filled,
-  .star-empty {
-    font-size: 18px;
-  }
-
-  .review-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
+  
+  .car-location {
+    font-size: 13px;
   }
 }

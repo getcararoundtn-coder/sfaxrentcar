@@ -8,50 +8,73 @@ import LazyLoad from 'react-lazyload';
 import './Cars.css';
 
 const Cars = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [cars, setCars] = useState([]);
-  const [filteredCars, setFilteredCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showDateFilter, setShowDateFilter] = useState(false);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 9,
+    limit: 12,
     total: 0,
     pages: 1,
     hasNextPage: false,
     hasPrevPage: false
   });
+
+  // قراءة المعاملات من URL
   const [filters, setFilters] = useState({
-    q: searchParams.get('q') || '',
-    year: searchParams.get('year') || '',
-    location: searchParams.get('location') || '',
-    minPrice: '',
-    maxPrice: '',
-    fuelType: '',
-    seats: ''
+    city: searchParams.get('city') || '',
+    delegation: searchParams.get('delegation') || '',
+    startDate: searchParams.get('startDate') || '',
+    endDate: searchParams.get('endDate') || '',
+    type: searchParams.get('type') || '',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+    transmission: searchParams.get('transmission') || '',
+    fuelType: searchParams.get('fuelType') || '',
+    seats: searchParams.get('seats') || '',
+    minRating: searchParams.get('minRating') || ''
   });
 
-  const fetchCarsWithDates = useCallback(async (pageNum = 1) => {
+  // تحديث URL عند تغيير الفلاتر
+  const updateURL = useCallback((newFilters) => {
+    const params = new URLSearchParams();
+    Object.keys(newFilters).forEach(key => {
+      if (newFilters[key]) {
+        params.append(key, newFilters[key]);
+      }
+    });
+    setSearchParams(params);
+  }, [setSearchParams]);
+
+  const fetchCars = useCallback(async (pageNum = 1, append = false) => {
     try {
-      setLoading(pageNum === 1);
-      if (pageNum > 1) setLoadingMore(true);
+      if (pageNum === 1) setLoading(true);
+      else setLoadingMore(true);
       
       const params = new URLSearchParams({
         page: pageNum,
         limit: pagination.limit
       });
       
-      if (startDate && endDate) {
-        params.append('startDate', startDate);
-        params.append('endDate', endDate);
-      }
+      if (filters.city) params.append('city', filters.city);
+      if (filters.delegation) params.append('delegation', filters.delegation);
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
+      if (filters.minPrice) params.append('minPrice', filters.minPrice);
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+      if (filters.transmission) params.append('transmission', filters.transmission);
+      if (filters.fuelType) params.append('fuelType', filters.fuelType);
+      if (filters.seats) params.append('seats', filters.seats);
       
       const { data } = await API.get(`/cars?${params}`);
-      setCars(prev => pageNum === 1 ? data.data : [...prev, ...data.data]);
+      
+      if (append) {
+        setCars(prev => [...prev, ...data.data]);
+      } else {
+        setCars(data.data);
+      }
       setPagination(data.pagination);
     } catch (err) {
       console.error('Error fetching cars:', err);
@@ -60,262 +83,233 @@ const Cars = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [startDate, endDate, pagination.limit]);
+  }, [filters, pagination.limit]);
 
   useEffect(() => {
-    fetchCarsWithDates(1);
-  }, [fetchCarsWithDates]);
+    fetchCars(1, false);
+  }, [filters, fetchCars]);
 
-  useEffect(() => {
-    let filtered = [...cars];
-
-    if (filters.q) {
-      filtered = filtered.filter(car => 
-        car.brand.toLowerCase().includes(filters.q.toLowerCase()) ||
-        car.model.toLowerCase().includes(filters.q.toLowerCase())
-      );
-    }
-
-    if (filters.year) {
-      filtered = filtered.filter(car => 
-        car.year.toString() === filters.year
-      );
-    }
-
-    if (filters.location) {
-      filtered = filtered.filter(car => 
-        car.location?.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
-
-    if (filters.minPrice) {
-      filtered = filtered.filter(car => car.pricePerDay >= Number(filters.minPrice));
-    }
-    if (filters.maxPrice) {
-      filtered = filtered.filter(car => car.pricePerDay <= Number(filters.maxPrice));
-    }
-
-    if (filters.fuelType) {
-      filtered = filtered.filter(car => car.fuelType === filters.fuelType);
-    }
-
-    if (filters.seats) {
-      filtered = filtered.filter(car => car.seats >= Number(filters.seats));
-    }
-
-    setFilteredCars(filtered);
-  }, [cars, filters]);
-
-  const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+  const handleFilterChange = (key, value) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    updateURL(newFilters);
   };
 
   const clearFilters = () => {
-    setFilters({
-      q: '',
-      year: '',
-      location: '',
-      minPrice: '',
-      maxPrice: '',
-      fuelType: '',
-      seats: ''
-    });
+    const emptyFilters = {
+      city: '', delegation: '', startDate: '', endDate: '', type: '',
+      minPrice: '', maxPrice: '', transmission: '', fuelType: '', seats: '', minRating: ''
+    };
+    setFilters(emptyFilters);
+    updateURL(emptyFilters);
+    setShowFilters(false);
   };
 
-  const fuelTypes = [
-    { value: '', label: 'كل الأنواع' },
-    { value: 'petrol', label: 'بنزين' },
-    { value: 'diesel', label: 'ديزل' },
-    { value: 'electric', label: 'كهرباء' },
-    { value: 'hybrid', label: 'هايبرد' }
-  ];
+  const loadMore = () => {
+    if (pagination.hasNextPage) {
+      fetchCars(pagination.page + 1, true);
+    }
+  };
 
-  const years = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015];
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  };
+
+  const locationText = filters.delegation ? `${filters.delegation}, ${filters.city}` : filters.city;
 
   return (
     <>
       <Navbar />
-      <div className="cars-page-container">
-        <h1 className="cars-page-title">السيارات المتاحة</h1>
+      <div className="cars-page">
+        {/* معلومات البحث */}
+        <div className="search-info">
+          {locationText && <span className="search-location">{locationText}</span>}
+          {filters.startDate && filters.endDate && (
+            <span className="search-dates">
+              {formatDate(filters.startDate)} → {formatDate(filters.endDate)}
+            </span>
+          )}
+        </div>
 
-        <button onClick={() => setShowFilters(!showFilters)} className="filter-toggle">
-          {showFilters ? '🔍 إخفاء البحث المتقدم' : '🔍 بحث متقدم'}
-        </button>
+        <div className="cars-container">
+          {/* زر الفلاتر */}
+          <button onClick={() => setShowFilters(!showFilters)} className="filter-toggle-btn">
+            {showFilters ? '✕ Fermer les filtres' : '🔍 Filtres'}
+          </button>
 
-        {showFilters && (
-          <div className="filters-section">
-            <h3 className="filters-title">بحث متقدم</h3>
-            <div className="filters-grid">
-              <input
-                type="text"
-                name="q"
-                placeholder="ابحث باسم السيارة"
-                value={filters.q}
-                onChange={handleFilterChange}
-                className="filter-input"
-              />
-              <select
-                name="year"
-                value={filters.year}
-                onChange={handleFilterChange}
-                className="filter-select"
-              >
-                <option value="">كل السنوات</option>
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                name="location"
-                placeholder="المكان"
-                value={filters.location}
-                onChange={handleFilterChange}
-                className="filter-input"
-              />
-              <input
-                type="number"
-                name="minPrice"
-                placeholder="أقل سعر"
-                value={filters.minPrice}
-                onChange={handleFilterChange}
-                className="filter-input"
-              />
-              <input
-                type="number"
-                name="maxPrice"
-                placeholder="أعلى سعر"
-                value={filters.maxPrice}
-                onChange={handleFilterChange}
-                className="filter-input"
-              />
-              <select
-                name="fuelType"
-                value={filters.fuelType}
-                onChange={handleFilterChange}
-                className="filter-select"
-              >
-                {fuelTypes.map(type => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
-                ))}
-              </select>
-              <input
-                type="number"
-                name="seats"
-                placeholder="عدد المقاعد"
-                value={filters.seats}
-                onChange={handleFilterChange}
-                className="filter-input"
-              />
-              <button onClick={clearFilters} className="clear-filters-button">
-                مسح الكل
-              </button>
-            </div>
+          {/* عدد النتائج */}
+          <div className="results-header">
+            <p className="results-count">{pagination.total} voitures disponibles</p>
+            <p className="filter-hint">Utilisez le filtre pour trouver la voiture idéale.</p>
           </div>
-        )}
 
-        <button onClick={() => setShowDateFilter(!showDateFilter)} className="date-filter-toggle">
-          {showDateFilter ? '🔍 إخفاء التحقق من التوفر' : '🔍 التحقق من توفر السيارة بتواريخ محددة'}
-        </button>
-
-        {showDateFilter && (
-          <div className="date-filter-section">
-            <h3 className="date-filter-title">تحقق من توفر السيارة</h3>
-            <div className="date-filter-grid">
-              <div className="date-filter-group">
-                <label>تاريخ البداية</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="date-filter-input"
-                />
-              </div>
-              <div className="date-filter-group">
-                <label>تاريخ النهاية</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || new Date().toISOString().split('T')[0]}
-                  className="date-filter-input"
-                />
-              </div>
-              {(startDate || endDate) && (
-                <button 
-                  onClick={() => {
-                    setStartDate('');
-                    setEndDate('');
-                  }} 
-                  className="clear-dates-button"
-                >
-                  مسح التواريخ
-                </button>
-              )}
-            </div>
-            {startDate && endDate && (
-              <p className="date-filter-info">
-                عرض السيارات المتاحة من {new Date(startDate).toLocaleDateString('ar-TN')} إلى {new Date(endDate).toLocaleDateString('ar-TN')}
-              </p>
-            )}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>جاري تحميل السيارات...</p>
-          </div>
-        ) : filteredCars.length === 0 ? (
-          <div className="no-results">
-            <p>لا توجد سيارات تطابق بحثك</p>
-            <button onClick={clearFilters} className="reset-button">
-              عرض جميع السيارات
-            </button>
-          </div>
-        ) : (
-          <>
-            <p className="results-count">تم العثور على {filteredCars.length} سيارة</p>
-            <div className="cars-grid">
-              {filteredCars.map(car => (
-                <div key={car._id} className="car-card">
-                  <LazyLoad height={180} offset={100} once>
-                    <img 
-                      src={car.images?.[0] || '/default-car.jpg'} 
-                      alt={car.brand} 
-                      className="car-image" 
+          <div className="cars-layout">
+            {/* الفلاتر الجانبية */}
+            {showFilters && (
+              <aside className="filters-sidebar">
+                <div className="filter-group">
+                  <h4>Prix</h4>
+                  <div className="price-range">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={filters.minPrice}
+                      onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                      className="filter-input"
                     />
-                  </LazyLoad>
-                  <div className="car-info">
-                    <h3 className="car-title">{car.brand} {car.model} ({car.year})</h3>
-                    <p className="car-price">{car.pricePerDay} دينار / يوم</p>
-                    <p className="car-location">📍 {car.location || 'تونس'}</p>
-                    <div className="car-rating">
-                      <span>⭐ {car.averageRating || 4.5}</span>
-                      <span>({car.reviewsCount || 0} تقييم)</span>
-                    </div>
-                    <Link to={`/car/${car._id}`} className="car-button">
-                      عرض التفاصيل
-                    </Link>
+                    <span>-</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={filters.maxPrice}
+                      onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                      className="filter-input"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-            
-            {pagination.hasNextPage && (
-              <div className="load-more-container">
-                <button 
-                  onClick={() => fetchCarsWithDates(pagination.page + 1)}
-                  className="load-more-button"
-                  disabled={loadingMore}
-                >
-                  {loadingMore ? 'جاري التحميل...' : 'تحميل المزيد'}
+
+                <div className="filter-group">
+                  <h4>Type de voiture</h4>
+                  {['Citadine', 'Utilitaire', 'SUV', 'Familiale', 'Luxe', 'Économique'].map(type => (
+                    <label key={type} className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={filters.type === type}
+                        onChange={() => handleFilterChange('type', filters.type === type ? '' : type)}
+                      />
+                      {type}
+                    </label>
+                  ))}
+                </div>
+
+                <div className="filter-group">
+                  <h4>Nombre de places</h4>
+                  <div className="seat-options">
+                    {[2, 4, 5, 7].map(seat => (
+                      <button
+                        key={seat}
+                        onClick={() => handleFilterChange('seats', filters.seats === seat.toString() ? '' : seat.toString())}
+                        className={`seat-btn ${filters.seats === seat.toString() ? 'active' : ''}`}
+                      >
+                        {seat}+
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="filter-group">
+                  <h4>Boîte de vitesses</h4>
+                  <div className="radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        name="transmission"
+                        value="manual"
+                        checked={filters.transmission === 'manual'}
+                        onChange={(e) => handleFilterChange('transmission', e.target.value)}
+                      />
+                      Manuelle
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="transmission"
+                        value="automatic"
+                        checked={filters.transmission === 'automatic'}
+                        onChange={(e) => handleFilterChange('transmission', e.target.value)}
+                      />
+                      Automatique
+                    </label>
+                  </div>
+                </div>
+
+                <div className="filter-group">
+                  <h4>Carburant</h4>
+                  <select
+                    value={filters.fuelType}
+                    onChange={(e) => handleFilterChange('fuelType', e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="">Tous</option>
+                    <option value="petrol">Essence</option>
+                    <option value="diesel">Diesel</option>
+                    <option value="electric">Électrique</option>
+                    <option value="hybrid">Hybride</option>
+                  </select>
+                </div>
+
+                <div className="filter-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={filters.minRating === '4'}
+                      onChange={() => handleFilterChange('minRating', filters.minRating === '4' ? '' : '4')}
+                    />
+                    Taux d’acceptation supérieur à 30%
+                  </label>
+                </div>
+
+                <button onClick={clearFilters} className="clear-filters-btn">
+                  Réinitialiser les filtres
                 </button>
-              </div>
+              </aside>
             )}
-          </>
-        )}
+
+            {/* عرض السيارات */}
+            <main className="cars-grid">
+              {loading ? (
+                <div className="loading-container">
+                  <div className="loading-spinner"></div>
+                  <p>Chargement des voitures...</p>
+                </div>
+              ) : cars.length === 0 ? (
+                <div className="no-results">
+                  <p>Aucune voiture trouvée</p>
+                  <button onClick={clearFilters} className="reset-btn">Afficher toutes les voitures</button>
+                </div>
+              ) : (
+                <>
+                  {cars.map(car => (
+                    <div key={car._id} className="car-card">
+                      <LazyLoad height={180} offset={100} once>
+                        <img 
+                          src={car.images?.[0] || '/default-car.jpg'} 
+                          alt={`${car.brand} ${car.model}`} 
+                          className="car-image" 
+                        />
+                      </LazyLoad>
+                      <div className="car-info">
+                        <h3 className="car-title">{car.brand} {car.model}</h3>
+                        <p className="car-price">{car.pricePerDay} DT / jour</p>
+                        <div className="car-meta">
+                          <span className="car-rating">⭐ {car.averageRating || 4.5}</span>
+                          <span className="car-location">📍 {car.delegation || car.city || car.location}</span>
+                        </div>
+                        <Link to={`/car/${car._id}`} className="car-details-btn">
+                          Voir les détails
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+
+                  {pagination.hasNextPage && (
+                    <div className="load-more">
+                      <button 
+                        onClick={loadMore} 
+                        disabled={loadingMore}
+                        className="load-more-btn"
+                      >
+                        {loadingMore ? 'Chargement...' : 'Afficher plus'}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </main>
+          </div>
+        </div>
       </div>
       <Footer />
     </>

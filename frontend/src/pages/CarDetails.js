@@ -1,243 +1,339 @@
-import { useEffect, useState, useContext } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
+import { showSuccess, showError, showWarning } from '../utils/ToastConfig';
 import './CarDetails.css';
 
 const CarDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [car, setCar] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
-  
-  // ===== قسم التقييمات =====
-  const [reviews, setReviews] = useState([]);
-  const [reviewsStats, setReviewsStats] = useState({ average: 0, total: 0, distribution: {} });
-  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
-    const fetchCar = async () => {
+    const fetchCarDetails = async () => {
       try {
+        setLoading(true);
         const { data } = await API.get(`/cars/${id}`);
         setCar(data.data);
+        
+        // جلب التقييمات
+        const reviewsRes = await API.get(`/reviews/car/${id}`);
+        setReviews(reviewsRes.data.data || []);
       } catch (err) {
-        console.error('Error fetching car:', err);
+        console.error('Error fetching car details:', err);
+        showError('فشل تحميل بيانات السيارة');
+        navigate('/cars');
       } finally {
         setLoading(false);
       }
     };
-    fetchCar();
-  }, [id]);
+    fetchCarDetails();
+  }, [id, navigate]);
 
-  // جلب التقييمات
+  // حساب السعر عند تغيير التواريخ
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const { data } = await API.get(`/reviews/car/${id}`);
-        setReviews(data.data.reviews || []);
-        setReviewsStats(data.data.stats || { average: 0, total: 0, distribution: {} });
-      } catch (err) {
-        console.error('Error fetching reviews:', err);
-      } finally {
-        setLoadingReviews(false);
+    if (startDate && endDate && car) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      if (days > 0) {
+        setTotalPrice(car.pricePerDay * days);
+      } else {
+        setTotalPrice(0);
       }
-    };
-    fetchReviews();
-  }, [id]);
+    }
+  }, [startDate, endDate, car]);
 
-  if (loading) return <><Navbar /><div className="loading">جاري التحميل...</div></>;
-  if (!car) return <><Navbar /><div className="loading">السيارة غير موجودة</div></>;
+  const handleBooking = async () => {
+    if (!user) {
+      showWarning('يرجى تسجيل الدخول أولاً');
+      navigate('/login');
+      return;
+    }
 
-  const pricePerDay = car.pricePerDay || car.daily_price || 0;
-  const deposit = car.deposit || car.caution_amount || 0;
-  const ownerName = car.ownerId?.name || 'غير محدد';
-  const isIndividual = car.ownerId?.role !== 'company';
-  const isOwner = user && car.ownerId?._id === user._id;
+    if (user.verificationStatus !== 'approved') {
+      showWarning('يجب توثيق حسابك أولاً (رفع رخصة القيادة)');
+      navigate('/upload-docs');
+      return;
+    }
+
+    if (!startDate || !endDate) {
+      showWarning('يرجى اختيار تاريخ البداية والنهاية');
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    
+    if (days <= 0) {
+      showError('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
+      return;
+    }
+
+    setBookingLoading(true);
+
+    try {
+      const response = await API.post('/bookings', {
+        carId: car._id,
+        startDate,
+        endDate,
+        totalPrice
+      });
+
+      if (response.data.success) {
+        showSuccess('✅ تم إنشاء الحجز بنجاح!');
+        navigate('/my-bookings');
+      }
+    } catch (err) {
+      console.error('Booking error:', err);
+      const errorMessage = err.response?.data?.message || 'فشل إنشاء الحجز';
+      showError(errorMessage);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span key={i} className={i <= rating ? 'star filled' : 'star'}>★</span>
+      );
+    }
+    return stars;
+  };
+
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : 0;
+
+  const today = new Date().toISOString().split('T')[0];
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>جاري تحميل بيانات السيارة...</p>
+        </div>
+      </>
+    );
+  }
+
+  if (!car) {
+    return (
+      <>
+        <Navbar />
+        <div className="error-container">
+          <p>السيارة غير موجودة</p>
+          <Link to="/cars" className="back-button">العودة إلى السيارات</Link>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
-      <div className="car-details-page">
-        <div className="car-details-container">
-          <h1 className="car-details-title">{car.brand} {car.model} ({car.year})</h1>
-          
-          {/* معرض الصور في الوسط */}
-          <div className="car-gallery">
-            <div className="main-image-container">
-              {car.images && car.images.length > 0 ? (
-                <img 
-                  src={car.images[selectedImage]} 
-                  alt={`${car.brand} ${car.model}`} 
-                  className="main-image" 
-                />
-              ) : (
-                <div className="no-image">لا توجد صور</div>
-              )}
+      <div className="car-details-container">
+        <div className="car-details-grid">
+          {/* قسم الصور */}
+          <div className="car-images-section">
+            <div className="main-image">
+              <img 
+                src={car.images?.[selectedImage] || '/default-car.jpg'} 
+                alt={`${car.brand} ${car.model}`}
+              />
             </div>
-            
-            {car.images && car.images.length > 1 && (
-              <div className="image-thumbnails">
-                {car.images.map((img, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`thumbnail ${selectedImage === idx ? 'active' : ''}`}
-                    onClick={() => setSelectedImage(idx)}
-                  >
-                    <img src={img} alt={`${car.brand} ${car.model} ${idx + 1}`} />
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="thumbnail-list">
+              {car.images?.map((img, idx) => (
+                <button
+                  key={idx}
+                  className={`thumbnail ${selectedImage === idx ? 'active' : ''}`}
+                  onClick={() => setSelectedImage(idx)}
+                >
+                  <img src={img} alt={`${car.brand} ${car.model} - ${idx + 1}`} />
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* معلومات السيارة في الوسط */}
-          <div className="car-info-center">
-            <div className="info-grid">
-              <div className="info-card">
-                <span className="info-icon">💰</span>
-                <span className="info-label">السعر اليومي</span>
-                <span className="info-value">{pricePerDay} دينار</span>
-              </div>
-              
-              <div className="info-card">
-                <span className="info-icon">🔒</span>
-                <span className="info-label">مبلغ الضمان</span>
-                <span className="info-value">{deposit} دينار</span>
-              </div>
-              
-              <div className="info-card">
-                <span className="info-icon">📍</span>
-                <span className="info-label">الموقع</span>
-                <span className="info-value">{car.location}</span>
-              </div>
-              
-              <div className="info-card">
-                <span className="info-icon">⛽</span>
-                <span className="info-label">نوع الوقود</span>
-                <span className="info-value">
-                  {car.fuelType === 'petrol' ? 'بنزين' : 
-                   car.fuelType === 'diesel' ? 'ديزل' : 
-                   car.fuelType === 'electric' ? 'كهرباء' : 'هايبرد'}
+          {/* معلومات السيارة */}
+          <div className="car-info-section">
+            <h1 className="car-title">{car.brand} {car.model} ({car.year})</h1>
+            
+            <div className="car-rating">
+              <div className="stars">{renderStars(Math.round(averageRating))}</div>
+              <span className="rating-value">{averageRating}</span>
+              <span className="review-count">({reviews.length} avis)</span>
+            </div>
+
+            <p className="car-location">
+              <span className="icon">📍</span> {car.delegation}, {car.city}
+            </p>
+
+            <div className="car-price-box">
+              <span className="price">{car.pricePerDay} DT</span>
+              <span className="per-day">/ jour</span>
+            </div>
+
+            <div className="car-specs">
+              <div className="spec-item">
+                <span className="spec-icon">⛽</span>
+                <span className="spec-label">Carburant</span>
+                <span className="spec-value">
+                  {car.fuelType === 'petrol' ? 'Essence' : 
+                   car.fuelType === 'diesel' ? 'Diesel' :
+                   car.fuelType === 'electric' ? 'Électrique' : 'Hybride'}
                 </span>
               </div>
-              
-              <div className="info-card">
-                <span className="info-icon">🪑</span>
-                <span className="info-label">عدد المقاعد</span>
-                <span className="info-value">{car.seats}</span>
+              <div className="spec-item">
+                <span className="spec-icon">⚙️</span>
+                <span className="spec-label">Transmission</span>
+                <span className="spec-value">
+                  {car.transmission === 'manual' ? 'Manuelle' : 'Automatique'}
+                </span>
               </div>
-              
-              <div className="info-card">
-                <span className="info-icon">👤</span>
-                <span className="info-label">المالك</span>
-                <span className="info-value">{ownerName}</span>
+              <div className="spec-item">
+                <span className="spec-icon">👥</span>
+                <span className="spec-label">Places</span>
+                <span className="spec-value">{car.seats}</span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-icon">🚪</span>
+                <span className="spec-label">Portes</span>
+                <span className="spec-value">{car.doors}</span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-icon">📊</span>
+                <span className="spec-label">Kilométrage</span>
+                <span className="spec-value">{car.mileage?.toLocaleString()} km</span>
               </div>
             </div>
 
-            {/* معلومات إضافية */}
-            <div className="additional-info">
-              <p><strong>رقم اللوحة:</strong> {car.licensePlate}</p>
-              {isIndividual && <p className="owner-type">(مالك فرد)</p>}
-            </div>
-
-            {/* عرض العقد إذا كان المالك فرداً */}
-            {isIndividual && car.contractPdf && (
-              <div className="contract-section">
-                <h3>📄 عقد الكراء</h3>
-                <p>يمكنك الاطلاع على العقد قبل الحجز:</p>
-                <a 
-                  href={car.contractPdf} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="contract-button"
-                >
-                  📥 عرض العقد (PDF)
-                </a>
-              </div>
-            )}
-
-            {/* أزرار الإجراءات في الوسط */}
-            <div className="action-buttons">
-              {!user ? (
-                <Link to="/login" className="action-button login-button">
-                  تسجيل الدخول للحجز
-                </Link>
-              ) : isOwner ? (
-                <div className="owner-message">🚗 هذه سيارتك الخاصة</div>
-              ) : user.verificationStatus !== 'approved' ? (
-                <div className="verification-warning">
-                  <p>⚠️ يجب توثيق حسابك قبل الحجز</p>
-                  <Link to="/upload-docs" className="action-button verify-button">
-                    توثيق الحساب الآن
-                  </Link>
-                </div>
-              ) : (
-                <Link to={`/booking/${car._id}`} className="action-button book-button">
-                  احجز الآن
-                </Link>
-              )}
-            </div>
-          </div>
-
-          {/* ===== قسم التقييمات ===== */}
-          <div className="reviews-section">
-            <h3>التقييمات ({reviewsStats.total})</h3>
-            
-            {reviewsStats.total > 0 && (
-              <div className="reviews-summary">
-                <div className="average-rating">
-                  <span className="average-number">{reviewsStats.average}</span>
-                  <div className="average-stars">
-                    {[1,2,3,4,5].map(star => (
-                      <span key={star} className={star <= Math.round(reviewsStats.average) ? 'star-filled' : 'star-empty'}>★</span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="rating-distribution">
-                  {[5,4,3,2,1].map(rating => (
-                    <div key={rating} className="distribution-row">
-                      <span className="rating-label">{rating} ★</span>
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill" 
-                          style={{ width: `${reviewsStats.total ? ((reviewsStats.distribution[rating] || 0) / reviewsStats.total * 100) : 0}%` }}
-                        ></div>
-                      </div>
-                      <span className="rating-count">{reviewsStats.distribution[rating] || 0}</span>
-                    </div>
+            {car.features?.length > 0 && (
+              <div className="car-features">
+                <h3>Équipements</h3>
+                <div className="features-list">
+                  {car.features.map((feature, idx) => (
+                    <span key={idx} className="feature-badge">{feature}</span>
                   ))}
                 </div>
               </div>
             )}
 
-            {loadingReviews ? (
-              <p className="loading-reviews">جاري تحميل التقييمات...</p>
-            ) : reviews.length === 0 ? (
-              <p className="no-reviews">لا توجد تقييمات بعد</p>
-            ) : (
-              <div className="reviews-list">
-                {reviews.map(review => (
-                  <div key={review._id} className="review-card">
-                    <div className="review-header">
-                      <strong className="reviewer-name">{review.reviewerId?.name || 'مستخدم'}</strong>
-                      <div className="review-rating">
-                        {[1,2,3,4,5].map(star => (
-                          <span key={star} className={star <= review.rating ? 'star-filled' : 'star-empty'}>★</span>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="review-comment">{review.comment}</p>
-                    <small className="review-date">{new Date(review.createdAt).toLocaleDateString('ar-TN')}</small>
-                  </div>
-                ))}
+            <div className="car-owner">
+              <h3>Propriétaire</h3>
+              <div className="owner-info">
+                <div className="owner-avatar">
+                  {car.ownerId?.name?.charAt(0) || 'U'}
+                </div>
+                <div className="owner-details">
+                  <span className="owner-name">{car.ownerId?.name || 'Utilisateur'}</span>
+                  <span className="owner-rating">⭐ {car.ownerRating || 'Nouveau'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* قسم الحجز */}
+          <div className="booking-section">
+            <h3>Réserver cette voiture</h3>
+            
+            <div className="date-fields">
+              <div className="date-field">
+                <label>Date de début</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  min={today}
+                />
+              </div>
+              <div className="date-field">
+                <label>Date de fin</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate || today}
+                />
+              </div>
+            </div>
+
+            {totalPrice > 0 && (
+              <div className="price-breakdown">
+                <div className="breakdown-item">
+                  <span>{Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))} jours × {car.pricePerDay} DT</span>
+                  <span>{totalPrice} DT</span>
+                </div>
+                <div className="breakdown-item total">
+                  <span>Total</span>
+                  <span>{totalPrice} DT</span>
+                </div>
               </div>
             )}
+
+            <button
+              onClick={handleBooking}
+              disabled={bookingLoading || !startDate || !endDate}
+              className="book-button"
+            >
+              {bookingLoading ? 'Traitement...' : 'Réserver'}
+            </button>
+
+            <p className="booking-note">
+              {!user && 'Connectez-vous pour réserver'}
+              {user && user.verificationStatus !== 'approved' && 'Vérifiez votre compte pour réserver'}
+            </p>
           </div>
         </div>
+
+        {/* قسم التقييمات */}
+        <div className="reviews-section">
+          <h2>Avis des locataires</h2>
+          
+          {reviews.length === 0 ? (
+            <p className="no-reviews">Aucun avis pour cette voiture</p>
+          ) : (
+            <div className="reviews-list">
+              {reviews.map(review => (
+                <div key={review._id} className="review-card">
+                  <div className="review-header">
+                    <div className="reviewer-info">
+                      <div className="reviewer-avatar">
+                        {review.reviewerId?.name?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <strong>{review.reviewerId?.name || 'Utilisateur'}</strong>
+                        <div className="review-stars">{renderStars(review.rating)}</div>
+                      </div>
+                    </div>
+                    <span className="review-date">
+                      {new Date(review.createdAt).toLocaleDateString('fr-FR')}
+                    </span>
+                  </div>
+                  <p className="review-comment">{review.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+      <Footer />
     </>
   );
 };

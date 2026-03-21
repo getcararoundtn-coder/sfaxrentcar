@@ -9,100 +9,83 @@ const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const { settings } = useContext(SettingsContext);
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
+    setMenuOpen(false);
   };
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const closeMenu = () => {
+    setMenuOpen(false);
   };
 
   return (
     <nav className="navbar">
       <div className="nav-container">
         <div className="logo">
-          <Link to="/" className="logo-link">
+          <Link to="/" className="logo-link" onClick={closeMenu}>
             {settings?.platformName || 'SfaxRentCar'}
           </Link>
         </div>
 
-        <button className="menu-button" onClick={toggleMobileMenu}>
+        {/* زر Menu ☰ */}
+        <button className="menu-button" onClick={toggleMenu}>
           ☰
         </button>
 
-        <div className="nav-links desktop-links">
-          <Link to="/" className="nav-link">الرئيسية</Link>
-          <Link to="/cars" className="nav-link">السيارات</Link>
-          {user && <Link to="/my-bookings" className="nav-link">حجوزاتي</Link>}
-          {user && <Link to="/owner-cars" className="nav-link">سياراتي</Link>}
-          <Link to="/about" className="nav-link">من نحن</Link>
-          {user?.role === 'admin' && (
-            <Link to="/admin" className="nav-link">لوحة المشرف</Link>
-          )}
-        </div>
-
-        <div className="user-section desktop-user-section">
-          {user ? (
-            <>
-              <NotificationBell />
-              <span className="user-name">مرحباً، {user.name}</span>
-              <Link to="/profile" className="profile-link">الملف الشخصي</Link>
-              {user.verificationStatus === 'approved' && (
-                <Link to="/add-car" className="add-car-link">إضافة سيارة</Link>
+        {/* القائمة المنسدلة */}
+        {menuOpen && (
+          <div className="dropdown-menu">
+            <div className="dropdown-content">
+              {/* Se connecter - يظهر فقط إذا لم يكن مسجلاً */}
+              {!user && (
+                <Link to="/login" className="dropdown-link" onClick={closeMenu}>
+                  Se connecter
+                </Link>
               )}
-              <button onClick={handleLogout} className="logout-btn">
-                تسجيل الخروج
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="login-link">تسجيل الدخول</Link>
-              <Link to="/register" className="register-link">التسجيل</Link>
-            </>
-          )}
-        </div>
-      </div>
-
-      {mobileMenuOpen && (
-        <div className="mobile-menu">
-          <Link to="/" className="mobile-link" onClick={toggleMobileMenu}>الرئيسية</Link>
-          <Link to="/cars" className="mobile-link" onClick={toggleMobileMenu}>السيارات</Link>
-          {user && (
-            <>
-              <Link to="/my-bookings" className="mobile-link" onClick={toggleMobileMenu}>حجوزاتي</Link>
-              <Link to="/owner-cars" className="mobile-link" onClick={toggleMobileMenu}>سياراتي</Link>
-            </>
-          )}
-          <Link to="/about" className="mobile-link" onClick={toggleMobileMenu}>من نحن</Link>
-          {user?.role === 'admin' && (
-            <Link to="/admin" className="mobile-link" onClick={toggleMobileMenu}>لوحة المشرف</Link>
-          )}
-          
-          <div className="mobile-user-section">
-            {user ? (
-              <>
-                <NotificationBell />
-                <span className="mobile-user-name">مرحباً، {user.name}</span>
-                <Link to="/profile" className="mobile-profile-link" onClick={toggleMobileMenu}>الملف الشخصي</Link>
-                {user.verificationStatus === 'approved' && (
-                  <Link to="/add-car" className="mobile-add-car-link" onClick={toggleMobileMenu}>إضافة سيارة</Link>
-                )}
-                <button onClick={() => { handleLogout(); toggleMobileMenu(); }} className="mobile-logout-btn">
-                  تسجيل الخروج
-                </button>
-              </>
-            ) : (
-              <div className="mobile-auth-buttons">
-                <Link to="/login" className="mobile-login-link" onClick={toggleMobileMenu}>تسجيل الدخول</Link>
-                <Link to="/register" className="mobile-register-link" onClick={toggleMobileMenu}>التسجيل</Link>
-              </div>
-            )}
+              
+              {/* Louer ma voiture */}
+              <Link to={user ? "/add-car" : "/register"} className="dropdown-link" onClick={closeMenu}>
+                Louer ma voiture
+              </Link>
+              
+              {/* روابط إضافية للمستخدمين المسجلين */}
+              {user && (
+                <>
+                  <div className="dropdown-divider"></div>
+                  <Link to="/profile" className="dropdown-link" onClick={closeMenu}>
+                    Mon profil
+                  </Link>
+                  <Link to="/my-bookings" className="dropdown-link" onClick={closeMenu}>
+                    Mes réservations
+                  </Link>
+                  {user.role === 'admin' && (
+                    <Link to="/admin" className="dropdown-link" onClick={closeMenu}>
+                      Admin
+                    </Link>
+                  )}
+                  <button onClick={handleLogout} className="dropdown-logout-btn">
+                    Se déconnecter
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* إشعارات للمستخدمين المسجلين فقط - تظهر بجانب الزر */}
+        {user && (
+          <div className="notification-wrapper">
+            <NotificationBell />
+          </div>
+        )}
+      </div>
     </nav>
   );
 };

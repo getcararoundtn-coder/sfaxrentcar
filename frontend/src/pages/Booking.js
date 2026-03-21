@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
-import { showSuccess, showError, showWarning } from '../utils/ToastConfig';
+import { showSuccess, showError } from '../utils/ToastConfig';
 import './Booking.css';
 
 const Booking = () => {
