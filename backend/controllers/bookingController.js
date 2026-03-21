@@ -2,6 +2,7 @@ const Booking = require('../models/Booking');
 const Car = require('../models/Car');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const Settings = require('../models/Settings'); // 🔥 إضافة نموذج الإعدادات
 
 // @desc    إنشاء حجز جديد
 // @route   POST /api/bookings
@@ -29,6 +30,11 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'السيارة غير متاحة في هذه التواريخ' });
     }
 
+    // 🔥 جلب إعدادات العمولة
+    const settings = await Settings.findOne();
+    const commissionRate = settings?.commissionRate || 0;
+    const platformCommission = (totalPrice * commissionRate) / 100;
+
     // إنشاء الحجز
     const booking = await Booking.create({
       carId,
@@ -37,6 +43,7 @@ exports.createBooking = async (req, res) => {
       startDate,
       endDate,
       totalPrice,
+      platformCommission,
       status: 'pending',
       paymentStatus: 'unpaid'
     });
