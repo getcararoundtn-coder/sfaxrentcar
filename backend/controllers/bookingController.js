@@ -2,7 +2,7 @@ const Booking = require('../models/Booking');
 const Car = require('../models/Car');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
-const Setting = require('../models/Setting'); // 🔥 التعديل الصحيح (بدون s)
+const Setting = require('../models/Setting');
 
 // @desc    إنشاء حجز جديد
 // @route   POST /api/bookings
@@ -11,10 +11,25 @@ exports.createBooking = async (req, res) => {
   try {
     const { carId, startDate, endDate, totalPrice } = req.body;
 
+    // التحقق من وجود totalPrice
+    if (!totalPrice || isNaN(totalPrice) || totalPrice <= 0) {
+      return res.status(400).json({ message: 'السعر الإجمالي مطلوب أو غير صالح' });
+    }
+
+    // التحقق من وجود التواريخ
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'تاريخ البداية والنهاية مطلوبان' });
+    }
+
     // التحقق من وجود السيارة
     const car = await Car.findById(carId);
     if (!car) {
       return res.status(404).json({ message: 'السيارة غير موجودة' });
+    }
+
+    // التحقق من أن المستخدم ليس مالك السيارة
+    if (car.ownerId.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: 'لا يمكنك حجز سيارتك الخاصة' });
     }
 
     // التحقق من توفر السيارة في التواريخ المطلوبة
@@ -30,7 +45,16 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'السيارة غير متاحة في هذه التواريخ' });
     }
 
-    // 🔥 جلب إعدادات العمولة
+    // حساب المدة بالأيام
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    
+    if (days <= 0) {
+      return res.status(400).json({ message: 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية' });
+    }
+
+    // جلب إعدادات العمولة
     const settings = await Setting.findOne();
     const commissionRate = settings?.commissionRate || 0;
     const platformCommission = (totalPrice * commissionRate) / 100;
@@ -40,12 +64,15 @@ exports.createBooking = async (req, res) => {
       carId,
       renterId: req.user._id,
       ownerId: car.ownerId,
-      startDate,
-      endDate,
-      totalPrice,
-      platformCommission,
+      startDate: start,
+      endDate: end,
+      durationDays: days,
+      totalPrice: Number(totalPrice),
+      platformCommission: Number(platformCommission),
       status: 'pending',
-      paymentStatus: 'unpaid'
+      paymentStatus: 'unpaid',
+      hasReview: false,
+      signed: false
     });
 
     // إشعار للمالك
@@ -54,11 +81,24 @@ exports.createBooking = async (req, res) => {
         userId: car.ownerId,
         type: 'booking_pending',
         title: '📅 حجز جديد بانتظار الموافقة',
-        message: `لديك حجز جديد على سيارتك ${car.brand} ${car.model}`,
+        message: `لديك حجز جديد على سيارتك ${car.brand} ${car.model} لمدة ${days} أيام`,
         relatedId: booking._id
       });
     } catch (notifError) {
-      console.error('فشل إنشاء إشعار:', notifError);
+      console.error('فشل إنشاء إشعار للمالك:', notifError);
+    }
+
+    // إشعار للمستأجر
+    try {
+      await Notification.create({
+        userId: req.user._id,
+        type: 'booking_created',
+        title: '📅 تم إنشاء حجزك',
+        message: `تم إنشاء حجزك لسيارة ${car.brand} ${car.model} بنجاح. في انتظار موافقة المالك.`,
+        relatedId: booking._id
+      });
+    } catch (notifError) {
+      console.error('فشل إنشاء إشعار للمستأجر:', notifError);
     }
 
     res.status(201).json({ success: true, data: booking });
