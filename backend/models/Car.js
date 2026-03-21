@@ -12,11 +12,17 @@ const carSchema = new mongoose.Schema({
   pricePerDay: { type: Number, required: true },
   deposit: { type: Number, required: true },
   location: { type: String, required: true },
+  city: { type: String, required: true },
+  delegation: { type: String, required: true },
   fuelType: { type: String, enum: ['petrol', 'diesel', 'electric', 'hybrid'], required: true },
+  transmission: { type: String, enum: ['manual', 'automatic'], required: true },
   seats: { type: Number, required: true },
+  doors: { type: Number, required: true, min: 2, max: 6 },
+  mileage: { type: Number, required: true },
+  features: [{ type: String }], // مثال: ['GPS', 'Bluetooth', 'Air Conditioning']
   images: [{ type: String }],
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
-  isAvailable: { type: Boolean, default: true }, // ✅ إضافة حقل التوفر
+  isAvailable: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });
 
