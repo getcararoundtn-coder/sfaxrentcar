@@ -66,7 +66,7 @@ exports.sendMessage = async (req, res) => {
     try {
       await Notification.create({
         userId: receiverId,
-        type: 'new_message',  // ✅ هذه القيمة موجودة الآن في الـ enum
+        type: 'new_message',
         title: notificationTitle,
         message: notificationMessage,
         relatedId: bookingId
@@ -125,6 +125,34 @@ exports.getMessages = async (req, res) => {
     res.json({ success: true, data: messages });
   } catch (error) {
     console.error('❌ Error fetching messages:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc جلب جميع رسائل المستخدم (لصفحة الرسائل)
+// @route GET /api/messages/my-messages
+// @access Private
+exports.getMyMessages = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    const messages = await Message.find({
+      $or: [{ senderId: userId }, { receiverId: userId }]
+    })
+      .populate('senderId', 'name email')
+      .populate('receiverId', 'name email')
+      .populate({
+        path: 'bookingId',
+        populate: {
+          path: 'carId',
+          select: 'brand model images'
+        }
+      })
+      .sort('-createdAt');
+    
+    res.json({ success: true, data: messages });
+  } catch (error) {
+    console.error('❌ Error getting my messages:', error);
     res.status(500).json({ message: error.message });
   }
 };
