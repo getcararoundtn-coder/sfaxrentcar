@@ -6,7 +6,8 @@ const {
   logout, 
   getMe,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  firebaseLogin  // ✅ إضافة Firebase Login
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const supportController = require('../controllers/supportController');
@@ -18,6 +19,9 @@ router.post('/logout', logout);
 router.get('/me', protect, getMe);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+
+// ✅ مسار Firebase Login
+router.post('/firebase-login', firebaseLogin);
 
 // ✅ مسار الدعم (يتطلب تسجيل دخول)
 router.post('/support', protect, supportController.sendMessage);
