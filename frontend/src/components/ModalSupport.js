@@ -25,7 +25,8 @@ const ModalSupport = ({ isOpen, onClose }) => {
 
     setLoading(true);
     try {
-      const response = await API.post('/support', {
+      // ✅ المسار الصحيح: /auth/support (لأن authRoutes تستخدمه)
+      const response = await API.post('/auth/support', {
         subject,
         message
       });
