@@ -3,6 +3,7 @@ const Car = require('../models/Car');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const Setting = require('../models/Setting');
+const Review = require('../models/Review');
 
 // @desc    إنشاء حجز جديد
 // @route   POST /api/bookings
@@ -284,9 +285,85 @@ exports.completeBooking = async (req, res) => {
       console.error('فشل إنشاء إشعار:', notifError);
     }
 
+    // 🔔 إشعار لتقييم المؤجر
+    try {
+      await Notification.create({
+        userId: booking.renterId,
+        type: 'review_owner',
+        title: '⭐ Évaluez votre expérience',
+        message: `Comment s'est passé votre location avec ${booking.carId.brand} ${booking.carId.model} ? Donnez votre avis sur le propriétaire.`,
+        relatedId: booking._id,
+        actionUrl: `/booking/${booking._id}/review-owner`
+      });
+    } catch (notifError) {
+      console.error('فشل إنشاء إشعار تقييم المؤجر:', notifError);
+    }
+
     res.json({ success: true, message: 'تم إكمال الحجز بنجاح' });
   } catch (error) {
     console.error('Error completing booking:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    تقييم المؤجر بعد انتهاء الحجز
+// @route   POST /api/bookings/:id/review-owner
+// @access  Private (المستأجر فقط)
+exports.reviewOwner = async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const bookingId = req.params.id;
+
+    // التحقق من وجود الحجز
+    const booking = await Booking.findById(bookingId)
+      .populate('carId', 'brand model ownerId')
+      .populate('ownerId', 'name');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'الحجز غير موجود' });
+    }
+
+    // التحقق من أن المستخدم هو المستأجر
+    if (booking.renterId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'غير مصرح لك بتقييم هذا الحجز' });
+    }
+
+    // التحقق من أن الحجز مكتمل
+    if (booking.status !== 'completed') {
+      return res.status(400).json({ message: 'لا يمكن تقييم الحجز إلا بعد اكتماله' });
+    }
+
+    // التحقق من عدم وجود تقييم سابق
+    const existingReview = await Review.findOne({ bookingId, type: 'owner' });
+    if (existingReview) {
+      return res.status(400).json({ message: 'تم تقييم هذا الحجز مسبقاً' });
+    }
+
+    // إنشاء التقييم
+    const review = await Review.create({
+      type: 'owner',
+      bookingId: booking._id,
+      reviewerId: req.user._id,
+      reviewedUserId: booking.ownerId._id,
+      ownerId: booking.ownerId._id,
+      rating,
+      comment
+    });
+
+    // تحديث تقييم المؤجر في User Model
+    const owner = await User.findById(booking.ownerId._id);
+    const newRatingSum = (owner.ownerRating * owner.ownerRatingCount) + rating;
+    const newRatingCount = owner.ownerRatingCount + 1;
+    const newAverageRating = newRatingSum / newRatingCount;
+
+    await User.findByIdAndUpdate(booking.ownerId._id, {
+      ownerRating: newAverageRating,
+      ownerRatingCount: newRatingCount
+    });
+
+    res.json({ success: true, data: review, message: 'تم تقييم المؤجر بنجاح' });
+  } catch (error) {
+    console.error('Error in reviewOwner:', error);
     res.status(500).json({ message: error.message });
   }
 };
