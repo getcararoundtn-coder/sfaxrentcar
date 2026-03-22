@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { AuthContext } from '../context/AuthContext';
 
+// تحديد رابط API حسب البيئة
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 const UploadDocuments = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
@@ -66,7 +69,8 @@ const UploadDocuments = () => {
     formData.append('driverLicense', driverLicenseFile);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/documents/upload`, {
+      // 🔥 استخدام الرابط الصحيح
+      const response = await fetch(`${API_URL}/documents/upload`, {
         method: 'POST',
         credentials: 'include',
         body: formData

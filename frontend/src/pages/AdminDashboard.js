@@ -225,6 +225,23 @@ const AdminDashboard = () => {
     }
   };
 
+  // ✅ دالة تفعيل/إلغاء تمييز السيارة
+  const handleToggleFeatured = async (carId, isFeatured, durationDays = 7) => {
+    try {
+      const response = await API.patch(`/admin/cars/${carId}/featured`, {
+        isFeatured,
+        durationDays: durationDays || 7
+      });
+      if (response.data.success) {
+        showSuccess(response.data.message || '✅ تم تحديث حالة التميز');
+        fetchAllData();
+      }
+    } catch (err) {
+      console.error('Error toggling featured:', err);
+      showError('❌ فشل تحديث حالة التميز');
+    }
+  };
+
   // ==================== دوال الحجوزات ====================
   const handleApproveBooking = async (bookingId) => {
     try {
@@ -288,7 +305,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // ✅ دالة مسح الوثائق (جديدة)
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm('⚠️ هل أنت متأكد من مسح هذه الوثيقة؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
     try {
@@ -459,6 +475,7 @@ const AdminDashboard = () => {
               onReject={handleRejectCar}
               onEdit={handleEditCar}
               onDelete={handleDeleteCar}
+              onToggleFeatured={handleToggleFeatured}
             />
           )}
           
@@ -478,7 +495,7 @@ const AdminDashboard = () => {
               documents={documents}
               onApprove={handleApproveDocument}
               onReject={handleRejectDocument}
-              onDelete={handleDeleteDocument}   // ✅ تم إضافة خاصية المسح
+              onDelete={handleDeleteDocument}
             />
           )}
           
