@@ -26,7 +26,8 @@ const Navbar = () => {
     email: '',
     password: '',
     phone: '',
-    role: 'user'
+    role: 'user',
+    agreeToTerms: false  // ✅ إضافة الموافقة على الشروط
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -95,6 +96,14 @@ const Navbar = () => {
     setLoading(true);
     setError('');
 
+    // ✅ التحقق من الموافقة على الشروط
+    if (!registerData.agreeToTerms) {
+      setError('يرجى الموافقة على الشروط والأحكام');
+      showError('يرجى الموافقة على الشروط والأحكام');
+      setLoading(false);
+      return;
+    }
+
     if (registerData.password.length < 6) {
       setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       showError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
@@ -107,7 +116,7 @@ const Navbar = () => {
       if (response.data.success) {
         showSuccess('✅ تم إنشاء الحساب بنجاح');
         setShowRegisterModal(false);
-        setRegisterData({ name: '', email: '', password: '', phone: '', role: 'user' });
+        setRegisterData({ name: '', email: '', password: '', phone: '', role: 'user', agreeToTerms: false });
         setShowLoginModal(true);
       }
     } catch (err) {
@@ -307,7 +316,7 @@ const Navbar = () => {
         </form>
       </Modal>
 
-      {/* Register Modal - مع 3 خيارات */}
+      {/* Register Modal - مع 3 خيارات وشروط الاستخدام */}
       <Modal isOpen={showRegisterModal} onClose={() => setShowRegisterModal(false)} title="Créer un compte" size="medium">
         <form onSubmit={handleRegisterSubmit} className="modal-form">
           {error && <div className="modal-error">{error}</div>}
@@ -360,7 +369,7 @@ const Navbar = () => {
             />
           </div>
           
-          {/* ✅ 3 خيارات لحساب المستخدم */}
+          {/* 3 خيارات لحساب المستخدم */}
           <div className="modal-form-group">
             <label>Type de compte</label>
             <div className="modal-radio-group">
@@ -395,6 +404,28 @@ const Navbar = () => {
                 Société
               </label>
             </div>
+          </div>
+          
+          {/* ✅ شروط الاستخدام وسياسة الخصوصية */}
+          <div className="modal-form-group terms-group">
+            <label className="terms-label">
+              <input
+                type="checkbox"
+                checked={registerData.agreeToTerms}
+                onChange={(e) => setRegisterData({ ...registerData, agreeToTerms: e.target.checked })}
+                required
+              />
+              <span>
+                J'accepte les{' '}
+                <Link to="/terms" target="_blank" style={{ color: '#6b46c0', textDecoration: 'underline' }}>
+                  conditions d'utilisation
+                </Link>
+                {' '}et la{' '}
+                <Link to="/privacy" target="_blank" style={{ color: '#6b46c0', textDecoration: 'underline' }}>
+                  politique de confidentialité
+                </Link>
+              </span>
+            </label>
           </div>
           
           <button type="submit" disabled={loading} className="modal-submit">
