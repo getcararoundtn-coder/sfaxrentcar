@@ -61,6 +61,16 @@
   color: white;
 }
 
+.stat-card.net-revenue {
+  background: linear-gradient(135deg, #6b46c0, #8b5cf6);
+  color: white;
+}
+
+.stat-card.monthly-revenue {
+  background: linear-gradient(135deg, #fd7e14, #ffc107);
+  color: white;
+}
+
 .stat-value {
   display: block;
   font-size: 24px;
@@ -69,7 +79,9 @@
   margin-bottom: 5px;
 }
 
-.stat-card.revenue .stat-value {
+.stat-card.revenue .stat-value,
+.stat-card.net-revenue .stat-value,
+.stat-card.monthly-revenue .stat-value {
   color: white;
 }
 
@@ -78,8 +90,17 @@
   color: #666;
 }
 
-.stat-card.revenue .stat-label {
+.stat-card.revenue .stat-label,
+.stat-card.net-revenue .stat-label,
+.stat-card.monthly-revenue .stat-label {
   color: rgba(255,255,255,0.9);
+}
+
+.stat-note {
+  font-size: 10px;
+  display: block;
+  margin-top: 5px;
+  opacity: 0.8;
 }
 
 /* التبويبات */
@@ -88,31 +109,33 @@
   gap: 10px;
   justify-content: center;
   margin-bottom: 30px;
+  flex-wrap: wrap;
 }
 
 .tab {
   padding: 10px 20px;
   border: none;
-  border-radius: 4px;
+  border-radius: 30px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
   background-color: #f8f9fa;
   color: #333;
   transition: all 0.3s;
 }
 
 .tab.active {
-  background-color: #007bff;
+  background-color: #6b46c0;
   color: white;
 }
 
 .tab:hover {
   background-color: #e9ecef;
+  transform: translateY(-2px);
 }
 
 .tab.active:hover {
-  background-color: #0056b3;
+  background-color: #5a3aa8;
 }
 
 /* شبكة السيارات */
@@ -124,7 +147,7 @@
 
 .car-card {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   border: 1px solid #e0e0e0;
@@ -148,10 +171,11 @@
 .car-header h3 {
   margin: 0;
   color: #333;
+  font-size: 18px;
 }
 
 .status-badge {
-  padding: 4px 8px;
+  padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
@@ -172,11 +196,16 @@
   color: #721c24;
 }
 
+.status-badge.draft {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
 .car-image {
   width: 100%;
   height: 150px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-bottom: 15px;
 }
 
@@ -187,6 +216,7 @@
 .car-details p {
   margin: 8px 0;
   color: #555;
+  font-size: 14px;
 }
 
 .availability {
@@ -212,9 +242,11 @@
   padding: 8px 16px;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .toggle-button.available {
@@ -236,16 +268,18 @@
 .view-button {
   flex: 1;
   padding: 8px 16px;
-  background-color: #007bff;
+  background-color: #6b46c0;
   color: white;
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: 6px;
   text-align: center;
+  font-size: 13px;
+  font-weight: 500;
   transition: background-color 0.3s;
 }
 
 .view-button:hover {
-  background-color: #0056b3;
+  background-color: #5a3aa8;
 }
 
 /* قائمة الحجوزات */
@@ -257,10 +291,15 @@
 
 .booking-card {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   border: 1px solid #e0e0e0;
+  transition: all 0.3s;
+}
+
+.booking-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .booking-header {
@@ -275,6 +314,7 @@
 .booking-header h3 {
   margin: 0;
   color: #333;
+  font-size: 18px;
 }
 
 .booking-details {
@@ -284,12 +324,23 @@
   margin-bottom: 15px;
   background-color: #f8f9fa;
   padding: 15px;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .booking-details p {
   margin: 5px 0;
   color: #555;
+  font-size: 14px;
+}
+
+.commission-info {
+  color: #fd7e14;
+  font-weight: 500;
+}
+
+.net-revenue-info {
+  color: #28a745;
+  font-weight: 500;
 }
 
 .booking-actions {
@@ -304,10 +355,10 @@
   color: white;
   text-decoration: none;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 500;
   text-align: center;
   transition: background-color 0.3s;
 }
@@ -322,10 +373,10 @@
   background-color: #dc3545;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 500;
   transition: background-color 0.3s;
 }
 
@@ -333,22 +384,179 @@
   background-color: #c82333;
 }
 
+/* ========== NEW: Messages Tab Styles ========== */
+.messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.message-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.message-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-left: 4px solid #6b46c0;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.message-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.message-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.message-preview {
+  margin: 10px 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-link {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #6b46c0;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.message-link:hover {
+  background-color: #5a3aa8;
+}
+
+/* ========== NEW: Paiements Tab Styles ========== */
+.payments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.payment-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s;
+}
+
+.payment-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.payment-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.payment-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.payment-status.completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.payment-status.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.payment-status.failed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.payment-details {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.payment-details p {
+  margin: 8px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.payment-details p strong {
+  color: #333;
+}
+
+.info-text {
+  font-size: 13px;
+  color: #999;
+  margin-top: 10px;
+}
+
 .no-data {
   text-align: center;
   padding: 40px;
   color: #666;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
 }
 
 .add-link {
   display: inline-block;
   margin-top: 15px;
   padding: 10px 20px;
-  background-color: #28a745;
+  background-color: #6b46c0;
   color: white;
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: 30px;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.add-link:hover {
+  background-color: #5a3aa8;
 }
 
 /* Responsive */
@@ -367,6 +575,20 @@
   
   .booking-actions {
     flex-direction: column;
+  }
+  
+  .cars-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tabs {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+  
+  .tab {
+    white-space: nowrap;
   }
 }
 
@@ -392,6 +614,21 @@
   }
   
   .car-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .booking-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .payment-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .message-header {
     flex-direction: column;
     align-items: flex-start;
   }
