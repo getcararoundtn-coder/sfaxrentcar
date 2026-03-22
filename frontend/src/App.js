@@ -1,14 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import About from './pages/About';
-import UploadDocuments from './pages/UploadDocuments';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import AddCar from './pages/AddCar';
@@ -27,11 +24,9 @@ function App() {
   useEffect(() => {
     console.log('✅ App.js loaded successfully (full version)');
     console.log('📝 Available routes:', [
-      '/', '/login', '/register', '/forgot-password', 
-      '/reset-password/:token', '/terms', '/privacy', 
-      '/about', '/cars', '/car/:id', '/upload-docs',
-      '/profile', '/my-bookings', '/owner-cars', '/add-car',
-      '/booking/:carId', '/messages/:bookingId', '/admin'
+      '/', '/forgot-password', '/reset-password/:token', '/terms', '/privacy', 
+      '/about', '/cars', '/car/:id', '/profile', '/my-bookings', '/owner-cars', 
+      '/add-car', '/booking/:carId', '/messages/:bookingId', '/admin'
     ]);
   }, []);
 
@@ -40,8 +35,6 @@ function App() {
       <Routes>
         {/* ========== المسارات العامة ========== */}
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/terms" element={<Terms />} />
@@ -51,11 +44,6 @@ function App() {
         <Route path="/car/:id" element={<CarDetails />} />
 
         {/* ========== المسارات المحمية (تتطلب تسجيل دخول) ========== */}
-        <Route path="/upload-docs" element={
-          <ProtectedRoute>
-            <UploadDocuments />
-          </ProtectedRoute>
-        } />
         <Route path="/profile" element={
           <ProtectedRoute>
             <Profile />
