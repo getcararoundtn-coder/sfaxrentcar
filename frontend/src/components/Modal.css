@@ -345,3 +345,43 @@
 .terms-label a:hover {
   text-decoration: underline;
 }
+/* Caution / Deposit Styles */
+.price-item.caution {
+  color: #b45309;
+  border-top: 1px dashed #fcd34d;
+  padding-top: 8px;
+  margin-top: 5px;
+}
+
+.caution-note {
+  background: #fef3c7;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #92400e;
+}
+.google-login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.google-login-button:hover {
+  background: #f8f9fa;
+}
+
+.google-login-button img {
+  width: 20px;
+  margin-right: 8px;
+}

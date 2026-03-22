@@ -9,7 +9,7 @@ import { showSuccess, showError } from '../../utils/ToastConfig';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { user, logout, setUser } = useContext(AuthContext);
+  const { user, logout, setUser, loginWithFirebaseGoogle } = useContext(AuthContext);
   const { settings } = useContext(SettingsContext);
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -27,7 +27,7 @@ const Navbar = () => {
     password: '',
     phone: '',
     role: 'user',
-    agreeToTerms: false  // ✅ إضافة الموافقة على الشروط
+    agreeToTerms: false
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +37,6 @@ const Navbar = () => {
     navigate('/');
     setMobileMenuOpen(false);
     setUserMenuOpen(false);
-    // ✅ إغلاق أي مودال مفتوح عند تسجيل الخروج
     setShowLoginModal(false);
     setShowRegisterModal(false);
   };
@@ -53,6 +52,29 @@ const Navbar = () => {
   const closeMenus = () => {
     setMobileMenuOpen(false);
     setUserMenuOpen(false);
+  };
+
+  // ✅ Google Login Handler
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await loginWithFirebaseGoogle();
+      if (result.success) {
+        showSuccess('✅ تم تسجيل الدخول بنجاح');
+        setShowLoginModal(false);
+        navigate('/');
+      } else {
+        setError(result.error || 'فشل تسجيل الدخول');
+        showError(result.error || 'فشل تسجيل الدخول');
+      }
+    } catch (err) {
+      console.error('Google login error:', err);
+      setError('حدث خطأ في تسجيل الدخول');
+      showError('حدث خطأ في تسجيل الدخول');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Login handlers
@@ -96,7 +118,6 @@ const Navbar = () => {
     setLoading(true);
     setError('');
 
-    // ✅ التحقق من الموافقة على الشروط
     if (!registerData.agreeToTerms) {
       setError('يرجى الموافقة على الشروط والأحكام');
       showError('يرجى الموافقة على الشروط والأحكام');
@@ -146,7 +167,6 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="desktop-menu">
-            {/* Louer ma voiture - يظهر للمستخدم المسجل يذهب إلى add-car، للزائر يفتح نافذة التسجيل */}
             {user ? (
               <Link to="/add-car" className="rent-button">
                 Louer ma voiture
@@ -170,7 +190,6 @@ const Navbar = () => {
                   <div className="user-dropdown">
                     <Link to="/profile" onClick={closeMenus}>Mon profil</Link>
                     <Link to="/my-bookings" onClick={closeMenus}>Mes réservations</Link>
-                    {/* ✅ إضافة Mes voitures للمؤجرين (owner) */}
                     {(user.role === 'owner') && (
                       <Link to="/owner-cars" onClick={closeMenus}>Mes voitures</Link>
                     )}
@@ -196,7 +215,6 @@ const Navbar = () => {
           {mobileMenuOpen && (
             <div className="mobile-menu">
               <div className="mobile-menu-content">
-                {/* Louer ma voiture - يظهر للمستخدم المسجل يذهب إلى add-car، للزائر يفتح نافذة التسجيل */}
                 {user ? (
                   <Link 
                     to="/add-car" 
@@ -231,7 +249,6 @@ const Navbar = () => {
                     <Link to="/my-bookings" className="mobile-link" onClick={closeMenus}>
                       Mes réservations
                     </Link>
-                    {/* ✅ إضافة Mes voitures للمؤجرين (owner) */}
                     {(user.role === 'owner') && (
                       <Link to="/owner-cars" className="mobile-link" onClick={closeMenus}>
                         Mes voitures
@@ -258,7 +275,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Login Modal */}
+      {/* Login Modal مع زر Google */}
       <Modal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} title="Se connecter" size="small">
         <form onSubmit={handleLoginSubmit} className="modal-form">
           {error && <div className="modal-error">{error}</div>}
@@ -290,6 +307,21 @@ const Navbar = () => {
           <button type="submit" disabled={loading} className="modal-submit">
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
+
+          {/* ✅ زر تسجيل الدخول بحساب Google */}
+          <button 
+            type="button" 
+            onClick={handleGoogleLogin} 
+            disabled={loading}
+            className="google-login-button"
+          >
+            <img 
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+              alt="Google" 
+              style={{ width: '20px', marginRight: '8px' }}
+            />
+            Continuer avec Google
+          </button>
           
           <div className="modal-footer-links">
             <button 
@@ -316,7 +348,7 @@ const Navbar = () => {
         </form>
       </Modal>
 
-      {/* Register Modal - مع 3 خيارات وشروط الاستخدام */}
+      {/* Register Modal */}
       <Modal isOpen={showRegisterModal} onClose={() => setShowRegisterModal(false)} title="Créer un compte" size="medium">
         <form onSubmit={handleRegisterSubmit} className="modal-form">
           {error && <div className="modal-error">{error}</div>}
@@ -369,7 +401,6 @@ const Navbar = () => {
             />
           </div>
           
-          {/* 3 خيارات لحساب المستخدم */}
           <div className="modal-form-group">
             <label>Type de compte</label>
             <div className="modal-radio-group">
@@ -406,7 +437,6 @@ const Navbar = () => {
             </div>
           </div>
           
-          {/* ✅ شروط الاستخدام وسياسة الخصوصية */}
           <div className="modal-form-group terms-group">
             <label className="terms-label">
               <input
