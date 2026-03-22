@@ -9,6 +9,7 @@ import About from './pages/About';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import AddCar from './pages/AddCar';
+import RentYourCar from './pages/RentYourCar'; // ✅ إضافة استيراد الصفحة الجديدة
 import CarDetails from './pages/CarDetails';
 import Booking from './pages/Booking';
 import MyBookings from './pages/MyBookings';
@@ -26,7 +27,7 @@ function App() {
     console.log('📝 Available routes:', [
       '/', '/forgot-password', '/reset-password/:token', '/terms', '/privacy', 
       '/about', '/cars', '/car/:id', '/profile', '/my-bookings', '/owner-cars', 
-      '/add-car', '/booking/:carId', '/messages/:bookingId', '/admin'
+      '/add-car', '/rent-your-car', '/booking/:carId', '/messages/:bookingId', '/admin'
     ]);
   }, []);
 
@@ -42,6 +43,13 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/car/:id" element={<CarDetails />} />
+
+        {/* ========== صفحة إضافة السيارة (Wizard) ========== */}
+        <Route path="/rent-your-car" element={
+          <ProtectedRoute>
+            <RentYourCar />
+          </ProtectedRoute>
+        } />
 
         {/* ========== المسارات المحمية (تتطلب تسجيل دخول) ========== */}
         <Route path="/profile" element={
