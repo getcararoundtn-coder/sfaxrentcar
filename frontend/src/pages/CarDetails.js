@@ -5,6 +5,8 @@ import Footer from '../components/layout/Footer';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
 import { showSuccess, showError, showWarning } from '../utils/ToastConfig';
+import ModalBooking from '../components/ModalBooking';
+import ModalUpload from '../components/ModalUpload';
 import './CarDetails.css';
 
 const CarDetails = () => {
@@ -19,7 +21,8 @@ const CarDetails = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [totalPrice, setTotalPrice] = useState(0);
-  const [bookingLoading, setBookingLoading] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -73,7 +76,7 @@ const CarDetails = () => {
     }
   }, [startDate, endDate, car]);
 
-  const handleBooking = async () => {
+  const handleBookingClick = () => {
     if (!user) {
       showWarning('يرجى تسجيل الدخول أولاً');
       navigate('/login');
@@ -82,7 +85,7 @@ const CarDetails = () => {
 
     if (user.verificationStatus !== 'approved') {
       showWarning('يجب توثيق حسابك أولاً (رفع رخصة القيادة)');
-      navigate('/upload-docs');
+      setShowUploadModal(true);
       return;
     }
 
@@ -100,27 +103,12 @@ const CarDetails = () => {
       return;
     }
 
-    setBookingLoading(true);
+    // فتح نافذة تأكيد الحجز
+    setShowBookingModal(true);
+  };
 
-    try {
-      const response = await API.post('/bookings', {
-        carId: car._id,
-        startDate,
-        endDate,
-        totalPrice
-      });
-
-      if (response.data.success) {
-        showSuccess('✅ تم إنشاء الحجز بنجاح!');
-        navigate('/my-bookings');
-      }
-    } catch (err) {
-      console.error('Booking error:', err);
-      const errorMessage = err.response?.data?.message || 'فشل إنشاء الحجز';
-      showError(errorMessage);
-    } finally {
-      setBookingLoading(false);
-    }
+  const handleBookingSuccess = () => {
+    navigate('/my-bookings');
   };
 
   const renderStars = (rating) => {
@@ -312,11 +300,11 @@ const CarDetails = () => {
             )}
 
             <button
-              onClick={handleBooking}
-              disabled={bookingLoading || !startDate || !endDate}
+              onClick={handleBookingClick}
+              disabled={!startDate || !endDate}
               className="book-button"
             >
-              {bookingLoading ? 'Traitement...' : 'Réserver'}
+              Réserver
             </button>
 
             <p className="booking-note">
@@ -357,6 +345,23 @@ const CarDetails = () => {
           )}
         </div>
       </div>
+
+      {/* Modal تأكيد الحجز */}
+      <ModalBooking
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        car={car}
+        startDate={startDate}
+        endDate={endDate}
+        totalPrice={totalPrice}
+        onSuccess={handleBookingSuccess}
+      />
+
+      {/* Modal رفع الوثائق */}
+      <ModalUpload
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+      />
       <Footer />
     </>
   );
