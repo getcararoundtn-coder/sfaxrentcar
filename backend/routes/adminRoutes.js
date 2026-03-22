@@ -29,6 +29,7 @@ router.patch('/cars/:id/approve', adminController.approveCar);
 router.patch('/cars/:id/reject', adminController.rejectCar);
 router.put('/cars/:id', adminController.updateCar);
 router.delete('/cars/:id', adminController.deleteCar);
+router.patch('/cars/:id/featured', adminController.toggleFeatured); // ✅ إضافة مسار التميز
 
 // ==================== الحجوزات ====================
 router.get('/bookings/pending', adminController.getPendingBookings);
