@@ -20,6 +20,7 @@ import Messages from './pages/Messages';
 import Cars from './pages/Cars';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './utils/ProtectedRoute';
+import CookieConsentBanner from './components/CookieConsent';
 
 function App() {
   // للتأكد من تحميل الملف
@@ -96,6 +97,8 @@ function App() {
         {/* ========== صفحة 404 للمسارات غير الموجودة ========== */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      {/* شريط الموافقة على الكوكيز */}
+      <CookieConsentBanner />
     </Router>
   );
 }
