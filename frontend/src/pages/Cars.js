@@ -5,6 +5,7 @@ import Footer from '../components/layout/Footer';
 import API from '../services/api';
 import { showError } from '../utils/ToastConfig';
 import LazyLoad from 'react-lazyload';
+import ModalFilter from '../components/ModalFilter';
 import './Cars.css';
 
 const Cars = () => {
@@ -13,7 +14,7 @@ const Cars = () => {
   const [ownerRatings, setOwnerRatings] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -107,10 +108,10 @@ const Cars = () => {
     fetchCars(1, false);
   }, [filters, fetchCars]);
 
-  const handleFilterChange = (key, value) => {
-    const newFilters = { ...filters, [key]: value };
+  const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
     updateURL(newFilters);
+    setShowFilterModal(false);
   };
 
   const clearFilters = () => {
@@ -120,7 +121,7 @@ const Cars = () => {
     };
     setFilters(emptyFilters);
     updateURL(emptyFilters);
-    setShowFilters(false);
+    setShowFilterModal(false);
   };
 
   const loadMore = () => {
@@ -162,9 +163,9 @@ const Cars = () => {
         </div>
 
         <div className="cars-container">
-          {/* زر الفلاتر */}
-          <button onClick={() => setShowFilters(!showFilters)} className="filter-toggle-btn">
-            {showFilters ? '✕ Fermer les filtres' : '🔍 Filtres'}
+          {/* زر الفلاتر - يفتح Modal */}
+          <button onClick={() => setShowFilterModal(true)} className="filter-toggle-btn">
+            🔍 Filtres
           </button>
 
           {/* عدد النتائج */}
@@ -174,117 +175,6 @@ const Cars = () => {
           </div>
 
           <div className="cars-layout">
-            {/* الفلاتر الجانبية */}
-            {showFilters && (
-              <aside className="filters-sidebar">
-                <div className="filter-group">
-                  <h4>Prix</h4>
-                  <div className="price-range">
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      value={filters.minPrice}
-                      onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                      className="filter-input"
-                    />
-                    <span>-</span>
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      value={filters.maxPrice}
-                      onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                      className="filter-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="filter-group">
-                  <h4>Type de voiture</h4>
-                  {['Citadine', 'Utilitaire', 'SUV', 'Familiale', 'Luxe', 'Économique'].map(type => (
-                    <label key={type} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={filters.type === type}
-                        onChange={() => handleFilterChange('type', filters.type === type ? '' : type)}
-                      />
-                      {type}
-                    </label>
-                  ))}
-                </div>
-
-                <div className="filter-group">
-                  <h4>Nombre de places</h4>
-                  <div className="seat-options">
-                    {[2, 4, 5, 7].map(seat => (
-                      <button
-                        key={seat}
-                        onClick={() => handleFilterChange('seats', filters.seats === seat.toString() ? '' : seat.toString())}
-                        className={`seat-btn ${filters.seats === seat.toString() ? 'active' : ''}`}
-                      >
-                        {seat}+
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="filter-group">
-                  <h4>Boîte de vitesses</h4>
-                  <div className="radio-group">
-                    <label>
-                      <input
-                        type="radio"
-                        name="transmission"
-                        value="manual"
-                        checked={filters.transmission === 'manual'}
-                        onChange={(e) => handleFilterChange('transmission', e.target.value)}
-                      />
-                      Manuelle
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="transmission"
-                        value="automatic"
-                        checked={filters.transmission === 'automatic'}
-                        onChange={(e) => handleFilterChange('transmission', e.target.value)}
-                      />
-                      Automatique
-                    </label>
-                  </div>
-                </div>
-
-                <div className="filter-group">
-                  <h4>Carburant</h4>
-                  <select
-                    value={filters.fuelType}
-                    onChange={(e) => handleFilterChange('fuelType', e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="">Tous</option>
-                    <option value="petrol">Essence</option>
-                    <option value="diesel">Diesel</option>
-                    <option value="electric">Électrique</option>
-                    <option value="hybrid">Hybride</option>
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={filters.minRating === '4'}
-                      onChange={() => handleFilterChange('minRating', filters.minRating === '4' ? '' : '4')}
-                    />
-                    Taux d’acceptation supérieur à 30%
-                  </label>
-                </div>
-
-                <button onClick={clearFilters} className="clear-filters-btn">
-                  Réinitialiser les filtres
-                </button>
-              </aside>
-            )}
-
             {/* عرض السيارات */}
             <main className="cars-grid">
               {loading ? (
@@ -346,6 +236,15 @@ const Cars = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal الفلاتر */}
+      <ModalFilter
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        filters={filters}
+        onApply={handleApplyFilters}
+        onClear={clearFilters}
+      />
       <Footer />
     </>
   );
