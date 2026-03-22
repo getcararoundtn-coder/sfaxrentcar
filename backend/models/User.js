@@ -21,6 +21,17 @@ const userSchema = new mongoose.Schema({
     enum: ['not_submitted', 'pending', 'approved', 'rejected'], 
     default: 'not_submitted' 
   },
+  // ✅ إضافة حقول تقييم المؤجر
+  ownerRating: { 
+    type: Number, 
+    default: 0, 
+    min: 0, 
+    max: 5 
+  },
+  ownerRatingCount: { 
+    type: Number, 
+    default: 0 
+  },
   resetPasswordToken: { type: String },
   resetPasswordExpire: { type: Date },
   createdAt: { type: Date, default: Date.now }
