@@ -158,6 +158,10 @@ const Navbar = () => {
                   <div className="user-dropdown">
                     <Link to="/profile" onClick={closeMenus}>Mon profil</Link>
                     <Link to="/my-bookings" onClick={closeMenus}>Mes réservations</Link>
+                    {/* ✅ إضافة Mes voitures للمؤجرين (company) */}
+                    {(user.role === 'company') && (
+                      <Link to="/owner-cars" onClick={closeMenus}>Mes voitures</Link>
+                    )}
                     {user.role === 'admin' && (
                       <Link to="/admin" onClick={closeMenus}>Admin</Link>
                     )}
@@ -212,6 +216,12 @@ const Navbar = () => {
                     <Link to="/my-bookings" className="mobile-link" onClick={closeMenus}>
                       Mes réservations
                     </Link>
+                    {/* ✅ إضافة Mes voitures للمؤجرين (company) */}
+                    {(user.role === 'company') && (
+                      <Link to="/owner-cars" className="mobile-link" onClick={closeMenus}>
+                        Mes voitures
+                      </Link>
+                    )}
                     {user.role === 'admin' && (
                       <Link to="/admin" className="mobile-link" onClick={closeMenus}>
                         Admin
