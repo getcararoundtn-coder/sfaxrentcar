@@ -7,7 +7,7 @@ const sendEmail = require('../utils/sendEmail');
 // تسجيل مستخدم
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role } = req.body;
 
     // التحقق من المدخلات
     if (!name || !email || !password || !phone) {
@@ -32,7 +32,14 @@ exports.register = async (req, res) => {
       });
     }
 
-    const user = await User.create({ name, email, password, phone });
+    // ✅ إضافة role إلى إنشاء المستخدم (افتراضي 'user' إذا لم يتم إرساله)
+    const user = await User.create({ 
+      name, 
+      email, 
+      password, 
+      phone,
+      role: role || 'user' // إذا لم يتم إرسال role، يصبح 'user'
+    });
     generateToken(res, user._id);
 
     // 🔔 إشعار للمشرفين بمستخدم جديد
@@ -167,29 +174,29 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // استخدام FRONTEND_URL من المتغيرات البيئية
-    const frontendUrl = process.env.FRONTEND_URL || 'https://sfaxrentcar-frontend-x281.onrender.com';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://drivetunisia.onrender.com';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; direction: rtl;">
         <h2 style="color: #333; text-align: center;">إعادة تعيين كلمة المرور</h2>
         <p style="font-size: 16px;">مرحباً ${user.name}،</p>
-        <p style="font-size: 16px;">لقد تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في <strong>SfaxRentCar</strong>.</p>
+        <p style="font-size: 16px;">لقد تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في <strong>DriveTunisia</strong>.</p>
         <p style="font-size: 16px;">الرجاء الضغط على الرابط أدناه لإعادة تعيين كلمة المرور:</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" style="display: inline-block; padding: 12px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-size: 16px;">إعادة تعيين كلمة المرور</a>
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 30px; background-color: #6b46c0; color: white; text-decoration: none; border-radius: 4px; font-size: 16px;">إعادة تعيين كلمة المرور</a>
         </div>
         <p style="font-size: 14px; color: #666;">هذا الرابط صالح لمدة 30 دقيقة فقط.</p>
         <p style="font-size: 14px; color: #666;">إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد.</p>
         <hr style="margin: 30px 0;">
-        <p style="color: #666; font-size: 12px; text-align: center;">SfaxRentCar - منصة كراء السيارات</p>
+        <p style="color: #666; font-size: 12px; text-align: center;">DriveTunisia - منصة كراء السيارات</p>
       </div>
     `;
 
     try {
       await sendEmail({
         email: user.email,
-        subject: 'إعادة تعيين كلمة المرور - SfaxRentCar',
+        subject: 'إعادة تعيين كلمة المرور - DriveTunisia',
         html: message
       });
 
