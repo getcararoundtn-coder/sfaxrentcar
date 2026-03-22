@@ -167,8 +167,9 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="desktop-menu">
+            {/* ✅ تغيير الرابط من /add-car إلى /rent-your-car */}
             {user ? (
-              <Link to="/add-car" className="rent-button">
+              <Link to="/rent-your-car" className="rent-button">
                 Louer ma voiture
               </Link>
             ) : (
@@ -190,11 +191,9 @@ const Navbar = () => {
                   <div className="user-dropdown">
                     <Link to="/profile" onClick={closeMenus}>Mon profil</Link>
                     <Link to="/my-bookings" onClick={closeMenus}>Mes réservations</Link>
-                    {(user.role === 'owner') && (
+                    {/* ✅ إضافة رابط لسياراتي للمؤجرين */}
+                    {(user.role === 'owner' || user.role === 'company') && (
                       <Link to="/owner-cars" onClick={closeMenus}>Mes voitures</Link>
-                    )}
-                    {(user.role === 'company') && (
-                      <Link to="/owner-cars" onClick={closeMenus}>Mes voitures (Société)</Link>
                     )}
                     {user.role === 'admin' && (
                       <Link to="/admin" onClick={closeMenus}>Admin</Link>
@@ -215,9 +214,10 @@ const Navbar = () => {
           {mobileMenuOpen && (
             <div className="mobile-menu">
               <div className="mobile-menu-content">
+                {/* ✅ تغيير الرابط في الموبايل أيضاً */}
                 {user ? (
                   <Link 
-                    to="/add-car" 
+                    to="/rent-your-car" 
                     className="mobile-rent-button" 
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -249,14 +249,10 @@ const Navbar = () => {
                     <Link to="/my-bookings" className="mobile-link" onClick={closeMenus}>
                       Mes réservations
                     </Link>
-                    {(user.role === 'owner') && (
+                    {/* ✅ إضافة رابط لسياراتي في الموبايل */}
+                    {(user.role === 'owner' || user.role === 'company') && (
                       <Link to="/owner-cars" className="mobile-link" onClick={closeMenus}>
                         Mes voitures
-                      </Link>
-                    )}
-                    {(user.role === 'company') && (
-                      <Link to="/owner-cars" className="mobile-link" onClick={closeMenus}>
-                        Mes voitures (Société)
                       </Link>
                     )}
                     {user.role === 'admin' && (
