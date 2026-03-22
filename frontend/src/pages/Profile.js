@@ -65,6 +65,16 @@ const Profile = () => {
     }
   };
 
+  // ✅ دالة للحصول على اسم الدور بالعربية
+  const getRoleName = (role) => {
+    switch(role) {
+      case 'admin': return 'مشرف';
+      case 'company': return 'Propriétaire';
+      case 'user': return 'Locataire';
+      default: return 'مستخدم';
+    }
+  };
+
   if (loading) return <><Navbar /><div className="profile-loading">جاري التحميل...</div></>;
 
   const verif = getVerificationText(user?.verificationStatus);
@@ -94,7 +104,7 @@ const Profile = () => {
                 <div className="profile-info-item">
                   <span className="profile-info-label">الدور</span>
                   <span className="profile-info-value">
-                    {user?.role === 'admin' ? 'مشرف' : user?.role === 'company' ? 'شركة' : 'مستخدم'}
+                    {getRoleName(user?.role)}
                   </span>
                 </div>
               </div>
