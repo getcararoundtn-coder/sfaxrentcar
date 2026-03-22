@@ -20,6 +20,13 @@
   position: relative;
 }
 
+/* ========== Logo Section with Notification Bell ========== */
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 /* Logo - بنفسجي */
 .logo-link {
   font-size: 1.8rem;
@@ -31,6 +38,12 @@
 
 .logo-link:hover {
   opacity: 0.85;
+}
+
+/* أيقونة الإشعارات بجانب الاسم */
+.notification-bell-inline {
+  display: flex;
+  align-items: center;
 }
 
 /* ========== Desktop Menu ========== */
@@ -263,6 +276,11 @@
 
   .logo-link {
     font-size: 1.5rem;
+  }
+
+  /* إخفاء أيقونة الإشعارات بجانب الاسم في الهاتف */
+  .notification-bell-inline {
+    display: none;
   }
 
   .notification-wrapper {

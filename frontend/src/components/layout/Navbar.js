@@ -35,11 +35,17 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="nav-container">
-        {/* Logo - بنفسجي */}
-        <div className="logo">
+        {/* الشعار مع أيقونة الإشعارات */}
+        <div className="logo-section">
           <Link to="/" className="logo-link" onClick={closeMenus}>
             {settings?.platformName || 'DriveTunisia'}
           </Link>
+          {/* أيقونة الإشعارات بجانب الاسم */}
+          {user && (
+            <div className="notification-bell-inline">
+              <NotificationBell />
+            </div>
+          )}
         </div>
 
         {/* ========== قائمة سطح المكتب (Desktop) ========== */}
@@ -69,13 +75,6 @@ const Navbar = () => {
                   <button onClick={handleLogout} className="logout-btn">Se déconnecter</button>
                 </div>
               )}
-            </div>
-          )}
-          
-          {/* إشعارات للمستخدمين المسجلين */}
-          {user && (
-            <div className="notification-wrapper">
-              <NotificationBell />
             </div>
           )}
         </div>
