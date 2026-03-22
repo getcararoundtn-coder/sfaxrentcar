@@ -16,7 +16,8 @@ const notificationSchema = new mongoose.Schema({
       'message_reply',
       'new_review',
       'new_user',
-      'new_message'  // ✅ متأكد من وجودها
+      'new_message',
+      'support_reply'  // ✅ إضافة دعم الرسائل
     ],
     required: true
   },
