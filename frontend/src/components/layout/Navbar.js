@@ -134,9 +134,16 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="desktop-menu">
-            <button onClick={() => setShowRegisterModal(true)} className="rent-button">
-              Louer ma voiture
-            </button>
+            {/* Louer ma voiture - يظهر للمستخدم المسجل يذهب إلى add-car، للزائر يفتح نافذة التسجيل */}
+            {user ? (
+              <Link to="/add-car" className="rent-button">
+                Louer ma voiture
+              </Link>
+            ) : (
+              <button onClick={() => setShowRegisterModal(true)} className="rent-button">
+                Louer ma voiture
+              </button>
+            )}
             
             {!user ? (
               <button onClick={() => setShowLoginModal(true)} className="login-link">
@@ -170,12 +177,23 @@ const Navbar = () => {
           {mobileMenuOpen && (
             <div className="mobile-menu">
               <div className="mobile-menu-content">
-                <button 
-                  onClick={() => { setShowRegisterModal(true); setMobileMenuOpen(false); }}
-                  className="mobile-rent-button"
-                >
-                  Louer ma voiture
-                </button>
+                {/* Louer ma voiture - يظهر للمستخدم المسجل يذهب إلى add-car، للزائر يفتح نافذة التسجيل */}
+                {user ? (
+                  <Link 
+                    to="/add-car" 
+                    className="mobile-rent-button" 
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Louer ma voiture
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => { setShowRegisterModal(true); setMobileMenuOpen(false); }}
+                    className="mobile-rent-button"
+                  >
+                    Louer ma voiture
+                  </button>
+                )}
                 
                 {!user && (
                   <button 
