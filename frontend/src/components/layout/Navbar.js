@@ -13,7 +13,7 @@ const Navbar = () => {
   const { settings } = useContext(SettingsContext);
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [popupMenuOpen, setPopupMenuOpen] = useState(false);
   
   // Modal states
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -36,7 +36,7 @@ const Navbar = () => {
     await logout();
     navigate('/');
     setMobileMenuOpen(false);
-    setUserMenuOpen(false);
+    setPopupMenuOpen(false);
     setShowLoginModal(false);
     setShowRegisterModal(false);
   };
@@ -45,13 +45,24 @@ const Navbar = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const toggleUserMenu = () => {
-    setUserMenuOpen(!userMenuOpen);
+  const togglePopupMenu = () => {
+    setPopupMenuOpen(!popupMenuOpen);
   };
 
   const closeMenus = () => {
     setMobileMenuOpen(false);
-    setUserMenuOpen(false);
+    setPopupMenuOpen(false);
+  };
+
+  // الحصول على أول حرف من الاسم للصورة
+  const getInitial = () => {
+    if (user?.name) {
+      return user.name.charAt(0).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
   };
 
   // ✅ Google Login Handler
@@ -167,7 +178,7 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="desktop-menu">
-            {/* ✅ تغيير الرابط من /add-car إلى /rent-your-car */}
+            {/* زر Louer ma voiture */}
             {user ? (
               <Link to="/rent-your-car" className="rent-button">
                 Louer ma voiture
@@ -184,21 +195,49 @@ const Navbar = () => {
               </button>
             ) : (
               <div className="user-menu-container">
-                <button className="user-menu-button" onClick={toggleUserMenu}>
-                  Mon compte ▼
+                {/* ✅ Popup Menu Trigger - الاسم مع الصورة والسهم */}
+                <button className="user-menu-trigger" onClick={togglePopupMenu}>
+                  <div className="user-avatar">
+                    {getInitial()}
+                  </div>
+                  <span className="user-name">{user.name?.split(' ')[0] || user.name || 'Compte'}</span>
+                  <span className={`user-chevron ${popupMenuOpen ? 'open' : ''}`}>▼</span>
                 </button>
-                {userMenuOpen && (
-                  <div className="user-dropdown">
-                    <Link to="/profile" onClick={closeMenus}>Mon profil</Link>
-                    <Link to="/my-bookings" onClick={closeMenus}>Mes réservations</Link>
-                    {/* ✅ إضافة رابط لسياراتي للمؤجرين */}
-                    {(user.role === 'owner' || user.role === 'company') && (
-                      <Link to="/owner-cars" onClick={closeMenus}>Mes voitures</Link>
-                    )}
-                    {user.role === 'admin' && (
-                      <Link to="/admin" onClick={closeMenus}>Admin</Link>
-                    )}
-                    <button onClick={handleLogout} className="logout-btn">Se déconnecter</button>
+                
+                {/* ✅ Popup Menu الجديد */}
+                {popupMenuOpen && (
+                  <div className="user-popup-menu">
+                    <div className="popup-user-info">
+                      <div className="popup-user-name">{user.name || 'Utilisateur'}</div>
+                      <div className="popup-user-email">{user.email}</div>
+                    </div>
+                    
+                    <div className="popup-menu-title">Menu propriétaire</div>
+                    
+                    <Link to="/owner-cars?tab=messages" className="popup-menu-item" onClick={closeMenus}>
+                      <span className="popup-menu-icon">💬</span>
+                      <span>Messages</span>
+                    </Link>
+                    
+                    <Link to="/owner-cars?tab=bookings" className="popup-menu-item" onClick={closeMenus}>
+                      <span className="popup-menu-icon">📅</span>
+                      <span>Locations</span>
+                    </Link>
+                    
+                    <Link to="/owner-cars?tab=paiements" className="popup-menu-item" onClick={closeMenus}>
+                      <span className="popup-menu-icon">💰</span>
+                      <span>Paiements</span>
+                    </Link>
+                    
+                    <Link to="/owner-cars?tab=cars" className="popup-menu-item" onClick={closeMenus}>
+                      <span className="popup-menu-icon">🚗</span>
+                      <span>Voitures</span>
+                    </Link>
+                    
+                    <button onClick={handleLogout} className="popup-menu-item logout">
+                      <span className="popup-menu-icon">🚪</span>
+                      <span>Se déconnecter</span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -214,7 +253,6 @@ const Navbar = () => {
           {mobileMenuOpen && (
             <div className="mobile-menu">
               <div className="mobile-menu-content">
-                {/* ✅ تغيير الرابط في الموبايل أيضاً */}
                 {user ? (
                   <Link 
                     to="/rent-your-car" 
@@ -249,11 +287,21 @@ const Navbar = () => {
                     <Link to="/my-bookings" className="mobile-link" onClick={closeMenus}>
                       Mes réservations
                     </Link>
-                    {/* ✅ إضافة رابط لسياراتي في الموبايل */}
                     {(user.role === 'owner' || user.role === 'company') && (
-                      <Link to="/owner-cars" className="mobile-link" onClick={closeMenus}>
-                        Mes voitures
-                      </Link>
+                      <>
+                        <Link to="/owner-cars?tab=messages" className="mobile-link" onClick={closeMenus}>
+                          💬 Messages
+                        </Link>
+                        <Link to="/owner-cars?tab=bookings" className="mobile-link" onClick={closeMenus}>
+                          📅 Locations
+                        </Link>
+                        <Link to="/owner-cars?tab=paiements" className="mobile-link" onClick={closeMenus}>
+                          💰 Paiements
+                        </Link>
+                        <Link to="/owner-cars?tab=cars" className="mobile-link" onClick={closeMenus}>
+                          🚗 Voitures
+                        </Link>
+                      </>
                     )}
                     {user.role === 'admin' && (
                       <Link to="/admin" className="mobile-link" onClick={closeMenus}>
@@ -304,7 +352,6 @@ const Navbar = () => {
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
 
-          {/* ✅ زر تسجيل الدخول بحساب Google */}
           <button 
             type="button" 
             onClick={handleGoogleLogin} 
