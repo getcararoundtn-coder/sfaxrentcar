@@ -10,6 +10,7 @@ import './Cars.css';
 const Cars = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [cars, setCars] = useState([]);
+  const [ownerRatings, setOwnerRatings] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -70,10 +71,27 @@ const Cars = () => {
       
       const { data } = await API.get(`/cars?${params}`);
       
+      const newCars = data.data;
+      
+      // جلب تقييمات المؤجرين للسيارات الجديدة
+      const ratings = {};
+      for (const car of newCars) {
+        if (car.ownerId?._id) {
+          try {
+            const res = await API.get(`/users/${car.ownerId._id}/rating`);
+            ratings[car.ownerId._id] = res.data.data;
+          } catch (err) {
+            ratings[car.ownerId._id] = { rating: 0, count: 0 };
+          }
+        }
+      }
+      
       if (append) {
-        setCars(prev => [...prev, ...data.data]);
+        setCars(prev => [...prev, ...newCars]);
+        setOwnerRatings(prev => ({ ...prev, ...ratings }));
       } else {
-        setCars(data.data);
+        setCars(newCars);
+        setOwnerRatings(ratings);
       }
       setPagination(data.pagination);
     } catch (err) {
@@ -115,6 +133,16 @@ const Cars = () => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  };
+
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span key={i} className={i <= Math.round(rating) ? 'star filled' : 'star'}>★</span>
+      );
+    }
+    return stars;
   };
 
   const locationText = filters.delegation ? `${filters.delegation}, ${filters.city}` : filters.city;
@@ -271,28 +299,35 @@ const Cars = () => {
                 </div>
               ) : (
                 <>
-                  {cars.map(car => (
-                    <div key={car._id} className="car-card">
-                      <LazyLoad height={180} offset={100} once>
-                        <img 
-                          src={car.images?.[0] || '/default-car.jpg'} 
-                          alt={`${car.brand} ${car.model}`} 
-                          className="car-image" 
-                        />
-                      </LazyLoad>
-                      <div className="car-info">
-                        <h3 className="car-title">{car.brand} {car.model}</h3>
-                        <p className="car-price">{car.pricePerDay} DT / jour</p>
-                        <div className="car-meta">
-                          <span className="car-rating">⭐ {car.averageRating || 4.5}</span>
-                          <span className="car-location">📍 {car.delegation || car.city || car.location}</span>
+                  {cars.map(car => {
+                    const ownerRating = ownerRatings[car.ownerId?._id] || { rating: 0, count: 0 };
+                    return (
+                      <div key={car._id} className="car-card">
+                        <LazyLoad height={180} offset={100} once>
+                          <img 
+                            src={car.images?.[0] || '/default-car.jpg'} 
+                            alt={`${car.brand} ${car.model}`} 
+                            className="car-image" 
+                          />
+                        </LazyLoad>
+                        <div className="car-info">
+                          <h3 className="car-title">{car.brand} {car.model}</h3>
+                          <p className="car-price">{car.pricePerDay} DT / jour</p>
+                          <div className="car-meta">
+                            <div className="owner-rating">
+                              <span className="stars">{renderStars(ownerRating.rating)}</span>
+                              <span className="rating-value">{ownerRating.rating?.toFixed(1) || 'Nouveau'}</span>
+                              <span className="review-count">({ownerRating.count || 0})</span>
+                            </div>
+                            <span className="car-location">📍 {car.delegation || car.city || car.location}</span>
+                          </div>
+                          <Link to={`/car/${car._id}`} className="car-details-btn">
+                            Voir les détails
+                          </Link>
                         </div>
-                        <Link to={`/car/${car._id}`} className="car-details-btn">
-                          Voir les détails
-                        </Link>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {pagination.hasNextPage && (
                     <div className="load-more">
