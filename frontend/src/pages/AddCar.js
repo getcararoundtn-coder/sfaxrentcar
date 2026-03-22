@@ -33,10 +33,9 @@ const AddCar = () => {
   useEffect(() => {
     if (!user) {
       navigate('/login');
-    } else if (user.verificationStatus !== 'approved') {
-      alert('يجب أن يكون حسابك موثقاً لإضافة سيارة');
-      navigate('/profile');
     }
+    // ✅ تم إزالة التحقق من التوثيق - المالك لا يحتاج توثيقاً لإضافة سيارة
+    // ✅ فقط نتحقق من أن المستخدم مسجل دخول
   }, [user, navigate]);
 
   const handleChange = (e) => {
@@ -94,7 +93,6 @@ const AddCar = () => {
         alert('❌ انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى');
         navigate('/login');
       } else if (err.response?.status === 400) {
-        // عرض تفاصيل الخطأ من Backend
         const errorMessage = err.response?.data?.message || 'الرجاء تعبئة جميع الحقول المطلوبة';
         alert(`❌ فشل إضافة السيارة: ${errorMessage}`);
       } else {
