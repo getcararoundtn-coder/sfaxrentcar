@@ -13,6 +13,7 @@ const CarDetails = () => {
   const { user } = useContext(AuthContext);
   const [car, setCar] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [ownerRating, setOwnerRating] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [startDate, setStartDate] = useState('');
@@ -35,6 +36,17 @@ const CarDetails = () => {
         } catch (reviewErr) {
           console.error('Error fetching reviews:', reviewErr);
           setReviews([]);
+        }
+        
+        // جلب تقييم المؤجر
+        if (data.data?.ownerId?._id) {
+          try {
+            const ownerRes = await API.get(`/users/${data.data.ownerId._id}/rating`);
+            setOwnerRating(ownerRes.data.data);
+          } catch (ownerErr) {
+            console.error('Error fetching owner rating:', ownerErr);
+            setOwnerRating({ rating: 0, count: 0, name: data.data.ownerId.name });
+          }
         }
       } catch (err) {
         console.error('Error fetching car details:', err);
@@ -242,6 +254,7 @@ const CarDetails = () => {
               </div>
             )}
 
+            {/* قسم المالك مع التقييم */}
             <div className="car-owner">
               <h3>Propriétaire</h3>
               <div className="owner-info">
@@ -250,7 +263,11 @@ const CarDetails = () => {
                 </div>
                 <div className="owner-details">
                   <span className="owner-name">{car.ownerId?.name || 'Utilisateur'}</span>
-                  <span className="owner-rating">⭐ {car.ownerRating || 'Nouveau'}</span>
+                  <div className="owner-rating">
+                    <span className="stars">{renderStars(Math.round(ownerRating?.rating || 0))}</span>
+                    <span className="rating-value">{ownerRating?.rating?.toFixed(1) || 'Nouveau'}</span>
+                    <span className="review-count">({ownerRating?.count || 0} avis)</span>
+                  </div>
                 </div>
               </div>
             </div>
