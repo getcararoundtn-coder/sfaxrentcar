@@ -30,59 +30,89 @@ const Navbar = () => {
       <div className="nav-container">
         <div className="logo">
           <Link to="/" className="logo-link" onClick={closeMenu}>
-            {settings?.platformName || 'SfaxRentCar'}
+            {settings?.platformName || 'DriveTunisia'}
           </Link>
         </div>
 
-        {/* زر Menu ☰ */}
+        {/* قائمة سطح المكتب (Desktop) */}
+        <div className="desktop-menu">
+          {/* Louer ma voiture - زر مميز */}
+          <Link to={user ? "/add-car" : "/register"} className="rent-button">
+            Louer ma voiture
+          </Link>
+          
+          {/* Se connecter / Mon compte */}
+          {!user ? (
+            <Link to="/login" className="login-link">
+              Se connecter
+            </Link>
+          ) : (
+            <div className="user-menu">
+              <button className="user-menu-button" onClick={toggleMenu}>
+                Mon compte ▼
+              </button>
+              {menuOpen && (
+                <div className="user-dropdown">
+                  <Link to="/profile" onClick={closeMenu}>Mon profil</Link>
+                  <Link to="/my-bookings" onClick={closeMenu}>Mes réservations</Link>
+                  {user.role === 'admin' && (
+                    <Link to="/admin" onClick={closeMenu}>Admin</Link>
+                  )}
+                  <button onClick={handleLogout} className="logout-btn">Se déconnecter</button>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* إشعارات للمستخدمين المسجلين */}
+          {user && (
+            <div className="notification-wrapper">
+              <NotificationBell />
+            </div>
+          )}
+        </div>
+
+        {/* زر Menu ☰ للهاتف (Mobile) */}
         <button className="menu-button" onClick={toggleMenu}>
           ☰
         </button>
 
-        {/* القائمة المنسدلة */}
+        {/* القائمة المنسدلة للهاتف */}
         {menuOpen && (
-          <div className="dropdown-menu">
-            <div className="dropdown-content">
+          <div className="mobile-menu">
+            <div className="mobile-menu-content">
+              {/* Louer ma voiture - زر مميز */}
+              <Link to={user ? "/add-car" : "/register"} className="mobile-rent-button" onClick={closeMenu}>
+                Louer ma voiture
+              </Link>
+              
               {/* Se connecter - يظهر فقط إذا لم يكن مسجلاً */}
               {!user && (
-                <Link to="/login" className="dropdown-link" onClick={closeMenu}>
+                <Link to="/login" className="mobile-link" onClick={closeMenu}>
                   Se connecter
                 </Link>
               )}
               
-              {/* Louer ma voiture */}
-              <Link to={user ? "/add-car" : "/register"} className="dropdown-link" onClick={closeMenu}>
-                Louer ma voiture
-              </Link>
-              
               {/* روابط إضافية للمستخدمين المسجلين */}
               {user && (
                 <>
-                  <div className="dropdown-divider"></div>
-                  <Link to="/profile" className="dropdown-link" onClick={closeMenu}>
+                  <Link to="/profile" className="mobile-link" onClick={closeMenu}>
                     Mon profil
                   </Link>
-                  <Link to="/my-bookings" className="dropdown-link" onClick={closeMenu}>
+                  <Link to="/my-bookings" className="mobile-link" onClick={closeMenu}>
                     Mes réservations
                   </Link>
                   {user.role === 'admin' && (
-                    <Link to="/admin" className="dropdown-link" onClick={closeMenu}>
+                    <Link to="/admin" className="mobile-link" onClick={closeMenu}>
                       Admin
                     </Link>
                   )}
-                  <button onClick={handleLogout} className="dropdown-logout-btn">
+                  <button onClick={handleLogout} className="mobile-logout-btn">
                     Se déconnecter
                   </button>
                 </>
               )}
             </div>
-          </div>
-        )}
-
-        {/* إشعارات للمستخدمين المسجلين فقط - تظهر بجانب الزر */}
-        {user && (
-          <div className="notification-wrapper">
-            <NotificationBell />
           </div>
         )}
       </div>

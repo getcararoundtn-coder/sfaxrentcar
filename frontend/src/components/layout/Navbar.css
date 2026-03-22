@@ -1,110 +1,224 @@
+/* ========== Navbar Styles ========== */
+
 .navbar {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #ddd;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0 20px;
   position: sticky;
   top: 0;
   z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .nav-container {
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  flex-wrap: wrap;
-}
-
-.logo {
-  font-size: 24px;
-  font-weight: bold;
+  height: 70px;
+  position: relative;
 }
 
 .logo-link {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: white;
   text-decoration: none;
-  color: #333;
+  transition: opacity 0.3s;
 }
 
-/* زر Menu */
-.menu-button {
-  background: none;
+.logo-link:hover {
+  opacity: 0.9;
+}
+
+/* ========== Desktop Menu ========== */
+.desktop-menu {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+/* زر Louer ma voiture - مميز */
+.rent-button {
+  background: #28a745;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.rent-button:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+/* رابط تسجيل الدخول */
+.login-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.3s;
+  font-size: 1rem;
+}
+
+.login-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* قائمة المستخدم (Desktop) */
+.user-menu {
+  position: relative;
+}
+
+.user-menu-button {
+  background: transparent;
+  color: white;
   border: none;
-  font-size: 28px;
+  font-size: 1rem;
   cursor: pointer;
-  color: #333;
   padding: 8px 12px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  font-weight: 500;
+  transition: opacity 0.3s;
 }
 
-.menu-button:hover {
-  background-color: #e9ecef;
+.user-menu-button:hover {
+  opacity: 0.8;
 }
 
-/* القائمة المنسدلة */
-.dropdown-menu {
+.user-dropdown {
   position: absolute;
-  top: 60px;
-  right: 20px;
-  background-color: white;
+  top: 100%;
+  right: 0;
+  background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1001;
-  min-width: 220px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  min-width: 200px;
   overflow: hidden;
+  z-index: 1001;
   animation: fadeIn 0.2s ease;
 }
 
-.dropdown-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.dropdown-link {
+.user-dropdown a,
+.user-dropdown button {
+  display: block;
   padding: 12px 20px;
   color: #333;
   text-decoration: none;
-  font-size: 14px;
-  transition: background-color 0.2s;
-  border: none;
-  background: none;
-  text-align: right;
-  cursor: pointer;
-}
-
-.dropdown-link:hover {
-  background-color: #f5f5f5;
-}
-
-.dropdown-divider {
-  height: 1px;
-  background-color: #e0e0e0;
-  margin: 8px 0;
-}
-
-.dropdown-logout-btn {
-  padding: 12px 20px;
-  color: #dc3545;
-  background: none;
-  border: none;
-  text-align: right;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 0.9rem;
+  transition: background 0.3s;
   width: 100%;
+  text-align: left;
+  border: none;
+  background: white;
+  cursor: pointer;
 }
 
-.dropdown-logout-btn:hover {
-  background-color: #f5f5f5;
+.user-dropdown a:hover,
+.user-dropdown button:hover {
+  background: #f8f9fa;
 }
 
-.notification-wrapper {
+.user-dropdown .logout-btn {
+  color: #dc3545;
+  border-top: 1px solid #eee;
+}
+
+.user-dropdown .logout-btn:hover {
+  background: #f8d7da;
+}
+
+/* ========== Mobile Menu ========== */
+.menu-button {
+  display: none;
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  color: white;
+  cursor: pointer;
+  padding: 10px;
+  transition: opacity 0.3s;
+}
+
+.menu-button:hover {
+  opacity: 0.8;
+}
+
+.mobile-menu {
   position: absolute;
-  top: 15px;
-  right: 80px;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background: white;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: slideDown 0.3s ease;
 }
 
+.mobile-menu-content {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+}
+
+.mobile-rent-button {
+  background: #28a745;
+  color: white;
+  padding: 15px 20px;
+  text-decoration: none;
+  font-weight: 600;
+  text-align: center;
+  margin: 5px 15px;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.mobile-rent-button:hover {
+  background: #218838;
+}
+
+.mobile-link {
+  padding: 12px 20px;
+  color: #333;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background 0.3s;
+  text-align: center;
+}
+
+.mobile-link:hover {
+  background: #f8f9fa;
+}
+
+.mobile-logout-btn {
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  color: #dc3545;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+  text-align: center;
+  border-top: 1px solid #eee;
+  margin-top: 5px;
+}
+
+.mobile-logout-btn:hover {
+  background: #f8d7da;
+}
+
+/* ========== Notification Wrapper ========== */
+.notification-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* ========== Animations ========== */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -116,207 +230,68 @@
   }
 }
 
-/* أنماط للأجهزة المحمولة */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== Responsive Design ========== */
+
+/* Tablet & Mobile (max-width: 768px) */
 @media (max-width: 768px) {
+  .desktop-menu {
+    display: none;
+  }
+
+  .menu-button {
+    display: block;
+  }
+
+  .logo-link {
+    font-size: 1.5rem;
+  }
+
+  .notification-wrapper {
+    position: absolute;
+    right: 70px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+/* Desktop (min-width: 769px) */
+@media (min-width: 769px) {
+  .mobile-menu {
+    display: none;
+  }
+}
+
+/* Small Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .logo-link {
+    font-size: 1.2rem;
+  }
+
   .menu-button {
     font-size: 24px;
   }
-  
+
+  .mobile-rent-button {
+    margin: 5px 10px;
+    padding: 12px 15px;
+  }
+
+  .mobile-link {
+    padding: 10px 15px;
+  }
+
   .notification-wrapper {
-    right: 70px;
-  }
-  
-  .dropdown-menu {
-    right: 10px;
-    left: 10px;
-    min-width: auto;
-  }
-  
-  .logo {
-    font-size: 20px;
-  }
-}
-
-/* أنماط قديمة محتفظ بها للتوافق */
-.nav-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: #333;
-  font-size: 14px;
-  transition: color 0.3s;
-}
-
-.nav-link:hover {
-  color: #007bff;
-}
-
-.user-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.user-name {
-  margin-right: 10px;
-  color: #333;
-  font-size: 14px;
-}
-
-.profile-link {
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.add-car-link {
-  padding: 5px 10px;
-  background-color: #28a745;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.logout-btn {
-  padding: 5px 10px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.login-link {
-  padding: 5px 15px;
-  background-color: #007bff;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.register-link {
-  padding: 5px 15px;
-  background-color: #28a745;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.mobile-menu {
-  display: none;
-  background-color: white;
-  padding: 15px;
-  border-top: 1px solid #ddd;
-}
-
-.mobile-link {
-  display: block;
-  padding: 10px;
-  text-decoration: none;
-  color: #333;
-  border-bottom: 1px solid #eee;
-  font-size: 16px;
-}
-
-.mobile-user-section {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-}
-
-.mobile-user-name {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-.mobile-profile-link,
-.mobile-add-car-link {
-  display: block;
-  padding: 8px;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  text-align: center;
-  margin-bottom: 5px;
-}
-
-.mobile-profile-link {
-  background-color: #007bff;
-}
-
-.mobile-add-car-link {
-  background-color: #28a745;
-}
-
-.mobile-logout-btn {
-  width: 100%;
-  padding: 8px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.mobile-auth-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.mobile-login-link,
-.mobile-register-link {
-  flex: 1;
-  padding: 8px;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.mobile-login-link {
-  background-color: #007bff;
-}
-
-.mobile-register-link {
-  background-color: #28a745;
-}
-
-@media (max-width: 768px) {
-  .menu-button {
-    display: block;
-  }
-  
-  .desktop-links,
-  .desktop-user-section {
-    display: none;
-  }
-  
-  .mobile-menu {
-    display: block;
-  }
-  
-  .nav-container {
-    padding: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .logo {
-    font-size: 20px;
+    right: 60px;
   }
 }
