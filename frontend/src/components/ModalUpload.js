@@ -1,6 +1,5 @@
 import React, { useState, useContext } from 'react';
 import Modal from './Modal';
-import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { showSuccess, showError } from '../utils/ToastConfig';
 
