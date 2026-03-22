@@ -4,7 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
-import { showSuccess, showError, showWarning } from '../utils/ToastConfig';
+import { showError, showWarning } from '../utils/ToastConfig';
 import ModalBooking from '../components/ModalBooking';
 import ModalUpload from '../components/ModalUpload';
 import './CarDetails.css';
@@ -152,6 +152,9 @@ const CarDetails = () => {
     );
   }
 
+  // حساب المجموع الكلي مع الضمان
+  const totalWithDeposit = totalPrice + (car.deposit || 0);
+
   return (
     <>
       <Navbar />
@@ -196,6 +199,15 @@ const CarDetails = () => {
               <span className="price">{car.pricePerDay} DT</span>
               <span className="per-day">/ jour</span>
             </div>
+
+            {/* ✅ إضافة مبلغ الضمان */}
+            {car.deposit && (
+              <div className="car-deposit-box">
+                <span className="deposit-label">💰 Caution</span>
+                <span className="deposit-value">{car.deposit} DT</span>
+                <span className="deposit-note">(remboursable)</span>
+              </div>
+            )}
 
             <div className="car-specs">
               <div className="spec-item">
@@ -292,10 +304,22 @@ const CarDetails = () => {
                   <span>{Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))} jours × {car.pricePerDay} DT</span>
                   <span>{totalPrice} DT</span>
                 </div>
+                {/* ✅ إضافة مبلغ الضمان في تفاصيل السعر */}
+                {car.deposit > 0 && (
+                  <div className="breakdown-item caution-item">
+                    <span>💰 Caution (remboursable)</span>
+                    <span>{car.deposit} DT</span>
+                  </div>
+                )}
                 <div className="breakdown-item total">
-                  <span>Total</span>
-                  <span>{totalPrice} DT</span>
+                  <span>Total à payer</span>
+                  <span>{totalWithDeposit.toFixed(2)} DT</span>
                 </div>
+                {car.deposit > 0 && (
+                  <div className="caution-note-booking">
+                    <small>⚠️ La caution vous sera restituée après la fin de la location, sous réserve d'absence de dommages.</small>
+                  </div>
+                )}
               </div>
             )}
 

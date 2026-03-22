@@ -641,3 +641,19 @@
     font-size: 13px;
   }
 }
+/* Caution / Deposit in Booking Section */
+.breakdown-item.caution-item {
+  color: #b45309;
+  border-top: 1px dashed #fcd34d;
+  padding-top: 8px;
+  margin-top: 5px;
+}
+
+.caution-note-booking {
+  background: #fef3c7;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #92400e;
+}
