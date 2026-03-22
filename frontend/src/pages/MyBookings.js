@@ -2,12 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import API from '../services/api';
-import { showError } from '../utils/ToastConfig';
+import { showError, showSuccess } from '../utils/ToastConfig';
+import Modal from '../components/Modal';
 import './MyBookings.css';
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // حالة الـ Modal للمحادثة
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -27,6 +35,47 @@ const MyBookings = () => {
     }
   };
 
+  // جلب الرسائل لحجز معين
+  const fetchMessages = async (bookingId) => {
+    try {
+      const { data } = await API.get(`/messages/booking/${bookingId}`);
+      setMessages(data.data || []);
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+      setMessages([]);
+    }
+  };
+
+  // فتح نافذة المحادثة
+  const openChat = async (booking) => {
+    setSelectedBooking(booking);
+    await fetchMessages(booking._id);
+    setShowMessageModal(true);
+  };
+
+  // إرسال رسالة جديدة
+  const sendMessage = async () => {
+    if (!newMessage.trim()) return;
+    
+    setSending(true);
+    try {
+      const response = await API.post(`/messages/booking/${selectedBooking._id}`, {
+        text: newMessage
+      });
+      
+      if (response.data.success) {
+        setMessages([...messages, response.data.data]);
+        setNewMessage('');
+        showSuccess('✅ تم إرسال الرسالة');
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      showError('فشل إرسال الرسالة');
+    } finally {
+      setSending(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch(status) {
       case 'pending': return { bg: '#fff3cd', color: '#856404', text: 'قيد الانتظار' };
@@ -40,6 +89,11 @@ const MyBookings = () => {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ar-TN');
+  };
+
+  const formatMessageDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
   };
 
   if (loading) {
@@ -92,10 +146,14 @@ const MyBookings = () => {
                       عرض السيارة
                     </Link>
                     
-                    {booking.status === 'approved' && (
-                      <Link to={`/messages/${booking._id}`} className="message-button">
-                        💬 المحادثة
-                      </Link>
+                    {/* زر المحادثة - يظهر للحجوزات المؤكدة والمكتملة والمعلقة */}
+                    {(booking.status === 'pending' || booking.status === 'approved' || booking.status === 'completed') && (
+                      <button 
+                        onClick={() => openChat(booking)}
+                        className="message-button"
+                      >
+                        💬 محادثة
+                      </button>
                     )}
                   </div>
                 </div>
@@ -104,6 +162,52 @@ const MyBookings = () => {
           </div>
         )}
       </div>
+
+      {/* Modal المحادثة */}
+      <Modal 
+        isOpen={showMessageModal} 
+        onClose={() => setShowMessageModal(false)} 
+        title={`محادثة - ${selectedBooking?.carId?.brand} ${selectedBooking?.carId?.model}`}
+        size="medium"
+      >
+        <div className="chat-container">
+          <div className="chat-messages">
+            {messages.length === 0 ? (
+              <div className="no-messages">
+                <p>لا توجد رسائل بعد</p>
+                <p className="chat-hint">ابدأ المحادثة مع المالك</p>
+              </div>
+            ) : (
+              messages.map(msg => (
+                <div key={msg._id} className={`chat-message ${msg.senderId === 'me' ? 'sent' : 'received'}`}>
+                  <div className="message-content">
+                    <p>{msg.text}</p>
+                    <span className="message-time">{formatMessageDate(msg.createdAt)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          <div className="chat-input-area">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="اكتب رسالتك..."
+              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              disabled={sending}
+            />
+            <button 
+              onClick={sendMessage} 
+              disabled={sending || !newMessage.trim()}
+              className="send-button"
+            >
+              {sending ? 'جاري الإرسال...' : 'إرسال'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
