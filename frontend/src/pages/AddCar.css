@@ -1,0 +1,103 @@
+.add-car-redirect {
+  min-height: calc(100vh - 60px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.redirect-card {
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 550px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.redirect-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.redirect-title {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.redirect-message {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.redirect-button {
+  background: linear-gradient(135deg, #6b46c0 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 40px;
+  cursor: pointer;
+  margin: 20px 0 15px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.redirect-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(107, 70, 193, 0.3);
+}
+
+.redirect-link {
+  display: inline-block;
+  color: #6b46c0;
+  text-decoration: none;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.redirect-link:hover {
+  text-decoration: underline;
+}
+
+.redirect-info {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.redirect-info h4 {
+  color: #333;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.redirect-info ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.redirect-info li {
+  color: #666;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
