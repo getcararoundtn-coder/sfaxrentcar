@@ -64,11 +64,19 @@ const OwnerCars = () => {
   const getStatusText = (status) => {
     switch(status) {
       case 'pending': return { text: 'في انتظار الموافقة', color: '#ffc107' };
+      case 'accepted': return { text: 'مقبول', color: '#28a745' };
       case 'approved': return { text: 'مؤكد', color: '#28a745' };
       case 'completed': return { text: 'مكتمل', color: '#17a2b8' };
+      case 'refused': return { text: 'مرفوض', color: '#dc3545' };
       case 'cancelled': return { text: 'ملغي', color: '#dc3545' };
       default: return { text: status, color: '#6c757d' };
     }
+  };
+
+  // حساب الإيرادات بعد خصم العمولة (5%)
+  const calculateNetRevenue = (total) => {
+    const commission = (total * 5) / 100;
+    return total - commission;
   };
 
   if (loading) return <><Navbar /><div className="loading">جاري التحميل...</div></>;
@@ -83,29 +91,6 @@ const OwnerCars = () => {
         {error && <div className="error-message">{error}</div>}
 
         {/* بطاقات الإحصائيات */}
-        {stats && (
-  <div className="stats-cards">
-    {/* ... البطاقات الموجودة ... */}
-    
-    {/* بطاقات الإيرادات مفصلة */}
-    <div className="stat-card revenue">
-      <span className="stat-value">{stats.revenue?.total || 0} د.ت</span>
-      <span className="stat-label">إيرادات مكتملة</span>
-      <small className="stat-note">من حجوزات مكتملة</small>
-    </div>
-    
-    <div className="stat-card pending-revenue">
-      <span className="stat-value">{stats.revenue?.pending || 0} د.ت</span>
-      <span className="stat-label">إيرادات معلقة</span>
-      <small className="stat-note">حجوزات مؤكدة لم تكتمل بعد</small>
-    </div>
-    
-    <div className="stat-card monthly-revenue">
-      <span className="stat-value">{stats.revenue?.monthly || 0} د.ت</span>
-      <span className="stat-label">إيرادات هذا الشهر</span>
-    </div>
-  </div>
-)}
         {stats && (
           <div className="stats-cards">
             <div className="stat-card">
@@ -128,16 +113,24 @@ const OwnerCars = () => {
               <span className="stat-value">{stats.bookings?.completed || 0}</span>
               <span className="stat-label">حجوزات مكتملة</span>
             </div>
+            
+            {/* بطاقات الإيرادات */}
             <div className="stat-card revenue">
               <span className="stat-value">{stats.revenue?.total || 0} د.ت</span>
-              <span className="stat-label">إجمالي الإيرادات</span>
+              <span className="stat-label">الإيرادات الإجمالية</span>
+              <small className="stat-note">قبل خصم العمولة</small>
             </div>
-            <div className="stat-card revenue">
+            <div className="stat-card net-revenue">
+              <span className="stat-value">{calculateNetRevenue(stats.revenue?.total || 0)} د.ت</span>
+              <span className="stat-label">صافي الإيرادات</span>
+              <small className="stat-note">بعد خصم 5% عمولة</small>
+            </div>
+            <div className="stat-card monthly-revenue">
               <span className="stat-value">{stats.revenue?.monthly || 0} د.ت</span>
               <span className="stat-label">إيرادات هذا الشهر</span>
             </div>
             <div className="stat-card">
-              <span className="stat-value">{stats.averageRating || 0}</span>
+              <span className="stat-value">{stats.averageRating || 0}/5</span>
               <span className="stat-label">متوسط التقييم</span>
             </div>
           </div>
@@ -163,7 +156,8 @@ const OwnerCars = () => {
             {cars.length === 0 ? (
               <div className="no-data">
                 <p>لا توجد سيارات مضافة.</p>
-                <Link to="/add-car" className="add-link">➕ إضافة سيارة جديدة</Link>
+                {/* ✅ تغيير الرابط إلى صفحة الويزارد الجديدة */}
+                <Link to="/rent-your-car" className="add-link">➕ إضافة سيارة جديدة</Link>
               </div>
             ) : (
               <div className="cars-grid">
@@ -173,7 +167,8 @@ const OwnerCars = () => {
                       <h3>{car.brand} {car.model} ({car.year})</h3>
                       <span className={`status-badge ${car.status}`}>
                         {car.status === 'approved' ? 'موافق عليها' : 
-                         car.status === 'pending' ? 'في انتظار الموافقة' : 'مرفوضة'}
+                         car.status === 'pending' ? 'في انتظار الموافقة' : 
+                         car.status === 'draft' ? 'مسودة' : 'مرفوضة'}
                       </span>
                     </div>
 
@@ -182,8 +177,8 @@ const OwnerCars = () => {
                     )}
 
                     <div className="car-details">
-                      <p><strong>السعر:</strong> {car.pricePerDay} دينار/يوم</p>
-                      <p><strong>الموقع:</strong> {car.location}</p>
+                      <p><strong>السعر:</strong> {car.pricePerDay || 'غير محدد'} دينار/يوم</p>
+                      <p><strong>الموقع:</strong> {car.location || car.city || 'غير محدد'}</p>
                       <p><strong>الحالة:</strong> 
                         <span className={`availability ${car.isAvailable ? 'available' : 'unavailable'}`}>
                           {car.isAvailable ? '✅ متاحة' : '❌ غير متاحة'}
@@ -217,6 +212,9 @@ const OwnerCars = () => {
               <div className="bookings-list">
                 {bookings.map(booking => {
                   const status = getStatusText(booking.status);
+                  const netRevenue = calculateNetRevenue(booking.totalPrice || 0);
+                  const commission = (booking.totalPrice || 0) * 0.05;
+                  
                   return (
                     <div key={booking._id} className="booking-card">
                       <div className="booking-header">
@@ -227,15 +225,25 @@ const OwnerCars = () => {
                       </div>
 
                       <div className="booking-details">
-                        <p><strong>المستأجر:</strong> {booking.renterId?.name}</p>
-                        <p><strong>البريد:</strong> {booking.renterId?.email}</p>
-                        <p><strong>الهاتف:</strong> {booking.renterId?.phone}</p>
+                        <p><strong>المستأجر:</strong> {booking.renterId?.name || 'غير معروف'}</p>
+                        <p><strong>البريد:</strong> {booking.renterId?.email || 'غير معروف'}</p>
+                        <p><strong>الهاتف:</strong> {booking.renterId?.phone || 'غير معروف'}</p>
                         <p><strong>من:</strong> {new Date(booking.startDate).toLocaleDateString('ar-TN')}</p>
                         <p><strong>إلى:</strong> {new Date(booking.endDate).toLocaleDateString('ar-TN')}</p>
                         <p><strong>الإجمالي:</strong> {booking.totalPrice} دينار</p>
+                        {booking.status === 'completed' && (
+                          <>
+                            <p className="commission-info">
+                              <strong>عمولة المنصة (5%):</strong> {commission.toFixed(2)} دينار
+                            </p>
+                            <p className="net-revenue-info">
+                              <strong>صافي أرباحك:</strong> {netRevenue.toFixed(2)} دينار
+                            </p>
+                          </>
+                        )}
                       </div>
 
-                      {booking.status === 'approved' && (
+                      {(booking.status === 'accepted' || booking.status === 'approved') && (
                         <div className="booking-actions">
                           <Link to={`/messages/${booking._id}`} className="message-button">
                             💬 المحادثة
