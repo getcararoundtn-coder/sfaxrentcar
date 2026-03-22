@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
@@ -8,18 +8,40 @@ import './OwnerCars.css';
 
 const OwnerCars = () => {
   const { user } = useContext(AuthContext);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [cars, setCars] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('cars');
+  
+  // تحديد التبويب النشط من الـ URL (messages, bookings, paiements, cars)
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'cars');
 
-  useEffect(() => {
-    fetchAllData();
+  // تحديث الـ URL عند تغيير التبويب
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
+
+  // ⚠️ مؤقتاً: تعطيل جلب المحادثات والمدفوعات حتى إنشاء الـ API
+  const fetchMessages = useCallback(async () => {
+    // مؤقتاً: استخدام بيانات تجريبية فارغة
+    setMessages([]);
+    // await API.get('/messages/owner'); // سيتم تفعيلها لاحقاً
   }, []);
 
-  const fetchAllData = async () => {
+  const fetchPayments = useCallback(async () => {
+    // مؤقتاً: استخدام بيانات تجريبية فارغة
+    setPayments([]);
+    // await API.get('/payments/owner'); // سيتم تفعيلها لاحقاً
+  }, []);
+
+  // جلب جميع البيانات
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -32,13 +54,23 @@ const OwnerCars = () => {
       setCars(carsRes.data.data || []);
       setBookings(bookingsRes.data.data || []);
       setStats(statsRes.data.data || {});
+      
+      // مؤقتاً: تعطيل جلب المحادثات والمدفوعات
+      await Promise.all([
+        fetchMessages(),
+        fetchPayments()
+      ]);
     } catch (err) {
       console.error('Error fetching owner data:', err);
       setError('حدث خطأ في جلب البيانات. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchMessages, fetchPayments]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleToggleAvailability = async (carId, currentStatus) => {
     try {
@@ -77,6 +109,12 @@ const OwnerCars = () => {
   const calculateNetRevenue = (total) => {
     const commission = (total * 5) / 100;
     return total - commission;
+  };
+
+  // تنسيق التاريخ
+  const formatDate = (date) => {
+    if (!date) return 'غير محدد';
+    return new Date(date).toLocaleDateString('ar-TN');
   };
 
   if (loading) return <><Navbar /><div className="loading">جاري التحميل...</div></>;
@@ -136,27 +174,40 @@ const OwnerCars = () => {
           </div>
         )}
 
+        {/* Tabs - القائمة الجديدة */}
         <div className="tabs">
           <button
-            onClick={() => setActiveTab('cars')}
+            onClick={() => handleTabChange('cars')}
             className={`tab ${activeTab === 'cars' ? 'active' : ''}`}
           >
-            🚗 سياراتي ({cars.length})
+            🚗 Voitures ({cars.length})
           </button>
           <button
-            onClick={() => setActiveTab('bookings')}
+            onClick={() => handleTabChange('bookings')}
             className={`tab ${activeTab === 'bookings' ? 'active' : ''}`}
           >
-            📅 حجوزات سياراتي ({bookings.length})
+            📅 Locations ({bookings.length})
+          </button>
+          <button
+            onClick={() => handleTabChange('messages')}
+            className={`tab ${activeTab === 'messages' ? 'active' : ''}`}
+          >
+            💬 Messages ({messages.length})
+          </button>
+          <button
+            onClick={() => handleTabChange('paiements')}
+            className={`tab ${activeTab === 'paiements' ? 'active' : ''}`}
+          >
+            💰 Paiements ({payments.length})
           </button>
         </div>
 
+        {/* Voitures Tab */}
         {activeTab === 'cars' && (
           <div>
             {cars.length === 0 ? (
               <div className="no-data">
                 <p>لا توجد سيارات مضافة.</p>
-                {/* ✅ تغيير الرابط إلى صفحة الويزارد الجديدة */}
                 <Link to="/rent-your-car" className="add-link">➕ إضافة سيارة جديدة</Link>
               </div>
             ) : (
@@ -202,6 +253,7 @@ const OwnerCars = () => {
           </div>
         )}
 
+        {/* Locations Tab (Bookings) */}
         {activeTab === 'bookings' && (
           <div>
             {bookings.length === 0 ? (
@@ -228,8 +280,8 @@ const OwnerCars = () => {
                         <p><strong>المستأجر:</strong> {booking.renterId?.name || 'غير معروف'}</p>
                         <p><strong>البريد:</strong> {booking.renterId?.email || 'غير معروف'}</p>
                         <p><strong>الهاتف:</strong> {booking.renterId?.phone || 'غير معروف'}</p>
-                        <p><strong>من:</strong> {new Date(booking.startDate).toLocaleDateString('ar-TN')}</p>
-                        <p><strong>إلى:</strong> {new Date(booking.endDate).toLocaleDateString('ar-TN')}</p>
+                        <p><strong>من:</strong> {formatDate(booking.startDate)}</p>
+                        <p><strong>إلى:</strong> {formatDate(booking.endDate)}</p>
                         <p><strong>الإجمالي:</strong> {booking.totalPrice} دينار</p>
                         {booking.status === 'completed' && (
                           <>
@@ -261,6 +313,26 @@ const OwnerCars = () => {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Messages Tab - مؤقتاً */}
+        {activeTab === 'messages' && (
+          <div>
+            <div className="no-data">
+              <p>💬 قريباً: نظام المحادثات</p>
+              <p className="info-text">سيتم إضافة نظام المحادثات قريباً للتواصل مع المستأجرين</p>
+            </div>
+          </div>
+        )}
+
+        {/* Paiements Tab - مؤقتاً */}
+        {activeTab === 'paiements' && (
+          <div>
+            <div className="no-data">
+              <p>💰 قريباً: نظام المدفوعات</p>
+              <p className="info-text">سيتم عرض تفاصيل المدفوعات هنا عند اكتمال الحجوزات</p>
+            </div>
           </div>
         )}
       </div>
