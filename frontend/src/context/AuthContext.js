@@ -1,6 +1,6 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useCallback } from 'react';
 import API from '../services/api';
-import { auth, loginWithEmail, registerWithEmail, loginWithGoogle, logoutFirebase } from '../firebase';
+import { auth, loginWithEmail, loginWithGoogle, logoutFirebase } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 export const AuthContext = createContext();
@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [firebaseUser, setFirebaseUser] = useState(null);
 
   // جلب المستخدم من Backend
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const { data } = await API.get('/auth/me');
       setUser(data.data);
@@ -23,10 +23,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       return null;
     }
-  };
+  }, []);
 
   // ربط حساب Firebase مع حساب محلي
-  const linkFirebaseAccount = async (firebaseUid, email, name) => {
+  const linkFirebaseAccount = useCallback(async (firebaseUid, email, name) => {
     try {
       const { data } = await API.post('/auth/firebase-login', {
         firebaseUid,
@@ -40,10 +40,10 @@ export const AuthProvider = ({ children }) => {
       console.error('Firebase login error:', err);
       return null;
     }
-  };
+  }, []);
 
   // تسجيل الدخول بالبريد الإلكتروني وكلمة المرور (Firebase + Backend)
-  const loginWithFirebaseEmail = async (email, password) => {
+  const loginWithFirebaseEmail = useCallback(async (email, password) => {
     try {
       const userCredential = await loginWithEmail(email, password);
       const firebaseUser = userCredential.user;
@@ -60,10 +60,10 @@ export const AuthProvider = ({ children }) => {
       console.error('Firebase login error:', error);
       return { success: false, error: error.message };
     }
-  };
+  }, [linkFirebaseAccount]);
 
   // تسجيل الدخول بحساب Google
-  const loginWithFirebaseGoogle = async () => {
+  const loginWithFirebaseGoogle = useCallback(async () => {
     try {
       const result = await loginWithGoogle();
       const firebaseUser = result.user;
@@ -80,10 +80,10 @@ export const AuthProvider = ({ children }) => {
       console.error('Google login error:', error);
       return { success: false, error: error.message };
     }
-  };
+  }, [linkFirebaseAccount]);
 
   // تسجيل الخروج (من Firebase و Backend)
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // تسجيل الخروج من Firebase
       await logoutFirebase();
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('Logout error:', err);
     }
-  };
+  }, []);
 
   // مراقبة حالة Firebase Auth
   useEffect(() => {
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }) => {
     });
     
     return () => unsubscribe();
-  }, []);
+  }, [user, linkFirebaseAccount]); // ✅ إضافة التبعيات
 
   // جلب المستخدم من Backend عند تحميل الصفحة
   useEffect(() => {
@@ -130,7 +130,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [fetchUser]);
 
   return (
     <AuthContext.Provider value={{ 
