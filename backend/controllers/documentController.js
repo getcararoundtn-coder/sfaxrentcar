@@ -3,7 +3,7 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { uploadDocuments } = require('../config/cloudinary');
 
-// @desc    رفع وثائق المستخدم
+// @desc    رفع رخصة القيادة (توثيق المستخدم)
 // @route   POST /api/documents/upload
 // @access  Private
 exports.uploadDocuments = async (req, res) => {
@@ -13,25 +13,20 @@ exports.uploadDocuments = async (req, res) => {
     }
 
     try {
-      if (!req.files || !req.files.idFront || !req.files.idBack || !req.files.driverLicense) {
-        return res.status(400).json({ message: 'جميع الصور مطلوبة' });
+      // ✅ التحقق من وجود ملف واحد فقط (رخصة القيادة)
+      if (!req.files || !req.files.driverLicense) {
+        return res.status(400).json({ message: 'يرجى رفع صورة رخصة القيادة' });
       }
 
-      const idFrontUrl = req.files.idFront[0].path;
-      const idBackUrl = req.files.idBack[0].path;
       const driverLicenseUrl = req.files.driverLicense[0].path;
 
       let document = await Document.findOne({ userId: req.user._id });
       if (document) {
-        document.idFront = idFrontUrl;
-        document.idBack = idBackUrl;
         document.driverLicense = driverLicenseUrl;
         document.status = 'pending';
       } else {
         document = new Document({
           userId: req.user._id,
-          idFront: idFrontUrl,
-          idBack: idBackUrl,
           driverLicense: driverLicenseUrl,
           status: 'pending'
         });
@@ -56,7 +51,7 @@ exports.uploadDocuments = async (req, res) => {
         console.error('فشل إنشاء إشعار للمشرفين:', notifError);
       }
 
-      res.json({ success: true, message: 'تم رفع الوثائق بنجاح' });
+      res.json({ success: true, message: 'تم رفع رخصة القيادة بنجاح' });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: error.message });
