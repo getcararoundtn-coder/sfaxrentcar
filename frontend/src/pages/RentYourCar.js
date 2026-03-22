@@ -21,195 +21,70 @@ const carBrands = [
   'Toyota', 'Triumph', 'Vauxhall', 'Volkswagen', 'Volvo', 'Wuling', 'Xpeng', 'Zeekr', 'Zotye'
 ];
 
-// ========== الموديلات حسب الماركة (شاملة - بدون تكرار) ==========
+// ========== الموديلات حسب الماركة (شاملة) ==========
 const carModels = {
-  // Ford
   'Ford': ['EcoSport', 'Fiesta', 'Focus', 'Mondeo', 'Fusion', 'Mustang', 'Mustang Mach-E', 'Explorer', 'Expedition', 'Edge', 'Escape', 'Kuga', 'Puma', 'Ranger', 'F-150', 'F-250', 'Transit', 'Tourneo', 'Galaxy', 'S-Max', 'C-Max', 'B-Max', 'Ka', 'Figo', 'GT', 'Bronco', 'Bronco Sport', 'Maverick'],
-  
-  // Renault
   'Renault': ['Clio', 'Captur', 'Megane', 'Megane E-Tech', 'Scenic', 'Espace', 'Kadjar', 'Austral', 'Arkana', 'Talisman', 'Zoe', 'Twingo', 'Twingo E-Tech', 'Kangoo', 'Master', 'Trafic', 'Alaskan', 'Kwid', 'Symbioz', 'Rafale', 'R5', 'R4'],
-  
-  // Peugeot
   'Peugeot': ['208', '2008', '308', '3008', '408', '508', '5008', '508 SW', 'Rifter', 'Partner', 'Expert', 'Boxer', 'Traveller', 'Landtrek', '108', '107', '1007', 'RCZ', 'iOn', 'e-208', 'e-2008', 'e-308', 'e-3008', 'e-5008'],
-  
-  // Citroën
   'Citroën': ['C3', 'C3 Aircross', 'C4', 'C4 Cactus', 'C4 X', 'C5 Aircross', 'C5 X', 'Berlingo', 'Jumpy', 'SpaceTourer', 'Ami', 'DS3', 'DS4', 'DS5', 'DS7', 'DS9', 'e-C3', 'e-C4', 'e-C4 X'],
-  
-  // Toyota
   'Toyota': ['Yaris', 'Yaris Cross', 'Corolla', 'Corolla Cross', 'Camry', 'RAV4', 'C-HR', 'Highlander', 'Land Cruiser', 'Land Cruiser Prado', 'Fortuner', 'Hilux', 'Supra', 'GR86', 'GR Yaris', 'GR Corolla', 'Prius', 'Mirai', 'bZ4X', 'Aygo', 'Aygo X', 'Proace', 'Proace City'],
-  
-  // Volkswagen
   'Volkswagen': ['Polo', 'Golf', 'Golf GTI', 'Golf R', 'ID.3', 'ID.4', 'ID.5', 'ID.7', 'ID.Buzz', 'Passat', 'Arteon', 'Tiguan', 'Tiguan Allspace', 'T-Roc', 'Taigo', 'T-Cross', 'Touareg', 'Touran', 'Sharan', 'California', 'Caddy', 'Transporter', 'Amarok', 'Up!', 'e-Up!'],
-  
-  // BMW
   'BMW': ['Série 1', 'Série 2', 'Série 2 Gran Coupé', 'Série 3', 'Série 4', 'Série 5', 'Série 6', 'Série 7', 'Série 8', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'XM', 'i3', 'i4', 'i5', 'i7', 'iX', 'iX1', 'iX2', 'iX3', 'Z4', 'M2', 'M3', 'M4', 'M5', 'M8'],
-  
-  // Mercedes-Benz
   'Mercedes-Benz': ['Classe A', 'Classe B', 'Classe C', 'Classe CLA', 'Classe CLS', 'Classe E', 'Classe S', 'Classe GLA', 'Classe GLB', 'Classe GLC', 'Classe GLE', 'Classe GLS', 'Classe G', 'EQA', 'EQB', 'EQC', 'EQE', 'EQS', 'EQV', 'AMG GT', 'AMG SL', 'Vito', 'Sprinter', 'Citan', 'T-Class'],
-  
-  // Audi
   'Audi': ['A1', 'A3', 'A3 Sportback', 'A4', 'A4 Avant', 'A5', 'A5 Sportback', 'A6', 'A6 Avant', 'A7', 'A8', 'Q2', 'Q3', 'Q3 Sportback', 'Q4 e-tron', 'Q5', 'Q5 Sportback', 'Q6 e-tron', 'Q7', 'Q8', 'Q8 e-tron', 'e-tron GT', 'R8', 'RS3', 'RS4', 'RS5', 'RS6', 'RS7', 'RS Q3', 'RS e-tron GT'],
-  
-  // Tesla
   'Tesla': ['Model 3', 'Model S', 'Model X', 'Model Y', 'Cybertruck', 'Roadster'],
-  
-  // Hyundai
   'Hyundai': ['i10', 'i20', 'i30', 'i40', 'Tucson', 'Santa Fe', 'Kona', 'Kona Electric', 'Bayon', 'IONIQ', 'IONIQ 5', 'IONIQ 6', 'IONIQ 7', 'Nexo', 'Genesis', 'Veloster', 'Elantra', 'Sonata', 'Palisade', 'Staria'],
-  
-  // Kia
   'Kia': ['Picanto', 'Rio', 'Ceed', 'Ceed SW', 'ProCeed', 'XCeed', 'Sportage', 'Sorento', 'Stonic', 'Niro', 'Niro EV', 'Soul', 'Soul EV', 'EV6', 'EV9', 'Telluride', 'Carnival', 'Mohave', 'K5', 'K8'],
-  
-  // Nissan
   'Nissan': ['Micra', 'Note', 'Leaf', 'Juke', 'Qashqai', 'X-Trail', 'Pathfinder', 'Navara', 'Patrol', 'GT-R', '370Z', 'Z', 'Ariya', 'Townstar', 'Primastar', 'Interstar'],
-  
-  // Dacia
   'Dacia': ['Sandero', 'Sandero Stepway', 'Logan', 'Logan MCV', 'Duster', 'Jogger', 'Spring', 'Lodgy', 'Dokker'],
-  
-  // Opel
   'Opel': ['Corsa', 'Corsa-e', 'Astra', 'Astra-e', 'Mokka', 'Mokka-e', 'Grandland', 'Grandland-e', 'Crossland', 'Insignia', 'Zafira', 'Combo', 'Vivaro', 'Movano'],
-  
-  // Seat
   'Seat': ['Ibiza', 'Leon', 'Arona', 'Ateca', 'Tarraco', 'Alhambra', 'Mii', 'Mii Electric'],
-  
-  // Skoda
   'Skoda': ['Fabia', 'Octavia', 'Superb', 'Kamiq', 'Karoq', 'Kodiaq', 'Enyaq', 'Enyaq Coupe', 'Scala', 'Rapid', 'Citigo'],
-  
-  // Mazda (جميع الموديلات في مكان واحد)
   'Mazda': ['2', '3', '6', 'CX-3', 'CX-30', 'CX-5', 'CX-60', 'CX-80', 'CX-90', 'MX-5', 'MX-30'],
-  
-  // Volvo
   'Volvo': ['XC40', 'XC40 Recharge', 'XC60', 'XC60 Recharge', 'XC90', 'XC90 Recharge', 'S60', 'S90', 'V60', 'V90', 'C40 Recharge', 'EX30', 'EX90', 'EM90'],
-  
-  // Honda
   'Honda': ['Jazz', 'Civic', 'Accord', 'CR-V', 'HR-V', 'ZR-V', 'e:Ny1', 'Pilot', 'Ridgeline', 'NSX', 'S660', 'e'],
-  
-  // Suzuki (جميع الموديلات في مكان واحد)
   'Suzuki': ['Swift', 'Ignis', 'Vitara', 'S-Cross', 'Jimny', 'Across', 'Swace', 'Wagon R', 'Celerio'],
-  
-  // Mitsubishi
   'Mitsubishi': ['Space Star', 'Colt', 'ASX', 'Eclipse Cross', 'Outlander', 'L200', 'Pajero', 'Pajero Sport'],
-  
-  // Jeep
   'Jeep': ['Wrangler', 'Grand Cherokee', 'Cherokee', 'Compass', 'Renegade', 'Gladiator', 'Avenger'],
-  
-  // Land Rover
   'Land Rover': ['Range Rover', 'Range Rover Sport', 'Range Rover Velar', 'Range Rover Evoque', 'Discovery', 'Discovery Sport', 'Defender', 'Freelander'],
-  
-  // Jaguar
   'Jaguar': ['F-Type', 'F-Pace', 'E-Pace', 'I-Pace', 'XE', 'XF', 'XJ'],
-  
-  // Porsche
   'Porsche': ['911', '718 Cayman', '718 Boxster', 'Panamera', 'Cayenne', 'Macan', 'Taycan', 'Taycan Cross Turismo'],
-  
-  // Fiat
   'Fiat': ['500', '500e', '500X', '500L', 'Panda', 'Tipo', 'Doblo', 'Ducato', 'Scudo', 'Ulysse', '600e'],
-  
-  // Alfa Romeo
   'Alfa Romeo': ['Giulia', 'Stelvio', 'Tonale', 'Junior', '4C', '8C'],
-  
-  // DS Automobiles
   'DS Automobiles': ['DS3', 'DS3 Crossback', 'DS4', 'DS7 Crossback', 'DS9'],
-  
-  // Mini
   'Mini': ['Cooper', 'Cooper S', 'Cooper SE', 'Countryman', 'Clubman', 'Paceman', 'Coupe', 'Roadster'],
-  
-  // BYD
   'BYD': ['Atto 3', 'Dolphin', 'Seal', 'Han', 'Tang', 'Seagull', 'Song Plus', 'Yuan Plus'],
-  
-  // MG
   'MG': ['ZS', 'ZS EV', 'HS', 'HS PHEV', 'MG4', 'MG5', 'Marvel R', 'Cyberster', 'MG3', 'MG6'],
-  
-  // Chery
   'Chery': ['Tiggo 2', 'Tiggo 4', 'Tiggo 7', 'Tiggo 8', 'Tiggo 8 Pro', 'Arrizo 5', 'Arrizo 8', 'Omoda 5', 'Jaecoo 7'],
-  
-  // Geely
   'Geely': ['Coolray', 'Azkarra', 'Emgrand', 'Geometry C', 'Monjaro', 'Tugella'],
-  
-  // Lynk & Co
   'Lynk & Co': ['01', '02', '03', '05', '06', '09'],
-  
-  // SsangYong
   'SsangYong': ['Tivoli', 'Korando', 'Rexton', 'Musso', 'Rodius', 'XLV'],
-  
-  // Smart
   'Smart': ['Fortwo', 'Forfour', 'EQ Fortwo', 'EQ Forfour', '#1', '#3'],
-  
-  // Lexus
   'Lexus': ['UX', 'NX', 'RX', 'RZ', 'TX', 'GX', 'LX', 'ES', 'IS', 'LC', 'LS', 'RC'],
-  
-  // Acura
   'Acura': ['MDX', 'RDX', 'TLX', 'ILX', 'NSX', 'ZDX', 'Integra'],
-  
-  // Infiniti
   'Infiniti': ['Q50', 'Q60', 'QX50', 'QX55', 'QX60', 'QX80'],
-  
-  // Genesis
   'Genesis': ['G70', 'G80', 'G90', 'GV60', 'GV70', 'GV80'],
-  
-  // Maserati
   'Maserati': ['Ghibli', 'Quattroporte', 'Levante', 'Grecale', 'MC20', 'GranTurismo', 'GranCabrio'],
-  
-  // Ferrari
   'Ferrari': ['F8 Tributo', 'SF90 Stradale', '296 GTB', 'Purosangue', 'Roma', 'Portofino', '812 Superfast', 'LaFerrari'],
-  
-  // Lamborghini
   'Lamborghini': ['Huracán', 'Aventador', 'Urus', 'Revuelto', 'Sián', 'Countach'],
-  
-  // Aston Martin
   'Aston Martin': ['DB11', 'DB12', 'DBX', 'Vantage', 'DBS', 'Valhalla', 'Valkyrie'],
-  
-  // Bentley
   'Bentley': ['Bentayga', 'Continental GT', 'Flying Spur', 'Mulsanne'],
-  
-  // Rolls-Royce
   'Rolls-Royce': ['Phantom', 'Ghost', 'Wraith', 'Dawn', 'Cullinan', 'Spectre'],
-  
-  // Bugatti
   'Bugatti': ['Chiron', 'Veyron', 'Divo', 'Centodieci', 'Mistral'],
-  
-  // McLaren
   'McLaren': ['720S', '750S', '765LT', 'Artura', 'GT', 'Senna', 'Speedtail', 'Elva'],
-  
-  // Koenigsegg
   'Koenigsegg': ['Jesko', 'Regera', 'Gemera', 'Agera', 'CC850'],
-  
-  // Pagani
   'Pagani': ['Huayra', 'Zonda', 'Utopia'],
-  
-  // Rimac
   'Rimac': ['Nevera', 'Concept One'],
-  
-  // Lotus
   'Lotus': ['Emira', 'Evija', 'Eletre', 'Emeya', 'Exige', 'Evora'],
-  
-  // GMC
   'GMC': ['Sierra', 'Yukon', 'Terrain', 'Acadia', 'Canyon', 'Hummer EV'],
-  
-  // Cadillac
   'Cadillac': ['Escalade', 'XT4', 'XT5', 'XT6', 'CT4', 'CT5', 'Lyriq', 'Celestiq'],
-  
-  // Chevrolet
   'Chevrolet': ['Spark', 'Aveo', 'Cruze', 'Malibu', 'Camaro', 'Corvette', 'Equinox', 'Traverse', 'Tahoe', 'Suburban', 'Silverado', 'Colorado'],
-  
-  // Dodge
   'Dodge': ['Challenger', 'Charger', 'Durango', 'Hornet', 'Grand Caravan'],
-  
-  // Chrysler
   'Chrysler': ['300', 'Pacifica', 'Voyager'],
-  
-  // Ram
   'Ram': ['1500', '2500', '3500', 'ProMaster', 'ProMaster City'],
-  
-  // Lincoln
   'Lincoln': ['Navigator', 'Aviator', 'Nautilus', 'Corsair', 'Zephyr'],
-  
-  // Buick
   'Buick': ['Encore', 'Encore GX', 'Envision', 'Enclave', 'LaCrosse'],
-  
-  // Subaru
   'Subaru': ['Impreza', 'WRX', 'Forester', 'Outback', 'Crosstrek', 'Ascent', 'Legacy', 'BRZ', 'Solterra'],
-  
-  // Tata
   'Tata': ['Nexon', 'Harrier', 'Safari', 'Altroz', 'Tiago', 'Tigor', 'Punch', 'Nano']
 };
 
@@ -331,6 +206,16 @@ const RentYourCar = () => {
     <>
       <Navbar />
       <div className="rent-car-page">
+        {/* الصورة في الأعلى */}
+        <div className="rent-car-top">
+          <img 
+            src="/images/car-rental.png" 
+            alt="Rent your car"
+            className="rent-car-image"
+          />
+        </div>
+        
+        {/* المحتوى */}
         <div className="rent-car-left">
           <h1 className="rent-car-title">اربح المال عند كراء سيارتك</h1>
           <p className="rent-car-subtitle">inscription votre voiture</p>
@@ -469,14 +354,6 @@ const RentYourCar = () => {
           <div className="about-section">
             <a href="/about">à propos</a>
           </div>
-        </div>
-
-        <div className="rent-car-right">
-          <img 
-            src="/images/car-rental.png" 
-            alt="Rent your car"
-            className="rent-car-image"
-          />
         </div>
       </div>
       <Footer />
