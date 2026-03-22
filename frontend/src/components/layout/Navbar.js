@@ -161,9 +161,12 @@ const Navbar = () => {
                   <div className="user-dropdown">
                     <Link to="/profile" onClick={closeMenus}>Mon profil</Link>
                     <Link to="/my-bookings" onClick={closeMenus}>Mes réservations</Link>
-                    {/* ✅ إضافة Mes voitures للمؤجرين (company) */}
-                    {(user.role === 'company') && (
+                    {/* ✅ إضافة Mes voitures للمؤجرين (owner) */}
+                    {(user.role === 'owner') && (
                       <Link to="/owner-cars" onClick={closeMenus}>Mes voitures</Link>
+                    )}
+                    {(user.role === 'company') && (
+                      <Link to="/owner-cars" onClick={closeMenus}>Mes voitures (Société)</Link>
                     )}
                     {user.role === 'admin' && (
                       <Link to="/admin" onClick={closeMenus}>Admin</Link>
@@ -219,10 +222,15 @@ const Navbar = () => {
                     <Link to="/my-bookings" className="mobile-link" onClick={closeMenus}>
                       Mes réservations
                     </Link>
-                    {/* ✅ إضافة Mes voitures للمؤجرين (company) */}
-                    {(user.role === 'company') && (
+                    {/* ✅ إضافة Mes voitures للمؤجرين (owner) */}
+                    {(user.role === 'owner') && (
                       <Link to="/owner-cars" className="mobile-link" onClick={closeMenus}>
                         Mes voitures
+                      </Link>
+                    )}
+                    {(user.role === 'company') && (
+                      <Link to="/owner-cars" className="mobile-link" onClick={closeMenus}>
+                        Mes voitures (Société)
                       </Link>
                     )}
                     {user.role === 'admin' && (
@@ -299,7 +307,7 @@ const Navbar = () => {
         </form>
       </Modal>
 
-      {/* Register Modal */}
+      {/* Register Modal - مع 3 خيارات */}
       <Modal isOpen={showRegisterModal} onClose={() => setShowRegisterModal(false)} title="Créer un compte" size="medium">
         <form onSubmit={handleRegisterSubmit} className="modal-form">
           {error && <div className="modal-error">{error}</div>}
@@ -352,6 +360,7 @@ const Navbar = () => {
             />
           </div>
           
+          {/* ✅ 3 خيارات لحساب المستخدم */}
           <div className="modal-form-group">
             <label>Type de compte</label>
             <div className="modal-radio-group">
@@ -369,11 +378,21 @@ const Navbar = () => {
                 <input
                   type="radio"
                   name="role"
+                  value="owner"
+                  checked={registerData.role === 'owner'}
+                  onChange={handleRegisterChange}
+                />
+                Propriétaire
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="role"
                   value="company"
                   checked={registerData.role === 'company'}
                   onChange={handleRegisterChange}
                 />
-                Propriétaire
+                Société
               </label>
             </div>
           </div>
