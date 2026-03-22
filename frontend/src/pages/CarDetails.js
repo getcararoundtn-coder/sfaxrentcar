@@ -30,7 +30,6 @@ const CarDetails = () => {
         // جلب التقييمات مع التأكد من أنها مصفوفة
         try {
           const reviewsRes = await API.get(`/reviews/car/${id}`);
-          // التأكد من أن البيانات هي مصفوفة
           const reviewsData = reviewsRes.data?.data;
           setReviews(Array.isArray(reviewsData) ? reviewsData : []);
         } catch (reviewErr) {
