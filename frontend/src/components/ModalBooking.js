@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Modal from './Modal';
 import API from '../services/api';
 import { showSuccess, showError } from '../utils/ToastConfig';
@@ -65,10 +65,7 @@ const ModalBooking = ({ isOpen, onClose, car, startDate, endDate, totalPrice, on
             <span>{car?.pricePerDay} DT × {days} jours</span>
             <span>{car?.pricePerDay * days} DT</span>
           </div>
-          <div className="price-item">
-            <span>Frais de service (10%)</span>
-            <span>{(car?.pricePerDay * days * 0.1).toFixed(2)} DT</span>
-          </div>
+          {/* ✅ تم إزالة قسم رسوم الخدمة (Frais de service) */}
           <div className="price-item total">
             <span>Total</span>
             <span>{totalPrice.toFixed(2)} DT</span>
