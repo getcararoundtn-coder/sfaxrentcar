@@ -80,7 +80,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// تسجيل الدخول
+// تسجيل الدخول العادي (بريد وكلمة مرور)
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -128,6 +128,68 @@ exports.login = async (req, res) => {
     res.status(500).json({ 
       success: false,
       message: 'حدث خطأ في الخادم' 
+    });
+  }
+};
+
+// ✅ تسجيل الدخول عبر Firebase
+exports.firebaseLogin = async (req, res) => {
+  try {
+    const { firebaseUid, email, name } = req.body;
+
+    if (!firebaseUid || !email) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'بيانات Firebase غير كاملة' 
+      });
+    }
+
+    // البحث عن مستخدم موجود بنفس البريد الإلكتروني
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // إنشاء مستخدم جديد
+      user = await User.create({
+        name: name || email.split('@')[0],
+        email,
+        password: crypto.randomBytes(20).toString('hex'), // كلمة مرور عشوائية
+        phone: '',
+        role: 'user',
+        verificationStatus: 'not_submitted',
+        firebaseUid // حفظ Firebase UID
+      });
+      
+      console.log('✅ New user created via Firebase:', user.email);
+    } else {
+      // تحديث Firebase UID إذا لم يكن موجوداً
+      if (!user.firebaseUid) {
+        user.firebaseUid = firebaseUid;
+        await user.save();
+      }
+      console.log('✅ Existing user logged in via Firebase:', user.email);
+    }
+
+    // إنشاء توكن للمستخدم
+    generateToken(res, user._id);
+
+    res.json({
+      success: true,
+      message: 'تم تسجيل الدخول بنجاح عبر Firebase',
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        verificationStatus: user.verificationStatus,
+        firebaseUid: user.firebaseUid
+      }
+    });
+  } catch (error) {
+    console.error('Firebase login error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'حدث خطأ في تسجيل الدخول عبر Firebase' 
     });
   }
 };
