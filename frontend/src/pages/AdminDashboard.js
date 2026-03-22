@@ -16,6 +16,7 @@ import MessagesTab from '../components/admin/MessagesTab';
 import SettingsTab from '../components/admin/SettingsTab';
 import NotificationsTab from '../components/admin/NotificationsTab';
 import ReportsTab from '../components/admin/ReportsTab';
+import SupportTab from '../components/admin/SupportTab';
 
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -394,6 +395,7 @@ const AdminDashboard = () => {
     { id: 'settings', label: '⚙️ الإعدادات', count: null },
     { id: 'notifications', label: '🔔 الإشعارات', count: unreadNotifications },
     { id: 'reports', label: '📈 التقارير', count: null },
+    { id: 'support', label: '📩 دعم سريع', count: null }, // ✅ إضافة تبويب الدعم
   ];
 
   if (loading) {
@@ -436,9 +438,9 @@ const AdminDashboard = () => {
               onClick={() => setActiveTab(tab.id)}
               style={{
                 ...styles.tab,
-                backgroundColor: activeTab === tab.id ? '#007bff' : '#f8f9fa',
+                backgroundColor: activeTab === tab.id ? '#6b46c0' : '#f8f9fa',
                 color: activeTab === tab.id ? 'white' : '#333',
-                borderBottom: activeTab === tab.id ? '3px solid #0056b3' : 'none'
+                borderBottom: activeTab === tab.id ? '3px solid #5a3aa8' : 'none'
               }}
             >
               {tab.label} {tab.count !== null && `(${tab.count})`}
@@ -528,6 +530,8 @@ const AdminDashboard = () => {
               onGenerate={handleGenerateReport}
             />
           )}
+
+          {activeTab === 'support' && <SupportTab />}
         </div>
       </div>
     </>
@@ -571,7 +575,7 @@ const styles = {
   },
   refreshButton: {
     padding: '10px 20px',
-    backgroundColor: '#17a2b8',
+    backgroundColor: '#6b46c0',
     color: 'white',
     border: 'none',
     borderRadius: '4px',
@@ -621,7 +625,7 @@ const styles = {
     width: '50px',
     height: '50px',
     border: '5px solid #f3f3f3',
-    borderTop: '5px solid #007bff',
+    borderTop: '5px solid #6b46c0',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
     marginBottom: '20px'
