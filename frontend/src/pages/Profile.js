@@ -4,6 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
 import { showSuccess, showError } from '../utils/ToastConfig';
+import ModalUpload from '../components/ModalUpload';
 import './Profile.css';
 
 const Profile = () => {
@@ -11,6 +12,7 @@ const Profile = () => {
   const [documents, setDocuments] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: ''
@@ -108,10 +110,14 @@ const Profile = () => {
                 ✏️ تعديل الملف الشخصي
               </button>
 
+              {/* ✅ زر رفع الوثائق - يفتح Modal بدلاً من صفحة جديدة */}
               {user?.verificationStatus !== 'approved' && (
-                <Link to="/upload-docs" className="profile-verify-button">
+                <button 
+                  onClick={() => setShowUploadModal(true)} 
+                  className="profile-verify-button"
+                >
                   {user?.verificationStatus === 'rejected' ? 'إعادة رفع المستندات' : 'رفع المستندات الآن'}
-                </Link>
+                </button>
               )}
 
               {user?.verificationStatus === 'approved' && (
@@ -156,18 +162,6 @@ const Profile = () => {
             <div className="profile-documents">
               <h3 className="profile-documents-title">الوثائق المرفوعة</h3>
               <div className="profile-images">
-                {documents.idFront && (
-                  <a href={documents.idFront} target="_blank" rel="noopener noreferrer" className="profile-doc-link">
-                    <img src={documents.idFront} alt="idFront" className="profile-thumbnail" />
-                    <span>الوجه الأمامي</span>
-                  </a>
-                )}
-                {documents.idBack && (
-                  <a href={documents.idBack} target="_blank" rel="noopener noreferrer" className="profile-doc-link">
-                    <img src={documents.idBack} alt="idBack" className="profile-thumbnail" />
-                    <span>الوجه الخلفي</span>
-                  </a>
-                )}
                 {documents.driverLicense && (
                   <a href={documents.driverLicense} target="_blank" rel="noopener noreferrer" className="profile-doc-link">
                     <img src={documents.driverLicense} alt="driverLicense" className="profile-thumbnail" />
@@ -182,6 +176,12 @@ const Profile = () => {
           )}
         </div>
       </div>
+
+      {/* ✅ Modal رفع الوثائق */}
+      <ModalUpload 
+        isOpen={showUploadModal} 
+        onClose={() => setShowUploadModal(false)} 
+      />
     </>
   );
 };
