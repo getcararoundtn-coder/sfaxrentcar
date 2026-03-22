@@ -431,6 +431,60 @@ exports.deleteCar = async (req, res) => {
   }
 };
 
+// ==================== السيارات المميزة ====================
+
+// @desc    تفعيل/إلغاء تفعيل السيارة المميزة
+// @route   PATCH /api/admin/cars/:id/featured
+// @access  Private/Admin
+exports.toggleFeatured = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isFeatured, durationDays } = req.body;
+
+    const car = await Car.findById(id);
+    if (!car) {
+      return res.status(404).json({ message: 'السيارة غير موجودة' });
+    }
+
+    car.isFeatured = isFeatured !== undefined ? isFeatured : !car.isFeatured;
+    
+    // إذا تم تفعيل المميزة، قم بتعيين تاريخ الانتهاء
+    if (car.isFeatured && durationDays) {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + durationDays);
+      car.featuredExpiresAt = expiresAt;
+    } else if (!car.isFeatured) {
+      car.featuredExpiresAt = null;
+    }
+
+    await car.save();
+
+    // إشعار للمالك
+    try {
+      await Notification.create({
+        userId: car.ownerId,
+        type: car.isFeatured ? 'car_featured' : 'car_unfeatured',
+        title: car.isFeatured ? '⭐ تم تمييز سيارتك' : '☆ تم إلغاء تمييز سيارتك',
+        message: car.isFeatured 
+          ? `سيارتك ${car.brand} ${car.model} أصبحت مميزة وستظهر أولاً في نتائج البحث.`
+          : `تم إلغاء تمييز سيارتك ${car.brand} ${car.model}.`,
+        relatedId: car._id
+      });
+    } catch (notifError) {
+      console.error('فشل إنشاء إشعار التميز:', notifError);
+    }
+
+    res.json({
+      success: true,
+      data: car,
+      message: car.isFeatured ? '⭐ السيارة مميزة الآن' : '☆ تم إلغاء تمييز السيارة'
+    });
+  } catch (error) {
+    console.error('❌ Error in toggleFeatured:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // ==================== الحجوزات ====================
 
 exports.getPendingBookings = async (req, res) => {
