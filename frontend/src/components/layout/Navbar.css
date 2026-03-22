@@ -85,11 +85,143 @@
   color: #6b46c0;
 }
 
-/* قائمة المستخدم (Desktop) */
+/* ========== NEW: Popup Menu (User Menu) ========== */
 .user-menu-container {
   position: relative;
 }
 
+.user-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 40px;
+  transition: all 0.3s ease;
+}
+
+.user-menu-trigger:hover {
+  background: #f9f5ff;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #6b46c0 0%, #8b5cf6 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+
+.user-chevron {
+  color: #a0aec0;
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.user-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Popup Menu Dropdown */
+.user-popup-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 1001;
+  animation: fadeInUp 0.2s ease;
+  border: 1px solid #f0f0f0;
+}
+
+/* User Info Section في الـ Popup */
+.popup-user-info {
+  padding: 20px;
+  background: #f9f5ff;
+  border-bottom: 1px solid #e9d8fd;
+}
+
+.popup-user-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.popup-user-email {
+  font-size: 12px;
+  color: #718096;
+  word-break: break-all;
+}
+
+/* Menu Propriétaire Title */
+.popup-menu-title {
+  padding: 12px 20px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #a0aec0;
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Menu Items */
+.popup-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: #4a5568;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+  cursor: pointer;
+  background: white;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.popup-menu-item:hover {
+  background: #f9f5ff;
+  color: #6b46c0;
+}
+
+.popup-menu-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.popup-menu-item.logout {
+  color: #dc3545;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 8px;
+}
+
+.popup-menu-item.logout:hover {
+  background: #fff5f5;
+  color: #dc3545;
+}
+
+/* ========== Old User Dropdown (Keep for backward compatibility) ========== */
 .user-menu-button {
   background: transparent;
   color: #4a5568;
@@ -345,6 +477,17 @@
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -402,6 +545,27 @@
     flex-direction: column;
     gap: 10px;
     align-items: center;
+  }
+  
+  /* Popup Menu للهاتف */
+  .user-popup-menu {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    animation: slideUp 0.3s ease;
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 }
 
