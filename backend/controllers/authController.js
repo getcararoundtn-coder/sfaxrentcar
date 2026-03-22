@@ -130,7 +130,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ تسجيل الدخول عبر Firebase
+// ✅ تسجيل الدخول عبر Firebase (محسّن)
 exports.firebaseLogin = async (req, res) => {
   try {
     console.log('🔥 Firebase login request received:', req.body);
@@ -144,21 +144,26 @@ exports.firebaseLogin = async (req, res) => {
       });
     }
 
-    // البحث عن مستخدم موجود بنفس البريد الإلكتروني
-    let user = await User.findOne({ email });
+    // ✅ البحث عن المستخدم بالبريد الإلكتروني (بدون تمييز حالة الأحرف)
+    let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+
+    // ✅ إذا لم يوجد، جرب البحث بـ firebaseUid
+    if (!user) {
+      user = await User.findOne({ firebaseUid });
+    }
 
     if (!user) {
-      // إنشاء مستخدم جديد
+      // إنشاء مستخدم جديد فقط إذا لم يوجد بأي شكل
+      console.log('📝 Creating new user for:', email);
       user = await User.create({
         name: name || email.split('@')[0],
-        email,
+        email: email.toLowerCase(),
         password: crypto.randomBytes(20).toString('hex'),
         phone: '',
         role: 'user',
         verificationStatus: 'not_submitted',
         firebaseUid
       });
-      
       console.log('✅ New user created via Firebase:', user.email);
     } else {
       // تحديث Firebase UID إذا لم يكن موجوداً
