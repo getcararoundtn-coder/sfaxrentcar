@@ -27,9 +27,16 @@ const CarDetails = () => {
         const { data } = await API.get(`/cars/${id}`);
         setCar(data.data);
         
-        // جلب التقييمات
-        const reviewsRes = await API.get(`/reviews/car/${id}`);
-        setReviews(reviewsRes.data.data || []);
+        // جلب التقييمات مع التأكد من أنها مصفوفة
+        try {
+          const reviewsRes = await API.get(`/reviews/car/${id}`);
+          // التأكد من أن البيانات هي مصفوفة
+          const reviewsData = reviewsRes.data?.data;
+          setReviews(Array.isArray(reviewsData) ? reviewsData : []);
+        } catch (reviewErr) {
+          console.error('Error fetching reviews:', reviewErr);
+          setReviews([]);
+        }
       } catch (err) {
         console.error('Error fetching car details:', err);
         showError('فشل تحميل بيانات السيارة');
@@ -115,8 +122,9 @@ const CarDetails = () => {
     return stars;
   };
 
-  const averageRating = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+  // التأكد من أن reviews هي مصفوفة قبل استخدام reduce
+  const averageRating = Array.isArray(reviews) && reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
     : 0;
 
   const today = new Date().toISOString().split('T')[0];
@@ -178,7 +186,7 @@ const CarDetails = () => {
             <div className="car-rating">
               <div className="stars">{renderStars(Math.round(averageRating))}</div>
               <span className="rating-value">{averageRating}</span>
-              <span className="review-count">({reviews.length} avis)</span>
+              <span className="review-count">({Array.isArray(reviews) ? reviews.length : 0} avis)</span>
             </div>
 
             <p className="car-location">
@@ -306,7 +314,7 @@ const CarDetails = () => {
         <div className="reviews-section">
           <h2>Avis des locataires</h2>
           
-          {reviews.length === 0 ? (
+          {!Array.isArray(reviews) || reviews.length === 0 ? (
             <p className="no-reviews">Aucun avis pour cette voiture</p>
           ) : (
             <div className="reviews-list">
