@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   role: { 
     type: String, 
-    enum: ['user', 'company', 'admin'], 
+    enum: ['user', 'owner', 'company', 'admin'], 
     default: 'user' 
   },
   status: { 
@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
     enum: ['not_submitted', 'pending', 'approved', 'rejected'], 
     default: 'not_submitted' 
   },
-  // ✅ إضافة حقول تقييم المؤجر
+  // ✅ حقول تقييم المؤجر
   ownerRating: { 
     type: Number, 
     default: 0, 
@@ -31,6 +31,13 @@ const userSchema = new mongoose.Schema({
   ownerRatingCount: { 
     type: Number, 
     default: 0 
+  },
+  // ✅ Firebase UID (لربط حسابات Firebase)
+  firebaseUid: { 
+    type: String, 
+    unique: true, 
+    sparse: true,
+    index: true
   },
   resetPasswordToken: { type: String },
   resetPasswordExpire: { type: Date },
