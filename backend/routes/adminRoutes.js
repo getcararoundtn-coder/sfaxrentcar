@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const supportController = require('../controllers/supportController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // جميع المسارات محمية وتتطلب صلاحية مشرف
@@ -29,7 +30,7 @@ router.patch('/cars/:id/approve', adminController.approveCar);
 router.patch('/cars/:id/reject', adminController.rejectCar);
 router.put('/cars/:id', adminController.updateCar);
 router.delete('/cars/:id', adminController.deleteCar);
-router.patch('/cars/:id/featured', adminController.toggleFeatured); // ✅ إضافة مسار التميز
+router.patch('/cars/:id/featured', adminController.toggleFeatured);
 
 // ==================== الحجوزات ====================
 router.get('/bookings/pending', adminController.getPendingBookings);
@@ -55,5 +56,13 @@ router.delete('/messages/:id', adminController.deleteMessage);
 // ==================== التقارير ====================
 router.post('/reports/generate', adminController.generateReport);
 router.get('/reports/:type', adminController.getReport);
+
+// ==================== دعم العملاء / تواصل معنا ====================
+router.get('/support/stats', supportController.getSupportStats);
+router.get('/support/messages', supportController.getSupportMessages);
+router.get('/support/messages/:id', supportController.getSupportMessageById);
+router.post('/support/messages/:id/reply', supportController.replyToSupport);
+router.patch('/support/messages/:id/status', supportController.updateMessageStatus);
+router.delete('/support/messages/:id', supportController.deleteSupportMessage);
 
 module.exports = router;
