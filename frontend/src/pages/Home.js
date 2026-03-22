@@ -94,19 +94,56 @@ const Home = () => {
     <>
       <Navbar />
       
+      {/* Hero Section مع صورة خلفية */}
       <div 
-        className="search-hero" 
+        className="hero-section" 
         style={{ 
-          backgroundImage: `url(${process.env.PUBLIC_URL}/images/hero.jpg)`,
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${process.env.PUBLIC_URL}/images/hero.jpg)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}
       >
-        <div className="search-container">
-          <h1 className="search-title">
-            Location de voitures entre particuliers et professionnels en Tunisie
+        <div className="hero-content">
+          <h1 className="hero-title">
+            استأجر سيارتك بسهولة في تونس، بأمان وبدون وسطاء
           </h1>
+          <p className="hero-subtitle">
+            اختر سيارتك من أشخاص موثوقين في مدينتك وابدأ رحلتك اليوم
+          </p>
+          
+          {/* Trust Signals */}
+          <div className="trust-signals">
+            <div className="trust-item">
+              <span className="trust-icon">🔒</span>
+              <span className="trust-text">الدفع الآمن</span>
+            </div>
+            <div className="trust-item">
+              <span className="trust-icon">⭐</span>
+              <span className="trust-text">تقييمات حقيقية</span>
+            </div>
+            <div className="trust-item">
+              <span className="trust-icon">🕒</span>
+              <span className="trust-text">دعم فوري</span>
+            </div>
+            <div className="trust-item">
+              <span className="trust-icon">📋</span>
+              <span className="trust-text">وثائق مؤمنة</span>
+            </div>
+          </div>
+          
+          <Link to="/cars" className="hero-cta-button">
+            استكشف السيارات
+          </Link>
+        </div>
+      </div>
+
+      {/* Search Hero */}
+      <div className="search-hero">
+        <div className="search-container">
+          <h2 className="search-title">
+            Location de voitures entre particuliers et professionnels en Tunisie
+          </h2>
           
           <form onSubmit={handleSearch} className="search-form">
             <div className="search-field">
@@ -167,6 +204,20 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Car Types */}
+      <div className="car-types">
+        <h2 className="section-title">Choisissez selon vos besoins</h2>
+        <div className="types-grid">
+          <button onClick={() => handleCarTypeClick('Citadine')} className="type-card">Citadine</button>
+          <button onClick={() => handleCarTypeClick('Utilitaire')} className="type-card">Utilitaire</button>
+          <button onClick={() => handleCarTypeClick('SUV')} className="type-card">SUV</button>
+          <button onClick={() => handleCarTypeClick('Familiale')} className="type-card">Familiale</button>
+          <button onClick={() => handleCarTypeClick('Luxe')} className="type-card">Luxe</button>
+          <button onClick={() => handleCarTypeClick('Économique')} className="type-card">Économique</button>
+        </div>
+      </div>
+
+      {/* How It Works */}
       <div className="how-it-works">
         <h2 className="section-title">Comment ça marche ?</h2>
         <div className="steps-container">
@@ -188,6 +239,7 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Rent Section */}
       <div className="rent-section">
         <div className="rent-content">
           <h2 className="rent-title">Vous voulez louer votre voiture ?</h2>
@@ -197,19 +249,7 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="car-types">
-        <h2 className="section-title">Choisissez selon vos besoins</h2>
-        <div className="types-grid">
-          <button onClick={() => handleCarTypeClick('Citadine')} className="type-card">Citadine</button>
-          <button onClick={() => handleCarTypeClick('Utilitaire')} className="type-card">Utilitaire</button>
-          <button onClick={() => handleCarTypeClick('SUV')} className="type-card">SUV</button>
-          <button onClick={() => handleCarTypeClick('Familiale')} className="type-card">Familiale</button>
-          <button onClick={() => handleCarTypeClick('Luxe')} className="type-card">Luxe</button>
-          <button onClick={() => handleCarTypeClick('Économique')} className="type-card">Économique</button>
-        </div>
-      </div>
-
-      {/* قسم الولايات التونسية */}
+      {/* Wilayas Section */}
       <div className="wilayas-section">
         <h2 className="section-title">Louer une voiture en Tunisie</h2>
         <div className="wilayas-grid">
