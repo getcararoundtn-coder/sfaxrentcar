@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const carController = require('../controllers/carController');
+const carWizardController = require('../controllers/carWizardController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // ========== المسارات العامة (لجميع المستخدمين) ==========
@@ -18,7 +19,12 @@ router.get('/all', protect, admin, carController.getAllCars);
 router.get('/pending', protect, admin, carController.getPendingCars);
 router.patch('/:id/approve', protect, admin, carController.approveCar);
 router.patch('/:id/reject', protect, admin, carController.rejectCar);
-router.patch('/:id/featured', protect, admin, carController.toggleFeatured); // ✅ إضافة مسار تمييز السيارة
+router.patch('/:id/featured', protect, admin, carController.toggleFeatured);
+
+// ========== مسارات الويزارد (Wizard) ==========
+router.post('/wizard/save', protect, carWizardController.saveDraft);
+router.get('/wizard/get', protect, carWizardController.getDraft);
+router.post('/wizard/complete', protect, carWizardController.completeWizard);
 
 // ========== المسارات الديناميكية (تأتي في النهاية) ==========
 router.get('/:id', carController.getCarById);
