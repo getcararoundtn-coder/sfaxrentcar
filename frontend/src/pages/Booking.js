@@ -45,7 +45,7 @@ const Booking = () => {
     fetchCar();
   }, [carId, user, navigate]);
 
-  // حساب السعر عند تغيير التواريخ
+  // حساب السعر عند تغيير التواريخ - بدون رسوم الخدمة
   useEffect(() => {
     if (startDate && endDate && car) {
       const start = new Date(startDate);
@@ -54,9 +54,8 @@ const Booking = () => {
       
       if (days > 0) {
         const pricePerDay = car.pricePerDay;
-        const subtotal = pricePerDay * days;
-        const commission = subtotal * 0.1; // 10% commission
-        setTotalPrice(subtotal + commission);
+        // ✅ إزالة رسوم الخدمة - المستأجر يدفع السعر الأساسي فقط
+        setTotalPrice(pricePerDay * days);
       } else {
         setTotalPrice(0);
       }
@@ -249,7 +248,7 @@ const Booking = () => {
                   </div>
                 </div>
 
-                {/* نموذج الحجز في الوسط */}
+                {/* نموذج الحجز في الوسط - بدون رسوم الخدمة */}
                 <form onSubmit={handleBooking} className="booking-form-center">
                   <div className="dates-container-center">
                     <div className="date-group-center">
@@ -285,14 +284,6 @@ const Booking = () => {
                       <div className="price-item-center">
                         <span>السعر اليومي:</span>
                         <span>{car.pricePerDay} دينار</span>
-                      </div>
-                      <div className="price-item-center">
-                        <span>المجموع الفرعي:</span>
-                        <span>{(totalPrice / 1.1).toFixed(2)} دينار</span>
-                      </div>
-                      <div className="price-item-center">
-                        <span>رسوم الخدمة (10%):</span>
-                        <span>{(totalPrice * 0.1).toFixed(2)} دينار</span>
                       </div>
                       <div className="price-item-center total">
                         <span>الإجمالي:</span>
