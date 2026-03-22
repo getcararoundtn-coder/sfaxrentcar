@@ -17,7 +17,8 @@ const notificationSchema = new mongoose.Schema({
       'new_review',
       'new_user',
       'new_message',
-      'support_reply'  // ✅ إضافة دعم الرسائل
+      'support_new',     // ✅ إشعار للمشرف عند استلام رسالة دعم جديدة
+      'support_reply'    // ✅ إشعار للمستخدم عند رد المشرف
     ],
     required: true
   },
@@ -41,5 +42,9 @@ const notificationSchema = new mongoose.Schema({
     default: Date.now 
   }
 });
+
+// فهرسة لتحسين الأداء
+notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ read: 1 });
 
 module.exports = mongoose.model('Notification', notificationSchema);
