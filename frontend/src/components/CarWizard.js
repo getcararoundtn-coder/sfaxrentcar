@@ -20,8 +20,6 @@ const CarWizard = ({ initialData }) => {
     registrationCountry: 'Tunisie',
     registrationYear: '',
     
-    // الخطوة 3: الكيلومترات (تم حفظه في الخطوة 1)
-    
     // الخطوة 4: تفاصيل إضافية
     fuelType: '',
     transmission: '',
@@ -51,13 +49,13 @@ const CarWizard = ({ initialData }) => {
     
     // الخطوة 12: العنوان
     address: '',
-    city: '',
-    delegation: '',
+    city: initialData?.location || '',
+    delegation: initialData?.delegation || '',
     
     // الخطوة 13: طريقة التسليم
     deliveryMethod: '',
     
-    // الخطوة 14: السعر (سيتم تعيينه لاحقاً)
+    // الخطوة 14: السعر
     pricePerDay: 0
   });
 
@@ -77,7 +75,7 @@ const CarWizard = ({ initialData }) => {
     fetchDraft();
   }, []);
 
-  // حفظ المسودة عند تغيير البيانات
+  // حفظ المسودة
   const saveDraft = async (currentStep, newData) => {
     try {
       await API.post('/cars/wizard/save', {
@@ -105,11 +103,12 @@ const CarWizard = ({ initialData }) => {
           features: prev.features.filter(f => f !== name)
         }));
       }
+      saveDraft(step, { ...formData, features: formData.features });
       return;
     }
     
     if (type === 'number') {
-      newValue = parseInt(value);
+      newValue = parseInt(value) || 0;
     }
     
     setFormData(prev => ({ ...prev, [name]: newValue }));
@@ -130,51 +129,112 @@ const CarWizard = ({ initialData }) => {
   const handleComplete = async () => {
     setLoading(true);
     try {
+      // التحقق من البيانات المطلوبة قبل الإرسال
+      const requiredFields = ['brand', 'model', 'year', 'mileage', 'licensePlate', 
+        'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
+        'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 'pricePerDay'];
+      
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      
+      if (missingFields.length > 0) {
+        showError(`الرجاء تعبئة جميع الحقول المطلوبة: ${missingFields.join(', ')}`);
+        setLoading(false);
+        return;
+      }
+      
       const { data } = await API.post('/cars/wizard/complete');
       if (data.success) {
         showSuccess('✅ تم إضافة السيارة بنجاح!');
-        navigate('/owner-cars');
+        navigate('/owner-cars?tab=cars');
       }
     } catch (err) {
       console.error('Error completing wizard:', err);
-      showError(err.response?.data?.message || 'فشل إضافة السيارة');
+      const errorMessage = err.response?.data?.message || 'فشل إضافة السيارة. الرجاء التأكد من تعبئة جميع البيانات.';
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // دالة عرض الخطوات
-  const renderStep = () => {
-    switch(step) {
-      case 1: return renderStep1();
-      case 2: return renderStep2();
-      case 3: return renderStep3();
-      case 4: return renderStep4();
-      case 5: return renderStep5();
-      case 6: return renderStep6();
-      case 7: return renderStep7();
-      case 8: return renderStep8();
-      case 9: return renderStep9();
-      case 10: return renderStep10();
-      case 11: return renderStep11();
-      case 12: return renderStep12();
-      case 13: return renderStep13();
-      case 14: return renderStep14();
-      default: return null;
+  // ========== الخطوة 8: تاريخ الميلاد (المعدلة) ==========
+  const renderStep8 = () => {
+    // استخراج اليوم والشهر والسنة من ownerBirthDate
+    let day = '', month = '', year = '';
+    if (formData.ownerBirthDate && formData.ownerBirthDate.includes('-')) {
+      const parts = formData.ownerBirthDate.split('-');
+      year = parts[0] || '';
+      month = parts[1] || '';
+      day = parts[2] || '';
     }
+
+    const handleBirthDateChange = (type, value) => {
+      let newDay = day, newMonth = month, newYear = year;
+      if (type === 'day') newDay = value;
+      if (type === 'month') newMonth = value;
+      if (type === 'year') newYear = value;
+      
+      if (newDay && newMonth && newYear) {
+        const formattedDate = `${newYear}-${newMonth}-${newDay}`;
+        setFormData(prev => ({ ...prev, ownerBirthDate: formattedDate }));
+        saveDraft(step, { ...formData, ownerBirthDate: formattedDate });
+      } else {
+        setFormData(prev => ({ ...prev, ownerBirthDate: '' }));
+      }
+    };
+
+    return (
+      <div className="wizard-step">
+        <h2>Quelle est votre date de naissance ?</h2>
+        <div className="birthdate-group">
+          <select 
+            onChange={(e) => handleBirthDateChange('day', e.target.value)} 
+            value={day}
+          >
+            <option value="">Jour</option>
+            {[...Array(31)].map((_, i) => (
+              <option key={i + 1} value={String(i + 1).padStart(2, '0')}>{i + 1}</option>
+            ))}
+          </select>
+          <select 
+            onChange={(e) => handleBirthDateChange('month', e.target.value)} 
+            value={month}
+          >
+            <option value="">Mois</option>
+            {[...Array(12)].map((_, i) => (
+              <option key={i + 1} value={String(i + 1).padStart(2, '0')}>{i + 1}</option>
+            ))}
+          </select>
+          <select 
+            onChange={(e) => handleBirthDateChange('year', e.target.value)} 
+            value={year}
+          >
+            <option value="">Année</option>
+            {[...Array(121)].map((_, i) => {
+              const yearOption = 1906 + i;
+              return <option key={yearOption} value={yearOption}>{yearOption}</option>;
+            })}
+          </select>
+        </div>
+        <p className="step-note">nous devons vous demander cette information pour des raisons légales</p>
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">Suivant</button>
+        </div>
+      </div>
+    );
   };
 
-  // الخطوة 1: Confirmez le modèle
+  // الخطوة 1
   const renderStep1 = () => (
     <div className="wizard-step">
       <h2>Confirmez le modèle de votre voiture</h2>
       <div className="form-group">
-        <label>Type</label>
-        <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Marque" />
+        <label>Marque</label>
+        <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Ex: Renault, Peugeot..." />
       </div>
       <div className="form-group">
         <label>Modèle</label>
-        <input type="text" name="model" value={formData.model} onChange={handleChange} placeholder="Modèle" />
+        <input type="text" name="model" value={formData.model} onChange={handleChange} placeholder="Ex: Clio, 208..." />
       </div>
       <div className="form-group">
         <label>Année</label>
@@ -197,7 +257,7 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 2: Inscrire ma voiture (plaque d'immatriculation)
+  // الخطوة 2
   const renderStep2 = () => (
     <div className="wizard-step">
       <h2>Inscrire ma voiture</h2>
@@ -233,7 +293,7 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 3: Confirmez le kilométrage
+  // الخطوة 3
   const renderStep3 = () => (
     <div className="wizard-step">
       <h2>Confirmez le kilométrage</h2>
@@ -256,7 +316,7 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 4: Ajouter plus de détails (Carburant, Boîte)
+  // الخطوة 4
   const renderStep4 = () => (
     <div className="wizard-step">
       <h2>Ajouter plus de détails</h2>
@@ -287,7 +347,7 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 5: Nombre de portes et sièges
+  // الخطوة 5
   const renderStep5 = () => (
     <div className="wizard-step">
       <h2>Ajouter plus de détails</h2>
@@ -315,27 +375,17 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 6: Équipements
+  // الخطوة 6
   const renderStep6 = () => (
     <div className="wizard-step">
       <h2>Rendre votre annonce unique</h2>
       <div className="features-grid">
-        <label className={`feature-item ${formData.features.includes('GPS') ? 'active' : ''}`}>
-          <input type="checkbox" name="GPS" checked={formData.features.includes('GPS')} onChange={handleChange} />
-          <span>GPS</span>
-        </label>
-        <label className={`feature-item ${formData.features.includes('Bluetooth') ? 'active' : ''}`}>
-          <input type="checkbox" name="Bluetooth" checked={formData.features.includes('Bluetooth')} onChange={handleChange} />
-          <span>Bluetooth</span>
-        </label>
-        <label className={`feature-item ${formData.features.includes('Climatisation') ? 'active' : ''}`}>
-          <input type="checkbox" name="Climatisation" checked={formData.features.includes('Climatisation')} onChange={handleChange} />
-          <span>Climatisation</span>
-        </label>
-        <label className={`feature-item ${formData.features.includes('Caméra recul') ? 'active' : ''}`}>
-          <input type="checkbox" name="Caméra recul" checked={formData.features.includes('Caméra recul')} onChange={handleChange} />
-          <span>Caméra recul</span>
-        </label>
+        {['GPS', 'Bluetooth', 'Climatisation', 'Caméra recul'].map(feature => (
+          <label key={feature} className={`feature-item ${formData.features.includes(feature) ? 'active' : ''}`}>
+            <input type="checkbox" name={feature} checked={formData.features.includes(feature)} onChange={handleChange} />
+            <span>{feature}</span>
+          </label>
+        ))}
       </div>
       <div className="step-buttons">
         <button onClick={handlePrev} className="step-button secondary">Précédent</button>
@@ -344,7 +394,7 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 7: Particulier ou Professionnel
+  // الخطوة 7
   const renderStep7 = () => (
     <div className="wizard-step">
       <h2>Louez vous en tant que particulier ou professionnel ?</h2>
@@ -365,55 +415,7 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 8: Date de naissance
-  const renderStep8 = () => {
-    const [day, month, year] = formData.ownerBirthDate ? formData.ownerBirthDate.split('-') : ['', '', ''];
-
-    const handleBirthDateChange = (type, value) => {
-      let newDate = { day, month, year };
-      newDate[type] = value;
-      
-      if (newDate.day && newDate.month && newDate.year) {
-        const formattedDate = `${newDate.year}-${newDate.month}-${newDate.day}`;
-        setFormData(prev => ({ ...prev, ownerBirthDate: formattedDate }));
-        saveDraft(step, { ...formData, ownerBirthDate: formattedDate });
-      }
-    };
-
-    return (
-      <div className="wizard-step">
-        <h2>Quelle est votre date de naissance ?</h2>
-        <div className="birthdate-group">
-          <select onChange={(e) => handleBirthDateChange('day', e.target.value)} value={day}>
-            <option value="">Jour</option>
-            {[...Array(31)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>{i + 1}</option>
-            ))}
-          </select>
-          <select onChange={(e) => handleBirthDateChange('month', e.target.value)} value={month}>
-            <option value="">Mois</option>
-            {[...Array(12)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>{i + 1}</option>
-            ))}
-          </select>
-          <select onChange={(e) => handleBirthDateChange('year', e.target.value)} value={year}>
-            <option value="">Année</option>
-            {[...Array(121)].map((_, i) => {
-              const yearOption = 1906 + i;
-              return <option key={yearOption} value={yearOption}>{yearOption}</option>;
-            })}
-          </select>
-        </div>
-        <p className="step-note">nous devons vous demander cette information pour des raisons légales</p>
-        <div className="step-buttons">
-          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-          <button onClick={handleNext} className="step-button">Suivant</button>
-        </div>
-      </div>
-    );
-  };
-
-  // الخطوة 9: Confirmer la paiement de frais de services
+  // الخطوة 9
   const renderStep9 = () => (
     <div className="wizard-step">
       <h2>Confirmer la paiement de frais de services du site</h2>
@@ -427,10 +429,7 @@ const CarWizard = ({ initialData }) => {
           <span>Paiement mensuel</span>
         </label>
       </div>
-      <p className="step-note">
-        لن تدفع أي مبلغ إلا بعد الحجز.<br />
-        المنصة تأخذ 5% من قيمة الحجز.
-      </p>
+      <p className="step-note">لن تدفع أي مبلغ إلا بعد الحجز. المنصة تأخذ 5% من قيمة الحجز.</p>
       <div className="step-buttons">
         <button onClick={handlePrev} className="step-button secondary">Précédent</button>
         <button onClick={handleNext} className="step-button">Confirmer</button>
@@ -438,7 +437,7 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 10: Numéro de téléphone
+  // الخطوة 10
   const renderStep10 = () => (
     <div className="wizard-step">
       <h2>Quel est votre numéro de téléphone ?</h2>
@@ -449,17 +448,9 @@ const CarWizard = ({ initialData }) => {
           <option value="Algérie">Algérie (+213)</option>
           <option value="Maroc">Maroc (+212)</option>
         </select>
-        <input
-          type="tel"
-          name="ownerPhone"
-          value={formData.ownerPhone}
-          onChange={handleChange}
-          placeholder="numéro de téléphone"
-        />
+        <input type="tel" name="ownerPhone" value={formData.ownerPhone} onChange={handleChange} placeholder="numéro de téléphone" />
       </div>
-      <p className="step-note">
-        nous ne vous contacterons que pour des informations importantes concernant vos locations
-      </p>
+      <p className="step-note">nous ne vous contacterons que pour des informations importantes concernant vos locations</p>
       <div className="step-buttons">
         <button onClick={handlePrev} className="step-button secondary">Précédent</button>
         <button onClick={handleNext} className="step-button">Suivant</button>
@@ -467,7 +458,7 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 11: Où garerez vous votre voiture ?
+  // الخطوة 11
   const renderStep11 = () => (
     <div className="wizard-step">
       <h2>Où garerez vous votre voiture ?</h2>
@@ -488,9 +479,8 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 12: Choisir l'adresse
+  // الخطوة 12
   const renderStep12 = () => {
-    // قائمة الولايات التونسية
     const tunisianCities = [
       'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
       'Kairouan', 'Kasserine', 'Kébili', 'Le Kef', 'Mahdia', 'Manouba', 'Médenine',
@@ -526,7 +516,7 @@ const CarWizard = ({ initialData }) => {
     );
   };
 
-  // الخطوة 13: Choisissez maintenant un mode de location
+  // الخطوة 13
   const renderStep13 = () => (
     <div className="wizard-step">
       <h2>Choisissez maintenant un mode de location</h2>
@@ -552,14 +542,6 @@ const CarWizard = ({ initialData }) => {
           <p>Le client vient récupérer la voiture à l'adresse indiquée</p>
         </div>
       </div>
-      <div className="info-box">
-        <p><strong>📋 Informations importantes:</strong></p>
-        <ul>
-          <li>Remise des clés au moment de la rencontre</li>
-          <li>Contrat de location signé électroniquement</li>
-          <li>État des lieux avant et après la location</li>
-        </ul>
-      </div>
       <div className="step-buttons">
         <button onClick={handlePrev} className="step-button secondary">Précédent</button>
         <button onClick={handleNext} className="step-button">Choisir</button>
@@ -567,50 +549,19 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 14: Explication des gains
+  // الخطوة 14
   const renderStep14 = () => (
     <div className="wizard-step">
       <h2>Comment fonctionnent vos gains ?</h2>
-      <div className="earnings-info">
-        <div className="earning-item">
-          <span className="earning-icon">💰</span>
-          <div>
-            <h4>Vous définissez un prix par jour</h4>
-            <p>Choisissez librement le tarif de location par jour</p>
-          </div>
-        </div>
-        <div className="earning-item">
-          <span className="earning-icon">📊</span>
-          <div>
-            <h4>Nous calculons le prix de réservation</h4>
-            <p>Le prix total est calculé automatiquement selon la durée</p>
-          </div>
-        </div>
-        <div className="earning-item">
-          <span className="earning-icon">💸</span>
-          <div>
-            <h4>Nous déduisons 5% de frais de service</h4>
-            <p>Seulement 5% de commission sur chaque réservation confirmée</p>
-          </div>
-        </div>
-        <div className="earning-item">
-          <span className="earning-icon">⚡</span>
-          <div>
-            <h4>Vous êtes indemnisés des frais additionnels</h4>
-            <p className="gray-text">comme l'essence manquante ou les pénalités</p>
-          </div>
-        </div>
-      </div>
       <div className="form-group">
         <label>Prix par jour (TND)</label>
-        <input
-          type="number"
-          name="pricePerDay"
-          value={formData.pricePerDay}
-          onChange={handleChange}
-          placeholder="Ex: 80"
-          min="0"
-        />
+        <input type="number" name="pricePerDay" value={formData.pricePerDay} onChange={handleChange} placeholder="Ex: 80" min="0" />
+      </div>
+      <div className="info-box">
+        <p>💰 Vous définissez un prix par jour</p>
+        <p>📊 Nous calculons le prix de réservation</p>
+        <p>💸 Nous déduisons 5% de frais de service</p>
+        <p>⚡ Vous êtes indemnisés des frais additionnels (essence manquante, pénalités)</p>
       </div>
       <div className="step-buttons">
         <button onClick={handlePrev} className="step-button secondary">Précédent</button>
@@ -620,6 +571,27 @@ const CarWizard = ({ initialData }) => {
       </div>
     </div>
   );
+
+  // دالة عرض الخطوات
+  const renderStep = () => {
+    switch(step) {
+      case 1: return renderStep1();
+      case 2: return renderStep2();
+      case 3: return renderStep3();
+      case 4: return renderStep4();
+      case 5: return renderStep5();
+      case 6: return renderStep6();
+      case 7: return renderStep7();
+      case 8: return renderStep8();
+      case 9: return renderStep9();
+      case 10: return renderStep10();
+      case 11: return renderStep11();
+      case 12: return renderStep12();
+      case 13: return renderStep13();
+      case 14: return renderStep14();
+      default: return null;
+    }
+  };
 
   return (
     <div className="wizard-container">
