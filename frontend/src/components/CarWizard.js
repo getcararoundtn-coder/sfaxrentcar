@@ -365,7 +365,261 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // باقي الخطوات ستضاف لاحقاً (8-14)
+  // الخطوة 8: Date de naissance
+  const renderStep8 = () => {
+    const [day, month, year] = formData.ownerBirthDate ? formData.ownerBirthDate.split('-') : ['', '', ''];
+
+    const handleBirthDateChange = (type, value) => {
+      let newDate = { day, month, year };
+      newDate[type] = value;
+      
+      if (newDate.day && newDate.month && newDate.year) {
+        const formattedDate = `${newDate.year}-${newDate.month}-${newDate.day}`;
+        setFormData(prev => ({ ...prev, ownerBirthDate: formattedDate }));
+        saveDraft(step, { ...formData, ownerBirthDate: formattedDate });
+      }
+    };
+
+    return (
+      <div className="wizard-step">
+        <h2>Quelle est votre date de naissance ?</h2>
+        <div className="birthdate-group">
+          <select onChange={(e) => handleBirthDateChange('day', e.target.value)} value={day}>
+            <option value="">Jour</option>
+            {[...Array(31)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>{i + 1}</option>
+            ))}
+          </select>
+          <select onChange={(e) => handleBirthDateChange('month', e.target.value)} value={month}>
+            <option value="">Mois</option>
+            {[...Array(12)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>{i + 1}</option>
+            ))}
+          </select>
+          <select onChange={(e) => handleBirthDateChange('year', e.target.value)} value={year}>
+            <option value="">Année</option>
+            {[...Array(121)].map((_, i) => {
+              const yearOption = 1906 + i;
+              return <option key={yearOption} value={yearOption}>{yearOption}</option>;
+            })}
+          </select>
+        </div>
+        <p className="step-note">nous devons vous demander cette information pour des raisons légales</p>
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">Suivant</button>
+        </div>
+      </div>
+    );
+  };
+
+  // الخطوة 9: Confirmer la paiement de frais de services
+  const renderStep9 = () => (
+    <div className="wizard-step">
+      <h2>Confirmer la paiement de frais de services du site</h2>
+      <div className="radio-group">
+        <label className={`radio-item ${formData.paymentPlan === 'hebdomadaire' ? 'active' : ''}`}>
+          <input type="radio" name="paymentPlan" value="hebdomadaire" checked={formData.paymentPlan === 'hebdomadaire'} onChange={handleChange} />
+          <span>Paiement hebdomadaire</span>
+        </label>
+        <label className={`radio-item ${formData.paymentPlan === 'mensuel' ? 'active' : ''}`}>
+          <input type="radio" name="paymentPlan" value="mensuel" checked={formData.paymentPlan === 'mensuel'} onChange={handleChange} />
+          <span>Paiement mensuel</span>
+        </label>
+      </div>
+      <p className="step-note">
+        لن تدفع أي مبلغ إلا بعد الحجز.<br />
+        المنصة تأخذ 5% من قيمة الحجز.
+      </p>
+      <div className="step-buttons">
+        <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+        <button onClick={handleNext} className="step-button">Confirmer</button>
+      </div>
+    </div>
+  );
+
+  // الخطوة 10: Numéro de téléphone
+  const renderStep10 = () => (
+    <div className="wizard-step">
+      <h2>Quel est votre numéro de téléphone ?</h2>
+      <div className="phone-group">
+        <select name="ownerPhoneCountry" value={formData.ownerPhoneCountry} onChange={handleChange}>
+          <option value="Tunisie">Tunisie (+216)</option>
+          <option value="Libye">Libye (+218)</option>
+          <option value="Algérie">Algérie (+213)</option>
+          <option value="Maroc">Maroc (+212)</option>
+        </select>
+        <input
+          type="tel"
+          name="ownerPhone"
+          value={formData.ownerPhone}
+          onChange={handleChange}
+          placeholder="numéro de téléphone"
+        />
+      </div>
+      <p className="step-note">
+        nous ne vous contacterons que pour des informations importantes concernant vos locations
+      </p>
+      <div className="step-buttons">
+        <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+        <button onClick={handleNext} className="step-button">Suivant</button>
+      </div>
+    </div>
+  );
+
+  // الخطوة 11: Où garerez vous votre voiture ?
+  const renderStep11 = () => (
+    <div className="wizard-step">
+      <h2>Où garerez vous votre voiture ?</h2>
+      <div className="radio-group">
+        <label className={`radio-item ${formData.parkingType === 'parking privé' ? 'active' : ''}`}>
+          <input type="radio" name="parkingType" value="parking privé" checked={formData.parkingType === 'parking privé'} onChange={handleChange} />
+          <span>Dans un parking privé</span>
+        </label>
+        <label className={`radio-item ${formData.parkingType === 'stationnement public' ? 'active' : ''}`}>
+          <input type="radio" name="parkingType" value="stationnement public" checked={formData.parkingType === 'stationnement public'} onChange={handleChange} />
+          <span>En stationnement public</span>
+        </label>
+      </div>
+      <div className="step-buttons">
+        <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+        <button onClick={handleNext} className="step-button">Suivant</button>
+      </div>
+    </div>
+  );
+
+  // الخطوة 12: Choisir l'adresse
+  const renderStep12 = () => {
+    // قائمة الولايات التونسية
+    const tunisianCities = [
+      'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
+      'Kairouan', 'Kasserine', 'Kébili', 'Le Kef', 'Mahdia', 'Manouba', 'Médenine',
+      'Monastir', 'Nabeul', 'Sfax', 'Sidi Bouzid', 'Siliana', 'Sousse', 'Tataouine',
+      'Tozeur', 'Tunis', 'Zaghouan'
+    ];
+
+    return (
+      <div className="wizard-step">
+        <h2>Choisissez l'adresse</h2>
+        <div className="form-group">
+          <label>Adresse</label>
+          <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Rue, numéro, bâtiment..." />
+        </div>
+        <div className="form-group">
+          <label>Ville / Gouvernorat</label>
+          <select name="city" value={formData.city} onChange={handleChange}>
+            <option value="">Sélectionner une ville</option>
+            {tunisianCities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Délégation</label>
+          <input type="text" name="delegation" value={formData.delegation} onChange={handleChange} placeholder="Délégation / Secteur" />
+        </div>
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">Suivant</button>
+        </div>
+      </div>
+    );
+  };
+
+  // الخطوة 13: Choisissez maintenant un mode de location
+  const renderStep13 = () => (
+    <div className="wizard-step">
+      <h2>Choisissez maintenant un mode de location</h2>
+      <div className="delivery-methods">
+        <div 
+          className={`delivery-method ${formData.deliveryMethod === 'livraison au client' ? 'active' : ''}`}
+          onClick={() => {
+            setFormData(prev => ({ ...prev, deliveryMethod: 'livraison au client' }));
+            saveDraft(step, { ...formData, deliveryMethod: 'livraison au client' });
+          }}
+        >
+          <h3>🚚 Livraison au client</h3>
+          <p>Vous livrez la voiture à l'adresse du client</p>
+        </div>
+        <div 
+          className={`delivery-method ${formData.deliveryMethod === 'client rencontre le conducteur' ? 'active' : ''}`}
+          onClick={() => {
+            setFormData(prev => ({ ...prev, deliveryMethod: 'client rencontre le conducteur' }));
+            saveDraft(step, { ...formData, deliveryMethod: 'client rencontre le conducteur' });
+          }}
+        >
+          <h3>🤝 Client rencontre le conducteur</h3>
+          <p>Le client vient récupérer la voiture à l'adresse indiquée</p>
+        </div>
+      </div>
+      <div className="info-box">
+        <p><strong>📋 Informations importantes:</strong></p>
+        <ul>
+          <li>Remise des clés au moment de la rencontre</li>
+          <li>Contrat de location signé électroniquement</li>
+          <li>État des lieux avant et après la location</li>
+        </ul>
+      </div>
+      <div className="step-buttons">
+        <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+        <button onClick={handleNext} className="step-button">Choisir</button>
+      </div>
+    </div>
+  );
+
+  // الخطوة 14: Explication des gains
+  const renderStep14 = () => (
+    <div className="wizard-step">
+      <h2>Comment fonctionnent vos gains ?</h2>
+      <div className="earnings-info">
+        <div className="earning-item">
+          <span className="earning-icon">💰</span>
+          <div>
+            <h4>Vous définissez un prix par jour</h4>
+            <p>Choisissez librement le tarif de location par jour</p>
+          </div>
+        </div>
+        <div className="earning-item">
+          <span className="earning-icon">📊</span>
+          <div>
+            <h4>Nous calculons le prix de réservation</h4>
+            <p>Le prix total est calculé automatiquement selon la durée</p>
+          </div>
+        </div>
+        <div className="earning-item">
+          <span className="earning-icon">💸</span>
+          <div>
+            <h4>Nous déduisons 5% de frais de service</h4>
+            <p>Seulement 5% de commission sur chaque réservation confirmée</p>
+          </div>
+        </div>
+        <div className="earning-item">
+          <span className="earning-icon">⚡</span>
+          <div>
+            <h4>Vous êtes indemnisés des frais additionnels</h4>
+            <p className="gray-text">comme l'essence manquante ou les pénalités</p>
+          </div>
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Prix par jour (TND)</label>
+        <input
+          type="number"
+          name="pricePerDay"
+          value={formData.pricePerDay}
+          onChange={handleChange}
+          placeholder="Ex: 80"
+          min="0"
+        />
+      </div>
+      <div className="step-buttons">
+        <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+        <button onClick={handleComplete} className="step-button" disabled={loading}>
+          {loading ? 'Confirmation...' : 'Confirmer et publier'}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="wizard-container">
