@@ -9,34 +9,42 @@ const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const { settings } = useContext(SettingsContext);
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
-    setMenuOpen(false);
+    setMobileMenuOpen(false);
+    setUserMenuOpen(false);
   };
 
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const closeMenu = () => {
-    setMenuOpen(false);
+  const toggleUserMenu = () => {
+    setUserMenuOpen(!userMenuOpen);
+  };
+
+  const closeMenus = () => {
+    setMobileMenuOpen(false);
+    setUserMenuOpen(false);
   };
 
   return (
     <nav className="navbar">
       <div className="nav-container">
+        {/* Logo - بنفسجي */}
         <div className="logo">
-          <Link to="/" className="logo-link" onClick={closeMenu}>
+          <Link to="/" className="logo-link" onClick={closeMenus}>
             {settings?.platformName || 'DriveTunisia'}
           </Link>
         </div>
 
-        {/* قائمة سطح المكتب (Desktop) */}
+        {/* ========== قائمة سطح المكتب (Desktop) ========== */}
         <div className="desktop-menu">
-          {/* Louer ma voiture - زر مميز */}
+          {/* Louer ma voiture - زر بنفسجي مميز */}
           <Link to={user ? "/add-car" : "/register"} className="rent-button">
             Louer ma voiture
           </Link>
@@ -47,16 +55,16 @@ const Navbar = () => {
               Se connecter
             </Link>
           ) : (
-            <div className="user-menu">
-              <button className="user-menu-button" onClick={toggleMenu}>
+            <div className="user-menu-container">
+              <button className="user-menu-button" onClick={toggleUserMenu}>
                 Mon compte ▼
               </button>
-              {menuOpen && (
+              {userMenuOpen && (
                 <div className="user-dropdown">
-                  <Link to="/profile" onClick={closeMenu}>Mon profil</Link>
-                  <Link to="/my-bookings" onClick={closeMenu}>Mes réservations</Link>
+                  <Link to="/profile" onClick={closeMenus}>Mon profil</Link>
+                  <Link to="/my-bookings" onClick={closeMenus}>Mes réservations</Link>
                   {user.role === 'admin' && (
-                    <Link to="/admin" onClick={closeMenu}>Admin</Link>
+                    <Link to="/admin" onClick={closeMenus}>Admin</Link>
                   )}
                   <button onClick={handleLogout} className="logout-btn">Se déconnecter</button>
                 </div>
@@ -72,23 +80,27 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* زر Menu ☰ للهاتف (Mobile) */}
-        <button className="menu-button" onClick={toggleMenu}>
+        {/* ========== زر Menu ☰ للهاتف (Mobile) ========== */}
+        <button className="mobile-menu-button" onClick={toggleMobileMenu}>
           ☰
         </button>
 
-        {/* القائمة المنسدلة للهاتف */}
-        {menuOpen && (
+        {/* ========== القائمة المنسدلة للهاتف ========== */}
+        {mobileMenuOpen && (
           <div className="mobile-menu">
             <div className="mobile-menu-content">
-              {/* Louer ma voiture - زر مميز */}
-              <Link to={user ? "/add-car" : "/register"} className="mobile-rent-button" onClick={closeMenu}>
+              {/* Louer ma voiture - زر بنفسجي مميز */}
+              <Link 
+                to={user ? "/add-car" : "/register"} 
+                className="mobile-rent-button"
+                onClick={closeMenus}
+              >
                 Louer ma voiture
               </Link>
               
               {/* Se connecter - يظهر فقط إذا لم يكن مسجلاً */}
               {!user && (
-                <Link to="/login" className="mobile-link" onClick={closeMenu}>
+                <Link to="/login" className="mobile-link" onClick={closeMenus}>
                   Se connecter
                 </Link>
               )}
@@ -96,14 +108,14 @@ const Navbar = () => {
               {/* روابط إضافية للمستخدمين المسجلين */}
               {user && (
                 <>
-                  <Link to="/profile" className="mobile-link" onClick={closeMenu}>
+                  <Link to="/profile" className="mobile-link" onClick={closeMenus}>
                     Mon profil
                   </Link>
-                  <Link to="/my-bookings" className="mobile-link" onClick={closeMenu}>
+                  <Link to="/my-bookings" className="mobile-link" onClick={closeMenus}>
                     Mes réservations
                   </Link>
                   {user.role === 'admin' && (
-                    <Link to="/admin" className="mobile-link" onClick={closeMenu}>
+                    <Link to="/admin" className="mobile-link" onClick={closeMenus}>
                       Admin
                     </Link>
                   )}
