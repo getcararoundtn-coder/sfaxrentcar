@@ -36,6 +36,9 @@ const Navbar = () => {
     navigate('/');
     setMobileMenuOpen(false);
     setUserMenuOpen(false);
+    // ✅ إغلاق أي مودال مفتوح عند تسجيل الخروج
+    setShowLoginModal(false);
+    setShowRegisterModal(false);
   };
 
   const toggleMobileMenu = () => {
