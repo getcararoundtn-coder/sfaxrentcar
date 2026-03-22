@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
-import { showSuccess, showError } from '../utils/ToastConfig';
+import { showSuccess, showError, showWarning } from '../utils/ToastConfig';
+import ModalUpload from '../components/ModalUpload';
 import './Booking.css';
 
 const Booking = () => {
@@ -18,6 +19,7 @@ const Booking = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [totalPrice, setTotalPrice] = useState(0);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -64,6 +66,13 @@ const Booking = () => {
   const handleBooking = async (e) => {
     e.preventDefault();
     
+    // ✅ التحقق من توثيق المستخدم
+    if (user?.verificationStatus !== 'approved') {
+      showWarning('يجب توثيق حسابك أولاً (رفع رخصة القيادة)');
+      setShowUploadModal(true);
+      return;
+    }
+
     if (!startDate || !endDate) {
       showError('يرجى اختيار تاريخ البداية والنهاية');
       return;
@@ -96,7 +105,6 @@ const Booking = () => {
         setBookingSuccess(true);
         showSuccess('✅ تم إنشاء الحجز بنجاح');
         
-        // تأخير قبل التوجيه
         setTimeout(() => {
           navigate('/my-bookings');
         }, 4000);
@@ -306,6 +314,12 @@ const Booking = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal رفع الوثائق */}
+      <ModalUpload 
+        isOpen={showUploadModal} 
+        onClose={() => setShowUploadModal(false)} 
+      />
     </>
   );
 };
