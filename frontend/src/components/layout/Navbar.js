@@ -35,12 +35,11 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="nav-container">
-        {/* الشعار مع أيقونة الإشعارات */}
+        {/* الشعار مع أيقونة الإشعارات (تظهر في جميع الشاشات للمستخدمين المسجلين) */}
         <div className="logo-section">
           <Link to="/" className="logo-link" onClick={closeMenus}>
             {settings?.platformName || 'DriveTunisia'}
           </Link>
-          {/* أيقونة الإشعارات بجانب الاسم */}
           {user && (
             <div className="notification-bell-inline">
               <NotificationBell />

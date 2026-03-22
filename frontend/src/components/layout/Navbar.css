@@ -20,14 +20,13 @@
   position: relative;
 }
 
-/* ========== Logo Section with Notification Bell ========== */
+/* ========== Logo Section with Notification ========== */
 .logo-section {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
-/* Logo - بنفسجي */
 .logo-link {
   font-size: 1.8rem;
   font-weight: bold;
@@ -277,17 +276,19 @@
   .logo-link {
     font-size: 1.5rem;
   }
-
-  /* إخفاء أيقونة الإشعارات بجانب الاسم في الهاتف */
-  .notification-bell-inline {
-    display: none;
+  
+  /* قسم الشعار مع الإشعارات في الهاتف */
+  .logo-section {
+    flex: 1;
+    gap: 8px;
   }
-
-  .notification-wrapper {
-    position: absolute;
-    right: 70px;
-    top: 50%;
-    transform: translateY(-50%);
+  
+  .notification-bell-inline {
+    display: flex;
+  }
+  
+  .mobile-menu-button {
+    margin-left: auto;
   }
 }
 
@@ -316,8 +317,8 @@
   .mobile-link {
     padding: 10px 15px;
   }
-
-  .notification-wrapper {
-    right: 60px;
+  
+  .logo-section {
+    gap: 6px;
   }
 }
