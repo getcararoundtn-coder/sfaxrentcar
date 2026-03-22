@@ -4,7 +4,8 @@ const {
   getAllUsers,
   deleteUser,
   getProfile,
-  updateProfile
+  updateProfile,
+  getUserRating
 } = require("../controllers/userController");
 const { protect, admin } = require("../middleware/authMiddleware");
 
@@ -15,5 +16,9 @@ router.delete("/:id", protect, admin, deleteUser);
 // ================= USER =================
 router.get("/profile", protect, getProfile);
 router.put("/profile", protect, updateProfile);
+
+// ================= PUBLIC =================
+// جلب تقييم المؤجر (عام - لا يحتاج تسجيل دخول)
+router.get("/:id/rating", getUserRating);
 
 module.exports = router;
