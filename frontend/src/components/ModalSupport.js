@@ -13,6 +13,11 @@ const ModalSupport = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('📤 Sending support message...');
+    console.log('User:', user);
+    console.log('Subject:', subject);
+    console.log('Message:', message);
+    
     if (!subject.trim() || !message.trim()) {
       showError('الرجاء تعبئة جميع الحقول');
       return;
@@ -25,15 +30,27 @@ const ModalSupport = ({ isOpen, onClose }) => {
         message
       });
 
+      console.log('✅ Response:', response.data);
+
       if (response.data.success) {
         showSuccess('✅ تم إرسال رسالتك بنجاح، سيتم الرد عليك قريباً');
         setSubject('');
         setMessage('');
         onClose();
+      } else {
+        showError(response.data.message || 'فشل إرسال الرسالة');
       }
     } catch (err) {
-      console.error('Error sending support message:', err);
-      showError(err.response?.data?.message || 'فشل إرسال الرسالة');
+      console.error('❌ Error sending support message:', err);
+      console.error('Error details:', err.response?.data);
+      
+      if (err.response?.status === 401) {
+        showError('يرجى تسجيل الدخول أولاً');
+      } else if (err.response?.status === 404) {
+        showError('خدمة الدعم غير متاحة حالياً');
+      } else {
+        showError(err.response?.data?.message || 'فشل إرسال الرسالة');
+      }
     } finally {
       setLoading(false);
     }
@@ -86,8 +103,12 @@ const ModalSupport = ({ isOpen, onClose }) => {
           />
         </div>
         
-        <button type="submit" disabled={loading} className="support-submit">
-          {loading ? 'Envoi...' : 'Envoyer'}
+        <button 
+          type="submit" 
+          disabled={loading} 
+          className="support-submit"
+        >
+          {loading ? 'Envoi en cours...' : 'Envoyer'}
         </button>
       </form>
     </Modal>
