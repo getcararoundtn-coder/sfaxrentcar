@@ -6,13 +6,16 @@ const CarsTab = ({
   onApprove, 
   onReject, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onToggleFeatured  // ✅ إضافة دالة لتفعيل/إلغاء التميز
 }) => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCar, setSelectedCar] = useState(null);
   const [showCarModal, setShowCarModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
+  const [featuredDuration, setFeaturedDuration] = useState(7);
   const [editFormData, setEditFormData] = useState({
     brand: '',
     model: '',
@@ -77,6 +80,17 @@ const CarsTab = ({
     if (window.confirm('هل أنت متأكد من حذف هذه السيارة؟')) {
       onDelete(carId);
     }
+  };
+
+  const handleToggleFeatured = (car) => {
+    setSelectedCar(car);
+    setFeaturedDuration(7);
+    setShowFeaturedModal(true);
+  };
+
+  const handleConfirmFeatured = () => {
+    onToggleFeatured(selectedCar._id, !selectedCar.isFeatured, featuredDuration);
+    setShowFeaturedModal(false);
   };
 
   const getStatusBadge = (status) => {
@@ -151,8 +165,8 @@ const CarsTab = ({
           <span style={styles.statLabel}>موافق عليها</span>
         </div>
         <div style={styles.statCard}>
-          <span style={styles.statValue}>{allCarsList.filter(c => c.status === 'rejected').length}</span>
-          <span style={styles.statLabel}>مرفوضة</span>
+          <span style={styles.statValue}>{allCarsList.filter(c => c.isFeatured).length}</span>
+          <span style={styles.statLabel}>⭐ مميزة</span>
         </div>
       </div>
 
@@ -166,6 +180,7 @@ const CarsTab = ({
               <th>السعر/اليوم</th>
               <th>الموقع</th>
               <th>الحالة</th>
+              <th>⭐ مميزة</th>
               <th>تاريخ الإضافة</th>
               <th>الإجراءات</th>
             </tr>
@@ -173,7 +188,7 @@ const CarsTab = ({
           <tbody>
             {filteredCars.length === 0 ? (
               <tr>
-                <td colSpan="7" style={styles.noData}>لا توجد سيارات تطابق البحث</td>
+                <td colSpan="8" style={styles.noData}>لا توجد سيارات تطابق البحث</td>
               </tr>
             ) : (
               filteredCars.map(car => {
@@ -210,6 +225,21 @@ const CarsTab = ({
                       }}>
                         {status.text}
                       </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      {car.status === 'approved' && (
+                        <button
+                          onClick={() => handleToggleFeatured(car)}
+                          style={{
+                            ...styles.featuredButton,
+                            backgroundColor: car.isFeatured ? '#ffc107' : '#6c757d',
+                          }}
+                          title={car.isFeatured ? 'إلغاء التميز' : 'تفعيل التميز'}
+                        >
+                          {car.isFeatured ? '⭐ مميزة' : '☆ تمييز'}
+                        </button>
+                      )}
+                      {car.status !== 'approved' && <span style={{ color: '#999' }}>-</span>}
                     </td>
                     <td>{new Date(car.createdAt).toLocaleDateString('ar-TN')}</td>
                     <td>
@@ -325,6 +355,20 @@ const CarsTab = ({
                         <a href={selectedCar.insuranceBack} target="_blank" rel="noopener noreferrer">عرض</a>
                       </div>
                     )}
+
+                    <div style={styles.detailRow}>
+                      <strong>⭐ حالة التميز:</strong>{' '}
+                      {selectedCar.isFeatured ? (
+                        <span style={{ color: '#ffc107', fontWeight: 'bold' }}>مميزة</span>
+                      ) : (
+                        <span>غير مميزة</span>
+                      )}
+                      {selectedCar.featuredExpiresAt && (
+                        <small style={{ color: '#666', marginLeft: '10px' }}>
+                          (تنتهي: {new Date(selectedCar.featuredExpiresAt).toLocaleDateString('ar-TN')})
+                        </small>
+                      )}
+                    </div>
                   </div>
                 </>
               ) : (
@@ -426,6 +470,56 @@ const CarsTab = ({
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal تفعيل التميز */}
+      {showFeaturedModal && selectedCar && (
+        <div style={styles.modal} onClick={() => setShowFeaturedModal(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>⭐ {selectedCar.isFeatured ? 'إلغاء التميز' : 'تفعيل التميز'}</h3>
+              <button 
+                onClick={() => setShowFeaturedModal(false)}
+                style={styles.modalCloseButton}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={styles.modalBody}>
+              {selectedCar.isFeatured ? (
+                <p>هل أنت متأكد من إلغاء تميز السيارة <strong>{selectedCar.brand} {selectedCar.model}</strong>؟</p>
+              ) : (
+                <>
+                  <p>هل أنت متأكد من تفعيل التميز للسيارة <strong>{selectedCar.brand} {selectedCar.model}</strong>؟</p>
+                  <div style={styles.formGroup}>
+                    <label>مدة التميز (أيام):</label>
+                    <select
+                      value={featuredDuration}
+                      onChange={(e) => setFeaturedDuration(parseInt(e.target.value))}
+                      style={styles.input}
+                    >
+                      <option value={3}>3 أيام</option>
+                      <option value={7}>7 أيام</option>
+                      <option value={14}>14 يوم</option>
+                      <option value={30}>30 يوم</option>
+                    </select>
+                  </div>
+                  <p style={styles.featuredNote}>
+                    💡 السيارة المميزة تظهر أولاً في نتائج البحث وتزيد فرص الحجز.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div style={styles.modalFooter}>
+              <button onClick={handleConfirmFeatured} style={styles.saveButton}>
+                {selectedCar.isFeatured ? 'إلغاء التميز' : 'تفعيل التميز'}
+              </button>
+              <button onClick={() => setShowFeaturedModal(false)} style={styles.cancelButton}>إلغاء</button>
             </div>
           </div>
         </div>
@@ -560,6 +654,15 @@ const styles = {
     borderRadius: '20px',
     fontSize: '12px',
     fontWeight: '500',
+  },
+  featuredButton: {
+    padding: '4px 12px',
+    borderRadius: '20px',
+    border: 'none',
+    color: 'white',
+    fontSize: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
   },
   actionButtons: {
     display: 'flex',
@@ -763,6 +866,14 @@ const styles = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  featuredNote: {
+    fontSize: '12px',
+    color: '#666',
+    marginTop: '10px',
+    padding: '10px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '4px',
   },
 };
 
