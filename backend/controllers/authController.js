@@ -32,17 +32,16 @@ exports.register = async (req, res) => {
       });
     }
 
-    // ✅ إضافة role إلى إنشاء المستخدم (افتراضي 'user' إذا لم يتم إرساله)
     const user = await User.create({ 
       name, 
       email, 
       password, 
       phone,
-      role: role || 'user' // إذا لم يتم إرسال role، يصبح 'user'
+      role: role || 'user'
     });
     generateToken(res, user._id);
 
-    // 🔔 إشعار للمشرفين بمستخدم جديد
+    // إشعار للمشرفين بمستخدم جديد
     try {
       const admins = await User.find({ role: 'admin' }).select('_id');
       for (const admin of admins) {
@@ -85,7 +84,6 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // التحقق من المدخلات
     if (!email || !password) {
       return res.status(400).json({ 
         success: false,
@@ -135,9 +133,11 @@ exports.login = async (req, res) => {
 // ✅ تسجيل الدخول عبر Firebase
 exports.firebaseLogin = async (req, res) => {
   try {
+    console.log('🔥 Firebase login request received:', req.body);
     const { firebaseUid, email, name } = req.body;
 
     if (!firebaseUid || !email) {
+      console.error('❌ Missing firebaseUid or email:', { firebaseUid, email });
       return res.status(400).json({ 
         success: false,
         message: 'بيانات Firebase غير كاملة' 
@@ -152,11 +152,11 @@ exports.firebaseLogin = async (req, res) => {
       user = await User.create({
         name: name || email.split('@')[0],
         email,
-        password: crypto.randomBytes(20).toString('hex'), // كلمة مرور عشوائية
+        password: crypto.randomBytes(20).toString('hex'),
         phone: '',
         role: 'user',
         verificationStatus: 'not_submitted',
-        firebaseUid // حفظ Firebase UID
+        firebaseUid
       });
       
       console.log('✅ New user created via Firebase:', user.email);
@@ -165,8 +165,10 @@ exports.firebaseLogin = async (req, res) => {
       if (!user.firebaseUid) {
         user.firebaseUid = firebaseUid;
         await user.save();
+        console.log('✅ Updated existing user with firebaseUid:', user.email);
+      } else {
+        console.log('✅ Existing user logged in via Firebase:', user.email);
       }
-      console.log('✅ Existing user logged in via Firebase:', user.email);
     }
 
     // إنشاء توكن للمستخدم
@@ -186,10 +188,10 @@ exports.firebaseLogin = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Firebase login error:', error);
+    console.error('❌ Firebase login error:', error);
     res.status(500).json({ 
       success: false,
-      message: 'حدث خطأ في تسجيل الدخول عبر Firebase' 
+      message: 'حدث خطأ في تسجيل الدخول عبر Firebase: ' + error.message
     });
   }
 };
@@ -223,34 +225,24 @@ exports.forgotPassword = async (req, res) => {
       return res.status(404).json({ message: 'لا يوجد حساب بهذا البريد الإلكتروني' });
     }
 
-    // إنشاء توكن عشوائي
     const resetToken = crypto.randomBytes(32).toString('hex');
-
-    // تشفير التوكن وحفظه في قاعدة البيانات
-    user.resetPasswordToken = crypto
-      .createHash('sha256')
-      .update(resetToken)
-      .digest('hex');
-    
-    user.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 دقيقة
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
     await user.save();
 
-    // استخدام FRONTEND_URL من المتغيرات البيئية
     const frontendUrl = process.env.FRONTEND_URL || 'https://drivetunisia.onrender.com';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; direction: rtl;">
         <h2 style="color: #333; text-align: center;">إعادة تعيين كلمة المرور</h2>
-        <p style="font-size: 16px;">مرحباً ${user.name}،</p>
-        <p style="font-size: 16px;">لقد تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في <strong>DriveTunisia</strong>.</p>
-        <p style="font-size: 16px;">الرجاء الضغط على الرابط أدناه لإعادة تعيين كلمة المرور:</p>
+        <p>مرحباً ${user.name}،</p>
+        <p>لقد تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في <strong>DriveTunisia</strong>.</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" style="display: inline-block; padding: 12px 30px; background-color: #6b46c0; color: white; text-decoration: none; border-radius: 4px; font-size: 16px;">إعادة تعيين كلمة المرور</a>
+          <a href="${resetUrl}" style="padding: 12px 30px; background-color: #6b46c0; color: white; text-decoration: none; border-radius: 4px;">إعادة تعيين كلمة المرور</a>
         </div>
-        <p style="font-size: 14px; color: #666;">هذا الرابط صالح لمدة 30 دقيقة فقط.</p>
-        <p style="font-size: 14px; color: #666;">إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد.</p>
-        <hr style="margin: 30px 0;">
+        <p>هذا الرابط صالح لمدة 30 دقيقة فقط.</p>
+        <hr>
         <p style="color: #666; font-size: 12px; text-align: center;">DriveTunisia - منصة كراء السيارات</p>
       </div>
     `;
@@ -261,15 +253,13 @@ exports.forgotPassword = async (req, res) => {
         subject: 'إعادة تعيين كلمة المرور - DriveTunisia',
         html: message
       });
-
       res.json({ success: true, message: 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' });
     } catch (error) {
       console.error('❌ فشل إرسال البريد الإلكتروني:', error);
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
       await user.save();
-
-      return res.status(500).json({ message: 'فشل إرسال البريد الإلكتروني. تأكد من إعدادات البريد.' });
+      return res.status(500).json({ message: 'فشل إرسال البريد الإلكتروني' });
     }
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -287,12 +277,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
     }
 
-    // تشفير التوكن والمقارنة مع المخزن في قاعدة البيانات
-    const resetPasswordToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
-
+    const resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
       resetPasswordToken,
       resetPasswordExpire: { $gt: Date.now() }
@@ -302,7 +287,6 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'رابط إعادة التعيين غير صالح أو منتهي الصلاحية' });
     }
 
-    // تحديث كلمة المرور
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
