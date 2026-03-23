@@ -23,6 +23,10 @@ const CarDetails = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  
+  // ✅ State for image modal
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
 
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -31,7 +35,6 @@ const CarDetails = () => {
         const { data } = await API.get(`/cars/${id}`);
         setCar(data.data);
         
-        // جلب التقييمات مع التأكد من أنها مصفوفة
         try {
           const reviewsRes = await API.get(`/reviews/car/${id}`);
           const reviewsData = reviewsRes.data?.data;
@@ -41,7 +44,6 @@ const CarDetails = () => {
           setReviews([]);
         }
         
-        // جلب تقييم المؤجر
         if (data.data?.ownerId?._id) {
           try {
             const ownerRes = await API.get(`/users/${data.data.ownerId._id}/rating`);
@@ -62,7 +64,6 @@ const CarDetails = () => {
     fetchCarDetails();
   }, [id, navigate]);
 
-  // حساب السعر عند تغيير التواريخ
   useEffect(() => {
     if (startDate && endDate && car) {
       const start = new Date(startDate);
@@ -110,6 +111,40 @@ const CarDetails = () => {
     navigate('/my-bookings');
   };
 
+  // ✅ Functions for image modal
+  const openImageModal = (index) => {
+    setModalImageIndex(index);
+    setShowImageModal(true);
+  };
+
+  const closeImageModal = () => {
+    setShowImageModal(false);
+  };
+
+  const nextImage = () => {
+    if (car?.images && modalImageIndex < car.images.length - 1) {
+      setModalImageIndex(modalImageIndex + 1);
+    }
+  };
+
+  const prevImage = () => {
+    if (car?.images && modalImageIndex > 0) {
+      setModalImageIndex(modalImageIndex - 1);
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!showImageModal) return;
+      if (e.key === 'ArrowRight') nextImage();
+      if (e.key === 'ArrowLeft') prevImage();
+      if (e.key === 'Escape') closeImageModal();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showImageModal, modalImageIndex, car?.images]);
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -120,7 +155,6 @@ const CarDetails = () => {
     return stars;
   };
 
-  // ترجمة طريقة التسليم
   const getDeliveryMethodText = (method) => {
     if (method === 'livraison au client') {
       return { text: '🚚 Livraison au client', description: 'Le propriétaire livre la voiture à l\'adresse du locataire' };
@@ -130,7 +164,6 @@ const CarDetails = () => {
     return { text: method || 'Non spécifié', description: '' };
   };
 
-  // ترجمة نوع الوقود
   const getFuelTypeText = (fuelType) => {
     const fuelMap = {
       'Essence': 'Essence',
@@ -142,7 +175,6 @@ const CarDetails = () => {
     return fuelMap[fuelType] || fuelType || 'Essence';
   };
 
-  // ترجمة ناقل الحركة
   const getTransmissionText = (transmission) => {
     const transMap = {
       'Manuelle': 'Manuelle',
@@ -184,31 +216,48 @@ const CarDetails = () => {
   const deliveryInfo = getDeliveryMethodText(car.deliveryMethod);
   const cautionAmount = car.caution || 500;
   const totalWithCaution = totalPrice + cautionAmount;
+  const images = car.images || [];
 
   return (
     <>
       <Navbar />
       <div className="car-details-container">
         <div className="car-details-grid">
-          {/* قسم الصور */}
+          {/* ✅ قسم الصور المحسن */}
           <div className="car-images-section">
-            <div className="main-image">
-              <img 
-                src={car.images?.[selectedImage] || '/default-car.jpg'} 
-                alt={`${car.brand} ${car.model}`}
-              />
+            <div className="main-image" onClick={() => images.length > 0 && openImageModal(selectedImage)}>
+              {images.length > 0 ? (
+                <img 
+                  src={images[selectedImage]} 
+                  alt={`${car.brand} ${car.model}`}
+                  className="main-car-image"
+                />
+              ) : (
+                <div className="no-image-placeholder">
+                  <span>🚗</span>
+                  <p>لا توجد صور</p>
+                </div>
+              )}
+              {images.length > 0 && (
+                <div className="image-overlay">
+                  <span>🔍 اضغط للتكبير</span>
+                </div>
+              )}
             </div>
-            <div className="thumbnail-list">
-              {car.images?.map((img, idx) => (
-                <button
-                  key={idx}
-                  className={`thumbnail ${selectedImage === idx ? 'active' : ''}`}
-                  onClick={() => setSelectedImage(idx)}
-                >
-                  <img src={img} alt={`${car.brand} ${car.model} - ${idx + 1}`} />
-                </button>
-              ))}
-            </div>
+            
+            {images.length > 1 && (
+              <div className="thumbnail-list">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    className={`thumbnail ${selectedImage === idx ? 'active' : ''}`}
+                    onClick={() => setSelectedImage(idx)}
+                  >
+                    <img src={img} alt={`${car.brand} ${car.model} - ${idx + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* معلومات السيارة */}
@@ -230,7 +279,6 @@ const CarDetails = () => {
               <span className="per-day">/ jour</span>
             </div>
 
-            {/* ✅ إضافة مبلغ الضمان (Caution) */}
             <div className="car-caution-box">
               <span className="caution-icon">🔒</span>
               <div className="caution-info">
@@ -240,7 +288,6 @@ const CarDetails = () => {
               </div>
             </div>
 
-            {/* ✅ إضافة طريقة التسليم (Delivery Method) */}
             <div className="car-delivery-box">
               <span className="delivery-icon">🚗</span>
               <div className="delivery-info">
@@ -249,7 +296,6 @@ const CarDetails = () => {
               </div>
             </div>
 
-            {/* مواصفات السيارة */}
             <div className="car-specs">
               <div className="spec-item">
                 <span className="spec-icon">⛽</span>
@@ -278,7 +324,6 @@ const CarDetails = () => {
               </div>
             </div>
 
-            {/* ✅ عرض المعدات (Features) */}
             {car.features && car.features.length > 0 && (
               <div className="car-features">
                 <h3>Équipements</h3>
@@ -290,7 +335,6 @@ const CarDetails = () => {
               </div>
             )}
 
-            {/* قسم المالك مع التقييم */}
             <div className="car-owner">
               <h3>Propriétaire</h3>
               <div className="owner-info">
@@ -340,7 +384,6 @@ const CarDetails = () => {
                   <span>{Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))} jours × {car.pricePerDay} DT</span>
                   <span>{totalPrice} DT</span>
                 </div>
-                {/* ✅ إضافة مبلغ الضمان في تفاصيل السعر */}
                 <div className="breakdown-item caution-item">
                   <span>🔒 Caution (remboursable)</span>
                   <span>{cautionAmount} DT</span>
@@ -402,7 +445,60 @@ const CarDetails = () => {
         </div>
       </div>
 
-      {/* Modal تأكيد الحجز */}
+      {/* ✅ Modal لعرض الصور بشكل كبير */}
+      {showImageModal && images.length > 0 && (
+        <div className="image-modal-overlay" onClick={closeImageModal}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="image-modal-close" onClick={closeImageModal}>✕</button>
+            
+            <div className="image-modal-main">
+              <img 
+                src={images[modalImageIndex]} 
+                alt={`${car.brand} ${car.model} - ${modalImageIndex + 1}`}
+                className="image-modal-img"
+              />
+              
+              {images.length > 1 && (
+                <>
+                  <button 
+                    className="image-modal-prev" 
+                    onClick={prevImage}
+                    disabled={modalImageIndex === 0}
+                  >
+                    ❮
+                  </button>
+                  <button 
+                    className="image-modal-next" 
+                    onClick={nextImage}
+                    disabled={modalImageIndex === images.length - 1}
+                  >
+                    ❯
+                  </button>
+                </>
+              )}
+            </div>
+            
+            {images.length > 1 && (
+              <div className="image-modal-thumbnails">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    className={`image-modal-thumb ${modalImageIndex === idx ? 'active' : ''}`}
+                    onClick={() => setModalImageIndex(idx)}
+                  >
+                    <img src={img} alt={`Thumbnail ${idx + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            <div className="image-modal-counter">
+              {modalImageIndex + 1} / {images.length}
+            </div>
+          </div>
+        </div>
+      )}
+
       <ModalBooking
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
@@ -414,7 +510,6 @@ const CarDetails = () => {
         onSuccess={handleBookingSuccess}
       />
 
-      {/* Modal رفع الوثائق */}
       <ModalUpload
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
