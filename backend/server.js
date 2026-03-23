@@ -12,39 +12,40 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp' }));
 
-// ✅ CORS configuration pour Safari et tous les navigateurs
+// ✅ CORS configuration améliorée pour tous les navigateurs (Safari, Chrome, iPhone)
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://drivetunisia.onrender.com',
-  'https://sfaxrentcar-frontend-x281.onrender.com'
+  'https://sfaxrentcar-frontend-x281.onrender.com',
+  'https://sfaxrentcar-backend.onrender.com'
 ];
 
-// Ajouter l'IP locale pour les tests sur iPhone (à modifier selon votre IP)
-// Exemple: 'http://192.168.1.100:3000'
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Permettre les requêtes sans origin (comme Postman)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
+// ✅ Middleware CORS plus permissif pour les tests sur iPhone
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Permettre toutes les origines en développement, ou les origines autorisées en production
+  if (process.env.NODE_ENV !== 'production') {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+  } else {
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
     }
-    
-    // Pour le développement local avec IP
-    if (process.env.NODE_ENV !== 'production' && origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/)) {
-      return callback(null, true);
-    }
-    
-    console.warn('🚫 CORS blocked origin:', origin);
-    return callback(new Error('CORS policy'), false);
-  },
-  credentials: true, // ✅ Important pour les cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
-  optionsSuccessStatus: 200
-}));
+  }
+  
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept');
+  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  
+  // Répondre immédiatement aux requêtes OPTIONS (preflight)
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -134,4 +135,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Test URL: http://localhost:${PORT}/api/test`);
   console.log(`❤️  Health URL: http://localhost:${PORT}/api/health`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
