@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp' }));
 
-// ✅ CORS configuration améliorée pour tous les navigateurs (Safari, Chrome, iPhone)
+// ✅ CORS configuration améliorée pour tous les navigateurs
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -21,11 +21,10 @@ const allowedOrigins = [
   'https://sfaxrentcar-backend.onrender.com'
 ];
 
-// ✅ Middleware CORS plus permissif pour les tests sur iPhone
+// ✅ Middleware CORS
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Permettre toutes les origines en développement, ou les origines autorisées en production
   if (process.env.NODE_ENV !== 'production') {
     res.header('Access-Control-Allow-Origin', origin || '*');
   } else {
@@ -36,10 +35,10 @@ app.use((req, res, next) => {
   
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept');
+  // ✅ إضافة Cache-Control إلى الـ allowed headers
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept, Cache-Control');
   res.header('Access-Control-Expose-Headers', 'Set-Cookie');
   
-  // Répondre immédiatement aux requêtes OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
@@ -77,7 +76,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// ========== Test & Health Check Endpoints ==========
+// Test & Health Check Endpoints
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
