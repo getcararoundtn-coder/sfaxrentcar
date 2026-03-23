@@ -605,3 +605,16 @@
     padding: 8px;
   }
 }
+/* Popup Menu Divider */
+.popup-menu-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 8px 0;
+}
+
+/* Mobile Divider */
+.mobile-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 8px 15px;
+}

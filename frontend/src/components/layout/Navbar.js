@@ -195,7 +195,7 @@ const Navbar = () => {
               </button>
             ) : (
               <div className="user-menu-container">
-                {/* ✅ Popup Menu Trigger - الاسم مع الصورة والسهم */}
+                {/* Popup Menu Trigger */}
                 <button className="user-menu-trigger" onClick={togglePopupMenu}>
                   <div className="user-avatar">
                     {getInitial()}
@@ -204,7 +204,7 @@ const Navbar = () => {
                   <span className={`user-chevron ${popupMenuOpen ? 'open' : ''}`}>▼</span>
                 </button>
                 
-                {/* ✅ Popup Menu الجديد */}
+                {/* Popup Menu */}
                 {popupMenuOpen && (
                   <div className="user-popup-menu">
                     <div className="popup-user-info">
@@ -233,6 +233,18 @@ const Navbar = () => {
                       <span className="popup-menu-icon">🚗</span>
                       <span>Voitures</span>
                     </Link>
+                    
+                    {/* ✅ إضافة قسم Admin للمشرفين */}
+                    {user.role === 'admin' && (
+                      <>
+                        <div className="popup-menu-divider"></div>
+                        <div className="popup-menu-title">Administration</div>
+                        <Link to="/admin" className="popup-menu-item" onClick={closeMenus}>
+                          <span className="popup-menu-icon">⚙️</span>
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      </>
+                    )}
                     
                     <button onClick={handleLogout} className="popup-menu-item logout">
                       <span className="popup-menu-icon">🚪</span>
@@ -304,9 +316,12 @@ const Navbar = () => {
                       </>
                     )}
                     {user.role === 'admin' && (
-                      <Link to="/admin" className="mobile-link" onClick={closeMenus}>
-                        Admin
-                      </Link>
+                      <>
+                        <div className="mobile-divider"></div>
+                        <Link to="/admin" className="mobile-link" onClick={closeMenus}>
+                          ⚙️ Admin Dashboard
+                        </Link>
+                      </>
                     )}
                     <button onClick={handleLogout} className="mobile-logout-btn">
                       Se déconnecter
