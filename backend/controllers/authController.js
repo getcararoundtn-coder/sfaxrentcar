@@ -9,7 +9,6 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, phone, role } = req.body;
 
-    // التحقق من المدخلات
     if (!name || !email || !password || !phone) {
       return res.status(400).json({ 
         success: false,
@@ -41,7 +40,6 @@ exports.register = async (req, res) => {
     });
     generateToken(res, user._id);
 
-    // إشعار للمشرفين بمستخدم جديد
     try {
       const admins = await User.find({ role: 'admin' }).select('_id');
       for (const admin of admins) {
@@ -79,7 +77,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// تسجيل الدخول العادي (بريد وكلمة مرور)
+// ✅ تسجيل الدخول العادي (محسن وسريع)
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -91,7 +89,11 @@ exports.login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    // ✅ استخدام lean() و select() لتسريع الاستعلام
+    const user = await User.findOne({ email })
+      .select('_id name email role status verificationStatus password')
+      .lean();
+
     if (!user) {
       return res.status(401).json({ 
         success: false,
@@ -99,7 +101,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    const isMatch = await user.comparePassword(password);
+    // ✅ التحقق من كلمة المرور (نحتاج إلى bcrypt)
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(password, user.password);
+    
     if (!isMatch) {
       return res.status(401).json({ 
         success: false,
@@ -107,19 +112,15 @@ exports.login = async (req, res) => {
       });
     }
 
+    // ✅ إزالة كلمة المرور من الرد
+    delete user.password;
+
     generateToken(res, user._id);
 
     res.json({
       success: true,
       message: 'تم تسجيل الدخول بنجاح',
-      data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        verificationStatus: user.verificationStatus
-      }
+      data: user
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -130,11 +131,11 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ تسجيل الدخول عبر Firebase (محسّن مع دعم الدور)
+// ✅ تسجيل الدخول عبر Firebase (محسن وسريع)
 exports.firebaseLogin = async (req, res) => {
   try {
     console.log('🔥 Firebase login request received:', req.body);
-    const { firebaseUid, email, name, role } = req.body; // ✅ إضافة role
+    const { firebaseUid, email, name, role } = req.body;
 
     if (!firebaseUid || !email) {
       console.error('❌ Missing firebaseUid or email:', { firebaseUid, email });
@@ -144,34 +145,48 @@ exports.firebaseLogin = async (req, res) => {
       });
     }
 
-    // البحث عن المستخدم بالبريد الإلكتروني
-    let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    // ✅ البحث عن المستخدم بالبريد الإلكتروني (محسن)
+    let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } })
+      .select('_id name email role status verificationStatus firebaseUid')
+      .lean();
 
     // إذا لم يوجد، جرب البحث بـ firebaseUid
     if (!user) {
-      user = await User.findOne({ firebaseUid });
+      user = await User.findOne({ firebaseUid })
+        .select('_id name email role status verificationStatus firebaseUid')
+        .lean();
     }
 
     if (!user) {
-      // ✅ إنشاء مستخدم جديد مع الدور المطلوب
-      const userRole = role || 'user'; // إذا لم يتم إرسال دور، افتراضي 'user'
+      // ✅ إنشاء مستخدم جديد
+      const userRole = role || 'user';
       console.log(`📝 Creating new user for: ${email} with role: ${userRole}`);
       
-      user = await User.create({
+      const newUser = await User.create({
         name: name || email.split('@')[0],
         email: email.toLowerCase(),
         password: crypto.randomBytes(20).toString('hex'),
         phone: '',
-        role: userRole, // ✅ استخدام الدور المرسل
+        role: userRole,
         verificationStatus: 'not_submitted',
         firebaseUid
       });
+      
+      user = {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        status: newUser.status,
+        verificationStatus: newUser.verificationStatus,
+        firebaseUid: newUser.firebaseUid
+      };
       console.log('✅ New user created via Firebase:', user.email, 'Role:', user.role);
     } else {
       // تحديث Firebase UID إذا لم يكن موجوداً
       if (!user.firebaseUid) {
+        await User.updateOne({ _id: user._id }, { $set: { firebaseUid } });
         user.firebaseUid = firebaseUid;
-        await user.save();
         console.log('✅ Updated existing user with firebaseUid:', user.email);
       }
       console.log('✅ Existing user logged in via Firebase:', user.email, 'Role:', user.role);
@@ -183,15 +198,7 @@ exports.firebaseLogin = async (req, res) => {
     res.json({
       success: true,
       message: 'تم تسجيل الدخول بنجاح عبر Firebase',
-      data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        verificationStatus: user.verificationStatus,
-        firebaseUid: user.firebaseUid
-      }
+      data: user
     });
   } catch (error) {
     console.error('❌ Firebase login error:', error);
@@ -211,10 +218,12 @@ exports.logout = (req, res) => {
   res.json({ success: true, message: 'تم تسجيل الخروج' });
 };
 
-// بيانات المستخدم الحالي
+// ✅ بيانات المستخدم الحالي (محسن)
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const user = await User.findById(req.user._id)
+      .select('-password')
+      .lean();
     console.log('🔵 getMe - user role:', user.role);
     res.json({ success: true, data: user });
   } catch (error) {
