@@ -3,34 +3,46 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const fileUpload = require('express-fileupload');
 
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp' }));
 
-// CORS configuration محسّنة للإنتاج
+// ✅ CORS configuration pour Safari et tous les navigateurs
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://drivetunisia.onrender.com',
   'https://sfaxrentcar-frontend-x281.onrender.com'
-].filter(Boolean);
+];
+
+// Ajouter l'IP locale pour les tests sur iPhone (à modifier selon votre IP)
+// Exemple: 'http://192.168.1.100:3000'
 
 app.use(cors({
   origin: function (origin, callback) {
-    // السماح للطلبات بدون origin (مثل Postman)
+    // Permettre les requêtes sans origin (comme Postman)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) === -1) {
-      console.warn('🚫 CORS blocked origin:', origin);
-      const msg = 'سياسة CORS تمنع الوصول من هذا المصدر';
-      return callback(new Error(msg), false);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
     }
-    return callback(null, true);
+    
+    // Pour le développement local avec IP
+    if (process.env.NODE_ENV !== 'production' && origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/)) {
+      return callback(null, true);
+    }
+    
+    console.warn('🚫 CORS blocked origin:', origin);
+    return callback(new Error('CORS policy'), false);
   },
-  credentials: true,
+  credentials: true, // ✅ Important pour les cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
   optionsSuccessStatus: 200
 }));
 
@@ -39,7 +51,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// ========== Routes ==========
+// Routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const documentRoutes = require('./routes/documentRoutes');
@@ -52,7 +64,6 @@ const companyRoutes = require('./routes/companyRoutes');
 const settingRoutes = require('./routes/settingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
-// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
@@ -66,8 +77,6 @@ app.use('/api/settings', settingRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // ========== Test & Health Check Endpoints ==========
-
-// Health check endpoint (لـ Render)
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
@@ -76,7 +85,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     success: true,
@@ -87,40 +95,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Simple test endpoint
 app.get('/api/test', (req, res) => {
   res.json({ 
     success: true, 
     message: 'Backend is working!',
-    timestamp: new Date().toISOString(),
-    endpoints: [
-      '/api/auth/login',
-      '/api/auth/register',
-      '/api/cars',
-      '/api/bookings',
-      '/api/health'
-    ]
+    timestamp: new Date().toISOString()
   });
 });
 
-// Root endpoint
 app.get('/', (req, res) => {
   res.json({
     success: true,
     message: 'DriveTunisia API',
     version: '1.0.0',
-    status: 'running',
-    endpoints: {
-      auth: '/api/auth',
-      cars: '/api/cars',
-      bookings: '/api/bookings',
-      health: '/api/health',
-      test: '/api/test'
-    }
+    status: 'running'
   });
 });
 
-// 404 handler for undefined routes
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
