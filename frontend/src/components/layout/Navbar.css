@@ -85,7 +85,7 @@
   color: #6b46c0;
 }
 
-/* ========== NEW: Popup Menu (User Menu) ========== */
+/* ========== Popup Menu (User Menu) ========== */
 .user-menu-container {
   position: relative;
 }
@@ -135,7 +135,7 @@
   transform: rotate(180deg);
 }
 
-/* Popup Menu Dropdown */
+/* Popup Menu Dropdown - Desktop */
 .user-popup-menu {
   position: absolute;
   top: calc(100% + 10px);
@@ -219,6 +219,12 @@
 .popup-menu-item.logout:hover {
   background: #fff5f5;
   color: #dc3545;
+}
+
+.popup-menu-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 8px 0;
 }
 
 /* ========== Old User Dropdown (Keep for backward compatibility) ========== */
@@ -308,6 +314,8 @@
   z-index: 1000;
   animation: slideDown 0.3s ease;
   border-bottom: 1px solid #f0f0f0;
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
 }
 
 .mobile-menu-content {
@@ -340,6 +348,7 @@
   font-size: 1rem;
   transition: background 0.3s;
   text-align: center;
+  display: block;
 }
 
 .mobile-link:hover {
@@ -358,10 +367,17 @@
   text-align: center;
   border-top: 1px solid #f0f0f0;
   margin-top: 5px;
+  width: 100%;
 }
 
 .mobile-logout-btn:hover {
   background: #fff5f5;
+}
+
+.mobile-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 8px 15px;
 }
 
 /* ========== Notification Wrapper ========== */
@@ -501,7 +517,7 @@
 
 /* ========== Responsive Design ========== */
 
-/* Tablet & Mobile (max-width: 768px) */
+/* Tablet (max-width: 768px) */
 @media (max-width: 768px) {
   .desktop-menu {
     display: none;
@@ -515,7 +531,6 @@
     font-size: 1.5rem;
   }
   
-  /* قسم الشعار مع الإشعارات في الهاتف */
   .logo-section {
     flex: 1;
     gap: 8px;
@@ -529,25 +544,7 @@
     margin-left: auto;
   }
   
-  /* تعديل أنماط الـ Modal للهاتف */
-  .modal-form-group input,
-  .modal-form-group select {
-    padding: 10px;
-    font-size: 13px;
-  }
-  
-  .modal-submit {
-    padding: 10px;
-    font-size: 14px;
-  }
-  
-  .modal-footer-links {
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-  }
-  
-  /* Popup Menu للهاتف */
+  /* Popup Menu للهاتف - من الأسفل */
   .user-popup-menu {
     position: fixed;
     top: auto;
@@ -555,8 +552,39 @@
     left: 0;
     right: 0;
     width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
     border-radius: 20px 20px 0 0;
     animation: slideUp 0.3s ease;
+    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* تكبير العناصر للهواتف */
+  .popup-menu-item {
+    padding: 16px 20px;
+    font-size: 16px;
+  }
+  
+  .popup-menu-icon {
+    font-size: 22px;
+    width: 32px;
+  }
+  
+  .popup-user-info {
+    padding: 20px;
+  }
+  
+  .popup-user-name {
+    font-size: 18px;
+  }
+  
+  .popup-user-email {
+    font-size: 13px;
+  }
+  
+  .popup-menu-title {
+    padding: 14px 20px 10px;
+    font-size: 12px;
   }
   
   @keyframes slideUp {
@@ -566,6 +594,24 @@
     to {
       transform: translateY(0);
     }
+  }
+  
+  /* تحسين الـ Modal للهاتف */
+  .modal-form-group input,
+  .modal-form-group select {
+    padding: 12px;
+    font-size: 16px;
+  }
+  
+  .modal-submit {
+    padding: 14px;
+    font-size: 16px;
+  }
+  
+  .modal-footer-links {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
   }
 }
 
@@ -592,29 +638,23 @@
   }
 
   .mobile-link {
-    padding: 10px 15px;
+    padding: 12px 15px;
   }
   
   .logo-section {
     gap: 6px;
   }
   
-  /* تعديلات إضافية للهاتف الصغير */
-  .modal-form-group input,
-  .modal-form-group select {
-    padding: 8px;
+  .user-popup-menu {
+    max-height: 85vh;
   }
-}
-/* Popup Menu Divider */
-.popup-menu-divider {
-  height: 1px;
-  background: #e2e8f0;
-  margin: 8px 0;
-}
-
-/* Mobile Divider */
-.mobile-divider {
-  height: 1px;
-  background: #e2e8f0;
-  margin: 8px 15px;
+  
+  .popup-menu-item {
+    padding: 14px 16px;
+  }
+  
+  .popup-menu-icon {
+    font-size: 20px;
+    width: 28px;
+  }
 }
