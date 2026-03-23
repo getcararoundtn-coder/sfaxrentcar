@@ -475,3 +475,72 @@
     width: 100%;
   }
 }
+/* Search Form avec dates */
+.search-form-simplified {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.search-form-simplified .search-field {
+  flex: 1;
+  min-width: 180px;
+}
+
+.search-form-simplified .search-input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 50px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.search-form-simplified .search-input:focus {
+  outline: none;
+  border-color: #6b46c0;
+  box-shadow: 0 0 0 3px rgba(107, 70, 192, 0.1);
+}
+
+.search-form-simplified .search-button {
+  flex: 0.5;
+  min-width: 120px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #6b46c0 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-form-simplified .search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 70, 192, 0.3);
+}
+
+.search-hint {
+  font-size: 13px;
+  color: #718096;
+  margin-top: 10px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .search-form-simplified {
+    flex-direction: column;
+  }
+  
+  .search-form-simplified .search-field {
+    width: 100%;
+  }
+  
+  .search-form-simplified .search-button {
+    width: 100%;
+  }
+}

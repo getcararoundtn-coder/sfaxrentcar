@@ -16,6 +16,8 @@ const Home = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [selectedCity, setSelectedCity] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -35,12 +37,20 @@ const Home = () => {
     if (selectedCity) {
       params.append('city', selectedCity);
     }
+    if (startDate) {
+      params.append('startDate', startDate);
+    }
+    if (endDate) {
+      params.append('endDate', endDate);
+    }
     navigate(`/cars?${params.toString()}`);
   };
 
   const handleCarTypeClick = (type) => {
     navigate(`/cars?type=${type}`);
   };
+
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <>
@@ -90,7 +100,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Search Hero - Simplifié */}
+      {/* Search Hero - Avec dates */}
       <div className="search-hero">
         <div className="search-container">
           <h2 className="search-title">
@@ -112,6 +122,28 @@ const Home = () => {
               </datalist>
             </div>
             
+            <div className="search-field">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                min={today}
+                className="search-input"
+                placeholder="Date de début"
+              />
+            </div>
+            
+            <div className="search-field">
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate || today}
+                className="search-input"
+                placeholder="Date de fin"
+              />
+            </div>
+            
             <button type="submit" className="search-button">
               Rechercher
             </button>
@@ -121,7 +153,7 @@ const Home = () => {
             DriveTunisia - Location de voitures entre particuliers et professionnels en Tunisie
           </p>
           <p className="search-hint">
-            💡 Utilisez les filtres avancés sur la page des résultats pour affiner votre recherche
+            💡 Sélectionnez une ville et des dates pour voir les voitures disponibles
           </p>
         </div>
       </div>
