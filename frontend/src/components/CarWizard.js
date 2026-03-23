@@ -1,17 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { showSuccess, showError } from '../utils/ToastConfig';
 import './CarWizard.css';
 
+// ========== قائمة المعتمديات الكاملة ==========
+const delegationsList = [
+  // Ariana
+  'Ariana Ville', 'Ettadhamen', 'Kalâat el-Andalous', 'La Soukra', 'Mnihla', 'Raoued', 'Sidi Thabet',
+  // Béja
+  'Amdoun', 'Béja Nord', 'Béja Sud', 'Goubellat', 'Medjez el-Bab', 'Nefza', 'Téboursouk', 'Testour', 'Thibar',
+  // Ben Arous
+  'Ben Arous', 'Bou Mhel el-Bassatine', 'Ezzahra', 'Fouchana', 'Hammam Chott', 'Hammam Lif', 'Mégrine', 'Mohamedia', 'Mornag', 'Radès', 'El Mourouj',
+  // Bizerte
+  'Bizerte Nord', 'Bizerte Sud', 'El Alia', 'Ghezala', 'Joumine', 'Mateur', 'Menzel Bourguiba', 'Menzel Jemil', 'Ras Jebel', 'Sejnane', 'Tinja', 'Utique', 'Zarzouna', 'Ghar El Melh',
+  // Gabès
+  'Gabès Médina', 'Gabès Ouest', 'Gabès Sud', 'El Hamma', 'El Hamma Ouest', 'Mareth-Dkhila', 'Menzel El Habib', 'Matmata', 'Métouia', 'Nouvelle Matmata', 'Oudhref', 'Toujane', 'Ghannouch',
+  // Gafsa
+  'Belkhir', 'El Guettar', 'El Ksar', 'Gafsa Nord', 'Gafsa Sud', 'Mdhilla', 'Métlaoui', 'Moularès', 'Redeyef', 'Sened', 'Sidi Aïch', 'Sidi Boubaker', 'Zannouch',
+  // Jendouba
+  'Aïn Draham', 'Balta-Bou Aouane', 'Bou Salem', 'Fernana', 'Ghardimaou', 'Jendouba', 'Jendouba Nord', 'Oued Meliz', 'Tabarka',
+  // Kairouan
+  'Aïn Djeloula', 'Bou Hajla', 'Chebika', 'Echrarda', 'El Alâa', 'Haffouz', 'Hajeb El Ayoun', 'Kairouan Nord', 'Kairouan Sud', 'Menzel Mehiri', 'Nasrallah', 'Oueslatia', 'Sbikha',
+  // Kasserine
+  'El Ayoun', 'Ezzouhour', 'Fériana', 'Foussana', 'Haïdra', 'Hassi El Ferid', 'Jedelienne', 'Kasserine Nord', 'Kasserine Sud', 'Majel Bel Abbès', 'Sbeïtla', 'Sbiba', 'Thala',
+  // Kébili
+  'Douz Nord', 'Douz Sud', 'Faouar', 'Kébili Nord', 'Kébili Sud', 'Rjim Maatoug', 'Souk Lahad',
+  // Le Kef
+  'Dahmani', 'El Ksour', 'Jérissa', 'Kalâat Khasba', 'Kalaat Senan', 'Kef Est', 'Kef Ouest', 'Nebeur', 'Sakiet Sidi Youssef', 'Sers', 'Tajerouine', 'Touiref',
+  // Mahdia
+  'Bou Merdes', 'Chebba', 'Chorbane', 'El Bradâa', 'El Jem', 'Essouassi', 'Hebira', 'Ksour Essef', 'Mahdia', 'Melloulèche', 'Ouled Chamekh', 'Rejiche', 'Sidi Alouane',
+  // Manouba
+  'Borj El Amri', 'Djedeida', 'Douar Hicher', 'El Batan', 'La Manouba', 'Mornaguia', 'Oued Ellil', 'Tebourba',
+  // Médenine
+  'Ben Gardane', 'Beni Khedache', 'Djerba - Ajim', 'Djerba - Houmt Souk', 'Djerba - Midoun', 'Médenine Nord', 'Médenine Sud', 'Sidi Makhlouf', 'Zarzis',
+  // Monastir
+  'Bekalta', 'Bembla', 'Beni Hassen', 'Jemmal', 'Ksar Hellal', 'Ksibet el-Médiouni', 'Moknine', 'Monastir', 'Ouerdanine', 'Sahline', 'Sayada-Lamta-Bou Hajar', 'Téboulba', 'Zéramdine',
+  // Nabeul
+  'Béni Khalled', 'Béni Khiar', 'Bou Argoub', 'Dar Chaâbane El Fehri', 'El Haouaria', 'El Mida', 'Grombalia', 'Hammam Ghezèze', 'Kélibia', 'Korba', 'Menzel Bouzelfa', 'Menzel Temime', 'Nabeul', 'Soliman', 'Takelsa',
+  // Sfax
+  'Agareb', 'Bir Ali Ben Khalifa', 'El Amra', 'El Hencha', 'Graïba', 'Jebiniana', 'Kerkennah', 'Mahrès', 'Menzel Chaker', 'Sakiet Eddaïer', 'Sakiet Ezzit', 'Sfax Sud', 'Sfax Ouest', 'Sfax Ville', 'Skhira', 'Thyna',
+  // Sidi Bouzid
+  'Bir El Hafey', 'Cebbala Ouled Asker', 'Essaïda', 'Hichria', 'Jilma', 'Meknassy', 'Menzel Bouzaiane', 'Mezzouna', 'Ouled Haffouz', 'Regueb', 'Sidi Ali Ben Aoun', 'Sidi Bouzid Est', 'Sidi Bouzid Ouest', 'Souk Jedid',
+  // Siliana
+  'Bargou', 'Bou Arada', 'El Aroussa', 'El Krib', 'Gaâfour', 'Kesra', 'Makthar', 'Rouhia', 'Sidi Bou Rouis', 'Siliana Nord', 'Siliana Sud',
+  // Sousse
+  'Akouda', 'Bouficha', 'Enfida', 'Hammam Sousse', 'Hergla', 'Kalâa Kebira', 'Kalâa Seghira', 'Kondar', "M'saken", 'Sidi Bou Ali', 'Sidi El Hani', 'Sousse Jawhara', 'Sousse Médina', 'Sousse Riadh', 'Sousse Sidi Abdelhamid', 'Zaouiet Ksibet Thrayet',
+  // Tataouine
+  'Beni Mhira', 'Bir Lahmar', 'Dehiba', 'Ghomrassen', 'Remada', 'Smâr', 'Tataouine Nord', 'Tataouine Sud',
+  // Tozeur
+  'Degache', 'El Hamma du Jérid', 'Hazoua', 'Nefta', 'Tameghza', 'Tozeur',
+  // Tunis
+  'Bab El Bhar', 'Bab Souika', 'Carthage', 'Cité El Khadra', 'Djebel Jelloud', 'El Kabaria', 'El Menzah', 'El Omrane', 'El Omrane supérieur', 'El Ouardia', 'Ettahrir', 'Ezzouhour', 'Hraïria', 'La Goulette', 'La Marsa', 'Le Bardo', 'Le Kram', 'Médina', 'Séjoumi', 'Sidi El Béchir', 'Sidi Hassine',
+  // Zaghouan
+  'Bir Mcherga', 'El Fahs', 'Nadhour', 'Saouaf', 'Zaghouan', 'Zriba'
+];
+
+// ========== قائمة خيارات السيارة الكاملة ==========
+const allFeatures = [
+  'GPS', 'Bluetooth', 'Caméra de recul', 'Radar de stationnement', 
+  'Climatisation', 'Régulateur de vitesse', 'Sièges chauffants', 
+  'Toit ouvrant', 'USB', 'Apple CarPlay', 'Android Auto', 'Start & Stop',
+  'Vitres électriques', 'Rétroviseurs électriques', 'Direction assistée',
+  'ABS', 'Airbags', 'Allumage automatique des phares', 'Essuie-glaces automatiques'
+];
+
 const CarWizard = ({ initialData, onComplete }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [insuranceFrontPreview, setInsuranceFrontPreview] = useState(null);
   const [insuranceBackPreview, setInsuranceBackPreview] = useState(null);
-  const [cautionType, setCautionType] = useState('fixed');
+  const saveTimeoutRef = useRef(null);
   
   const [formData, setFormData] = useState({
     brand: initialData?.brand || '',
@@ -38,12 +100,15 @@ const CarWizard = ({ initialData, onComplete }) => {
     deliveryMethod: '',
     pricePerDay: 0,
     caution: 500,
-    cautionFixed: 500,
-    cautionPercentage: 10,
     carImages: [],
     insuranceFront: null,
     insuranceBack: null
   });
+
+  // حساب نسبة التقدم
+  const getProgressPercentage = () => {
+    return Math.round((step / 15) * 100);
+  };
 
   useEffect(() => {
     const fetchDraft = async () => {
@@ -60,15 +125,26 @@ const CarWizard = ({ initialData, onComplete }) => {
     fetchDraft();
   }, []);
 
+  // Sauvegarde automatique
   const saveDraft = async (currentStep, newData) => {
-    try {
-      await API.post('/cars/wizard/save', {
-        step: currentStep,
-        data: newData
-      });
-    } catch (err) {
-      console.error('Error saving draft:', err);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
+    
+    setSaving(true);
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await API.post('/cars/wizard/save', {
+          step: currentStep,
+          data: newData
+        });
+        console.log('✅ Auto-saved');
+      } catch (err) {
+        console.error('Error saving draft:', err);
+      } finally {
+        setSaving(false);
+      }
+    }, 1000);
   };
 
   const handleChange = (e) => {
@@ -92,7 +168,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     }
     
     if (type === 'number') {
-      newValue = parseInt(value) || 0;
+      newValue = parseFloat(value) || 0;
     }
     
     setFormData(prev => ({ ...prev, [name]: newValue }));
@@ -100,6 +176,19 @@ const CarWizard = ({ initialData, onComplete }) => {
   };
 
   const handleNext = async () => {
+    // Vérification des champs obligatoires selon l'étape
+    if (step === 1) {
+      if (!formData.brand || !formData.model || !formData.year || !formData.mileage || !formData.city || !formData.delegation) {
+        showError('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+    }
+    
+    if (step === 14 && formData.pricePerDay < 20) {
+      const confirm = window.confirm('Le prix semble très bas (moins de 20 TND/jour). Voulez-vous continuer ?');
+      if (!confirm) return;
+    }
+    
     setLoading(true);
     await saveDraft(step + 1, formData);
     setStep(step + 1);
@@ -115,7 +204,6 @@ const CarWizard = ({ initialData, onComplete }) => {
     setLoading(true);
     
     try {
-      // التحقق من الحقول المطلوبة
       const requiredFields = [
         'brand', 'model', 'year', 'mileage', 'licensePlate', 
         'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
@@ -131,22 +219,19 @@ const CarWizard = ({ initialData, onComplete }) => {
       }
       
       if (missingFields.length > 0) {
-        showError(`الرجاء تعبئة جميع الحقول المطلوبة: ${missingFields.join(', ')}`);
+        showError(`Veuillez remplir tous les champs requis: ${missingFields.join(', ')}`);
         setLoading(false);
         return;
       }
       
-      // التحقق من وجود صور
       if (!formData.carImages || formData.carImages.length === 0) {
-        showError('الرجاء إضافة صورة واحدة على الأقل للسيارة');
+        showError('Veuillez ajouter au moins une photo de votre voiture');
         setLoading(false);
         return;
       }
       
-      // إنشاء FormData
       const formDataToSend = new FormData();
       
-      // إضافة الحقول النصية
       const textFields = [
         'brand', 'model', 'year', 'mileage', 'licensePlate', 
         'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
@@ -162,24 +247,19 @@ const CarWizard = ({ initialData, onComplete }) => {
         }
       });
       
-      // إضافة المعدات
       if (formData.features && formData.features.length > 0) {
         formData.features.forEach(feature => {
           formDataToSend.append('features[]', feature);
         });
       }
       
-      // إضافة تاريخ الميلاد
       if (formData.ownerBirthDate) {
         formDataToSend.append('ownerBirthDate', formData.ownerBirthDate);
       }
       
-      // إضافة الصور
-      if (formData.carImages && formData.carImages.length > 0) {
-        formData.carImages.forEach((file) => {
-          formDataToSend.append('images', file);
-        });
-      }
+      formData.carImages.forEach((file) => {
+        formDataToSend.append('images', file);
+      });
       
       if (formData.insuranceFront) {
         formDataToSend.append('insuranceFront', formData.insuranceFront);
@@ -188,26 +268,25 @@ const CarWizard = ({ initialData, onComplete }) => {
         formDataToSend.append('insuranceBack', formData.insuranceBack);
       }
       
-      console.log('Sending to backend...');
       const { data } = await API.post('/cars/wizard/complete', formDataToSend, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 60000
       });
       
       if (data.success) {
-        showSuccess('✅ تم إضافة السيارة بنجاح!');
+        showSuccess('✅ Votre voiture est maintenant en ligne !');
         if (onComplete) onComplete();
         navigate('/owner-cars?tab=cars');
       } else {
-        showError(data.message || 'حدث خطأ في إضافة السيارة');
+        showError(data.message || 'Erreur lors de l\'ajout de la voiture');
       }
     } catch (err) {
       console.error('Error:', err);
-      let errorMessage = 'فشل إضافة السيارة. ';
+      let errorMessage = 'Échec de l\'ajout. ';
       if (err.response) {
-        errorMessage += err.response.data?.message || 'خطأ من الخادم.';
+        errorMessage += err.response.data?.message || 'Erreur serveur.';
       } else if (err.request) {
-        errorMessage += 'لم يتم استلام رد من الخادم.';
+        errorMessage += 'Pas de réponse du serveur.';
       } else {
         errorMessage += err.message;
       }
@@ -217,341 +296,90 @@ const CarWizard = ({ initialData, onComplete }) => {
     }
   };
 
-  // ========== الخطوة 8: تاريخ الميلاد ==========
-  const renderStep8 = () => {
-    const handleBirthDateChange = (e) => {
-      const value = e.target.value;
-      setFormData(prev => ({ ...prev, ownerBirthDate: value }));
-      saveDraft(step, { ...formData, ownerBirthDate: value });
-    };
+  // ========== RENDER STEP 1 ==========
+  const renderStep1 = () => {
+    const tunisianCities = [
+      'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
+      'Kairouan', 'Kasserine', 'Kébili', 'Le Kef', 'Mahdia', 'Manouba', 'Médenine',
+      'Monastir', 'Nabeul', 'Sfax', 'Sidi Bouzid', 'Siliana', 'Sousse', 'Tataouine',
+      'Tozeur', 'Tunis', 'Zaghouan'
+    ];
 
     return (
       <div className="wizard-step">
-        <h2>Quelle est votre date de naissance ?</h2>
+        <h2>Confirmez le modèle de votre voiture</h2>
+        
         <div className="form-group">
-          <label>Date de naissance</label>
-          <input 
-            type="date" 
-            name="ownerBirthDate" 
-            value={formData.ownerBirthDate || ''} 
-            onChange={handleBirthDateChange}
-          />
-          <small className="form-hint">Format: JJ/MM/AAAA (ex: 15/05/1985)</small>
+          <label>Marque *</label>
+          <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Ex: Renault, Peugeot, Ford..." />
+          <small className="form-hint">Entrez la marque de votre voiture</small>
         </div>
-        <p className="step-note">nous devons vous demander cette information pour des raisons légales</p>
-        <div className="step-buttons">
-          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-          <button onClick={handleNext} className="step-button">Suivant</button>
+        
+        <div className="form-group">
+          <label>Modèle *</label>
+          <input type="text" name="model" value={formData.model} onChange={handleChange} placeholder="Ex: Clio, 208, EcoSport..." />
+          <small className="form-hint">Entrez le modèle exact de votre voiture</small>
         </div>
+        
+        <div className="form-group">
+          <label>Année de fabrication *</label>
+          <select name="year" value={formData.year} onChange={handleChange} required>
+            <option value="">Sélectionner une année</option>
+            {[...Array(16)].map((_, i) => {
+              const year = 2015 + i;
+              return <option key={year} value={year}>{year}</option>;
+            })}
+          </select>
+          <small className="form-hint">Année de première mise en circulation</small>
+        </div>
+        
+        <div className="form-group">
+          <label>Kilométrage *</label>
+          <select name="mileage" value={formData.mileage} onChange={handleChange} required>
+            <option value="">Sélectionner</option>
+            <option value="0-15000">0-15000 km</option>
+            <option value="15000-50000">15000-50000 km</option>
+            <option value="50000-100000">50000-100000 km</option>
+            <option value="100000-150000">100000-150000 km</option>
+            <option value="150000-200000">150000-200000 km</option>
+            <option value="200000+">200000+ km</option>
+          </select>
+          <small className="form-hint">Cette information aide les locataires à choisir une voiture fiable</small>
+        </div>
+        
+        <div className="form-group">
+          <label>Gouvernorat *</label>
+          <select name="city" value={formData.city} onChange={handleChange} required>
+            <option value="">Sélectionner un gouvernorat</option>
+            {tunisianCities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="form-group">
+          <label>Délégation *</label>
+          <select name="delegation" value={formData.delegation} onChange={handleChange} required>
+            <option value="">Sélectionner une délégation</option>
+            {delegationsList.map(delegation => (
+              <option key={delegation} value={delegation}>{delegation}</option>
+            ))}
+          </select>
+        </div>
+        
+        <p className="step-note">dans quelques minutes, votre annonce sera mise en ligne</p>
+        <button onClick={handleNext} className="step-button">Confirmer</button>
       </div>
     );
   };
 
-  // ========== الخطوة 13: طريقة التسليم ==========
-  const renderStep13 = () => {
-    const handleDeliverySelect = (method) => {
-      setFormData(prev => ({ ...prev, deliveryMethod: method }));
-      saveDraft(step, { ...formData, deliveryMethod: method });
-    };
-
-    return (
-      <div className="wizard-step">
-        <h2>Choisissez maintenant un mode de location</h2>
-        <div className="delivery-methods">
-          <div 
-            className={`delivery-method ${formData.deliveryMethod === 'livraison au client' ? 'active' : ''}`}
-            onClick={() => handleDeliverySelect('livraison au client')}
-          >
-            <div className="delivery-radio">
-              <input 
-                type="radio" 
-                name="deliveryMethod" 
-                value="livraison au client"
-                checked={formData.deliveryMethod === 'livraison au client'}
-                onChange={() => {}}
-                readOnly
-              />
-              <span>🚚 Livraison au client</span>
-            </div>
-            <p>Vous livrez la voiture à l'adresse du client</p>
-          </div>
-          <div 
-            className={`delivery-method ${formData.deliveryMethod === 'client rencontre le conducteur' ? 'active' : ''}`}
-            onClick={() => handleDeliverySelect('client rencontre le conducteur')}
-          >
-            <div className="delivery-radio">
-              <input 
-                type="radio" 
-                name="deliveryMethod" 
-                value="client rencontre le conducteur"
-                checked={formData.deliveryMethod === 'client rencontre le conducteur'}
-                onChange={() => {}}
-                readOnly
-              />
-              <span>🤝 Client rencontre le conducteur</span>
-            </div>
-            <p>Le client vient récupérer la voiture à l'adresse indiquée</p>
-          </div>
-        </div>
-        <div className="step-buttons">
-          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-          <button onClick={handleNext} className="step-button">Choisir</button>
-        </div>
-      </div>
-    );
-  };
-
-  // ========== الخطوة 14: Gains + Caution (مع توضيح الدفع النقدي) ==========
-  const renderStep14 = () => {
-    const handleCautionTypeChange = (type) => {
-      setCautionType(type);
-      if (type === 'fixed') {
-        setFormData(prev => ({ ...prev, caution: prev.cautionFixed || 500 }));
-      } else {
-        setFormData(prev => ({ ...prev, caution: prev.cautionPercentage || 10 }));
-      }
-      saveDraft(step, { ...formData, caution: formData.caution });
-    };
-    
-    const handleCautionChange = (value) => {
-      const numValue = parseFloat(value) || 0;
-      setFormData(prev => ({ ...prev, caution: numValue }));
-      if (cautionType === 'fixed') {
-        setFormData(prev => ({ ...prev, cautionFixed: numValue }));
-      } else {
-        setFormData(prev => ({ ...prev, cautionPercentage: numValue }));
-      }
-      saveDraft(step, { ...formData, caution: numValue });
-    };
-    
-    return (
-      <div className="wizard-step">
-        <h2>Comment fonctionnent vos gains ?</h2>
-        
-        {/* Prix par jour */}
-        <div className="form-group">
-          <label>💰 Prix par jour (TND)</label>
-          <input 
-            type="number" 
-            name="pricePerDay" 
-            value={formData.pricePerDay || 0} 
-            onChange={handleChange} 
-            placeholder="Ex: 80" 
-            min="0"
-            step="1"
-          />
-          <small className="form-hint">Le prix que vous souhaitez facturer par jour de location</small>
-        </div>
-        
-        {/* Section Caution */}
-        <div className="caution-section">
-          <h3>🔒 Dépôt de garantie (Caution)</h3>
-          <p className="caution-description">
-            Le dépôt de garantie est versé en espèces par le locataire au propriétaire le jour de la remise des clés.
-            Il sera restitué au locataire après vérification du véhicule (absence de dommages, carburant, etc.).
-          </p>
-          
-          {/* ⚠️ AVERTISSEMENT IMPORTANT */}
-          <div className="warning-box">
-            <p className="warning-icon">⚠️</p>
-            <div className="warning-text">
-              <strong>Important :</strong>
-              <ul>
-                <li>Le paiement de la caution se fait <strong>en espèces</strong> entre le propriétaire et le locataire le jour de la rencontre</li>
-                <li>La plateforme <strong>ne gère pas</strong> le paiement de la caution</li>
-                <li>La plateforme <strong>n'est pas responsable</strong> en cas d'accident, de dommages ou de litige concernant la caution</li>
-                <li>Un constat d'état des lieux doit être signé par les deux parties avant et après la location</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="caution-type-group">
-            <label className={`caution-type ${cautionType === 'fixed' ? 'active' : ''}`}>
-              <input
-                type="radio"
-                name="cautionType"
-                checked={cautionType === 'fixed'}
-                onChange={() => handleCautionTypeChange('fixed')}
-              />
-              <span>Montant fixe (TND)</span>
-            </label>
-            <label className={`caution-type ${cautionType === 'percentage' ? 'active' : ''}`}>
-              <input
-                type="radio"
-                name="cautionType"
-                checked={cautionType === 'percentage'}
-                onChange={() => handleCautionTypeChange('percentage')}
-              />
-              <span>Pourcentage du prix total (%)</span>
-            </label>
-          </div>
-          
-          {cautionType === 'fixed' ? (
-            <div className="form-group">
-              <label>Montant de la caution (TND)</label>
-              <input
-                type="number"
-                value={formData.cautionFixed || 500}
-                onChange={(e) => handleCautionChange(e.target.value)}
-                placeholder="Ex: 500"
-                min="0"
-                step="50"
-              />
-              <small className="form-hint">Recommandé: 500 à 1000 TND selon la voiture</small>
-            </div>
-          ) : (
-            <div className="form-group">
-              <label>Pourcentage de la caution (%)</label>
-              <input
-                type="number"
-                value={formData.cautionPercentage || 10}
-                onChange={(e) => handleCautionChange(e.target.value)}
-                placeholder="Ex: 10"
-                min="0"
-                max="50"
-                step="5"
-              />
-              <small className="form-hint">Pourcentage du prix total de la réservation</small>
-            </div>
-          )}
-          
-          <div className="caution-preview">
-            <p>
-              <strong>Aperçu:</strong> Caution de{' '}
-              {cautionType === 'fixed' 
-                ? `${formData.cautionFixed || 500} TND` 
-                : `${formData.cautionPercentage || 10}% du prix total`}
-            </p>
-          </div>
-        </div>
-        
-        <div className="info-box">
-          <h4>📊 Comment sont calculés vos gains ?</h4>
-          <p>💰 <strong>Prix par jour:</strong> {formData.pricePerDay || 0} TND/jour</p>
-          <p>💸 <strong>Commission plateforme (5%):</strong> Déduite automatiquement</p>
-          <p>🔒 <strong>Caution:</strong> Versée en espèces, non déduite de vos gains</p>
-        </div>
-        
-        <div className="step-buttons">
-          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-          <button onClick={handleNext} className="step-button">
-            Suivant
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // ========== الخطوة 15: Photos ==========
-  const renderStep15 = () => {
-    const handleImageUpload = (e) => {
-      const files = Array.from(e.target.files);
-      const previews = files.map(file => URL.createObjectURL(file));
-      setImagePreviews(previews);
-      setFormData(prev => ({ ...prev, carImages: files }));
-    };
-    
-    const handleInsuranceFrontUpload = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        setInsuranceFrontPreview(URL.createObjectURL(file));
-        setFormData(prev => ({ ...prev, insuranceFront: file }));
-      }
-    };
-    
-    const handleInsuranceBackUpload = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        setInsuranceBackPreview(URL.createObjectURL(file));
-        setFormData(prev => ({ ...prev, insuranceBack: file }));
-      }
-    };
-    
-    return (
-      <div className="wizard-step">
-        <h2>Ajoutez des photos de votre voiture</h2>
-        <p className="step-note">Ajoutez au moins 3 photos pour que votre annonce soit plus attractive</p>
-        
-        <div className="form-group">
-          <label>📸 Photos de la voiture (max 5)</label>
-          <input type="file" multiple accept="image/*" onChange={handleImageUpload} />
-          {imagePreviews.length > 0 && (
-            <div className="image-previews">
-              <p className="preview-label">{imagePreviews.length} photo(s) sélectionnée(s)</p>
-              <div className="preview-grid">
-                {imagePreviews.map((src, idx) => (
-                  <img key={idx} src={src} alt={`preview-${idx}`} className="preview-thumb" />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        <div className="form-group">
-          <label>📄 Carte grise (recto)</label>
-          <input type="file" accept="image/*" onChange={handleInsuranceFrontUpload} />
-          {insuranceFrontPreview && (
-            <img src={insuranceFrontPreview} alt="Carte grise recto" className="preview-thumb" />
-          )}
-        </div>
-        
-        <div className="form-group">
-          <label>📄 Carte grise (verso)</label>
-          <input type="file" accept="image/*" onChange={handleInsuranceBackUpload} />
-          {insuranceBackPreview && (
-            <img src={insuranceBackPreview} alt="Carte grise verso" className="preview-thumb" />
-          )}
-        </div>
-        
-        <div className="step-buttons">
-          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-          <button onClick={handleComplete} className="step-button" disabled={loading}>
-            {loading ? 'Envoi en cours...' : 'Confirmer et publier'}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // ========== الخطوات 1-7, 9-12 ==========
-  const renderStep1 = () => (
-    <div className="wizard-step">
-      <h2>Confirmez le modèle de votre voiture</h2>
-      <div className="form-group">
-        <label>Marque</label>
-        <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Ex: Renault, Peugeot..." />
-      </div>
-      <div className="form-group">
-        <label>Modèle</label>
-        <input type="text" name="model" value={formData.model} onChange={handleChange} placeholder="Ex: Clio, 208, Symbol..." />
-      </div>
-      <div className="form-group">
-        <label>Année</label>
-        <input type="number" name="year" value={formData.year} onChange={handleChange} placeholder="2020" />
-      </div>
-      <div className="form-group">
-        <label>Kilométrage</label>
-        <select name="mileage" value={formData.mileage} onChange={handleChange}>
-          <option value="">Sélectionner</option>
-          <option value="0-15000">0-15000 km</option>
-          <option value="15000-50000">15000-50000 km</option>
-          <option value="50000-100000">50000-100000 km</option>
-          <option value="100000-150000">100000-150000 km</option>
-          <option value="150000-200000">150000-200000 km</option>
-          <option value="200000+">200000+ km</option>
-        </select>
-      </div>
-      <p className="step-note">dans quelques minutes, votre annonce sera mise en ligne</p>
-      <button onClick={handleNext} className="step-button">Confirmer</button>
-    </div>
-  );
-
+  // ========== RENDER STEP 2 ==========
   const renderStep2 = () => (
     <div className="wizard-step">
       <h2>Inscrire ma voiture</h2>
       <p>quelle est l'immatriculation ?</p>
       <div className="form-group">
-        <label>Plaque d'immatriculation</label>
+        <label>Plaque d'immatriculation *</label>
         <input type="text" name="licensePlate" value={formData.licensePlate} onChange={handleChange} placeholder="123 TUN 456" />
       </div>
       <div className="form-group">
@@ -564,7 +392,7 @@ const CarWizard = ({ initialData, onComplete }) => {
         </select>
       </div>
       <div className="form-group">
-        <label>Année d'immatriculation</label>
+        <label>Année d'immatriculation *</label>
         <select name="registrationYear" value={formData.registrationYear} onChange={handleChange}>
           <option value="">Sélectionner</option>
           {[...Array(19)].map((_, i) => {
@@ -581,6 +409,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 3 ==========
   const renderStep3 = () => (
     <div className="wizard-step">
       <h2>Confirmez le kilométrage</h2>
@@ -603,11 +432,12 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 4 ==========
   const renderStep4 = () => (
     <div className="wizard-step">
       <h2>Ajouter plus de détails</h2>
       <div className="form-group">
-        <label>Carburant</label>
+        <label>Carburant *</label>
         <select name="fuelType" value={formData.fuelType} onChange={handleChange}>
           <option value="">Sélectionner</option>
           <option value="Essence">Essence</option>
@@ -618,7 +448,7 @@ const CarWizard = ({ initialData, onComplete }) => {
         </select>
       </div>
       <div className="form-group">
-        <label>Boîte de vitesse</label>
+        <label>Boîte de vitesse *</label>
         <select name="transmission" value={formData.transmission} onChange={handleChange}>
           <option value="">Sélectionner</option>
           <option value="Manuelle">Manuelle</option>
@@ -633,6 +463,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 5 ==========
   const renderStep5 = () => (
     <div className="wizard-step">
       <h2>Ajouter plus de détails</h2>
@@ -660,11 +491,13 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 6 (Features) ==========
   const renderStep6 = () => (
     <div className="wizard-step">
-      <h2>Rendre votre annonce unique</h2>
+      <h2>Rendez votre annonce unique</h2>
+      <p className="step-note">Sélectionnez les équipements de votre voiture</p>
       <div className="features-grid">
-        {['GPS', 'Bluetooth', 'Climatisation', 'Caméra recul'].map(feature => (
+        {allFeatures.map(feature => (
           <label key={feature} className={`feature-item ${formData.features.includes(feature) ? 'active' : ''}`}>
             <input type="checkbox" name={feature} checked={formData.features.includes(feature)} onChange={handleChange} />
             <span>{feature}</span>
@@ -678,6 +511,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 7 ==========
   const renderStep7 = () => (
     <div className="wizard-step">
       <h2>Louez vous en tant que particulier ou professionnel ?</h2>
@@ -698,6 +532,37 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 8 ==========
+  const renderStep8 = () => {
+    const handleBirthDateChange = (e) => {
+      const value = e.target.value;
+      setFormData(prev => ({ ...prev, ownerBirthDate: value }));
+      saveDraft(step, { ...formData, ownerBirthDate: value });
+    };
+
+    return (
+      <div className="wizard-step">
+        <h2>Quelle est votre date de naissance ?</h2>
+        <div className="form-group">
+          <label>Date de naissance *</label>
+          <input 
+            type="date" 
+            name="ownerBirthDate" 
+            value={formData.ownerBirthDate || ''} 
+            onChange={handleBirthDateChange}
+          />
+          <small className="form-hint">Format: JJ/MM/AAAA (ex: 15/05/1985)</small>
+        </div>
+        <p className="step-note">nous devons vous demander cette information pour des raisons légales</p>
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">Suivant</button>
+        </div>
+      </div>
+    );
+  };
+
+  // ========== RENDER STEP 9 ==========
   const renderStep9 = () => (
     <div className="wizard-step">
       <h2>Confirmer la paiement de frais de services du site</h2>
@@ -719,6 +584,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 10 ==========
   const renderStep10 = () => (
     <div className="wizard-step">
       <h2>Quel est votre numéro de téléphone ?</h2>
@@ -739,6 +605,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 11 ==========
   const renderStep11 = () => (
     <div className="wizard-step">
       <h2>Où garerez vous votre voiture ?</h2>
@@ -759,6 +626,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
+  // ========== RENDER STEP 12 ==========
   const renderStep12 = () => {
     const tunisianCities = [
       'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
@@ -771,12 +639,13 @@ const CarWizard = ({ initialData, onComplete }) => {
       <div className="wizard-step">
         <h2>Choisissez l'adresse</h2>
         <div className="form-group">
-          <label>Adresse</label>
+          <label>Adresse *</label>
           <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Rue, numéro, bâtiment..." />
+          <small className="form-hint">Adresse exacte où se trouve la voiture</small>
         </div>
         <div className="form-group">
-          <label>Ville / Gouvernorat</label>
-          <select name="city" value={formData.city} onChange={handleChange}>
+          <label>Ville / Gouvernorat *</label>
+          <select name="city" value={formData.city} onChange={handleChange} required>
             <option value="">Sélectionner une ville</option>
             {tunisianCities.map(city => (
               <option key={city} value={city}>{city}</option>
@@ -784,12 +653,244 @@ const CarWizard = ({ initialData, onComplete }) => {
           </select>
         </div>
         <div className="form-group">
-          <label>Délégation</label>
-          <input type="text" name="delegation" value={formData.delegation} onChange={handleChange} placeholder="Délégation / Secteur" />
+          <label>Délégation *</label>
+          <select name="delegation" value={formData.delegation} onChange={handleChange} required>
+            <option value="">Sélectionner une délégation</option>
+            {delegationsList.map(delegation => (
+              <option key={delegation} value={delegation}>{delegation}</option>
+            ))}
+          </select>
         </div>
         <div className="step-buttons">
           <button onClick={handlePrev} className="step-button secondary">Précédent</button>
           <button onClick={handleNext} className="step-button">Suivant</button>
+        </div>
+      </div>
+    );
+  };
+
+  // ========== RENDER STEP 13 ==========
+  const renderStep13 = () => {
+    const handleDeliverySelect = (method) => {
+      setFormData(prev => ({ ...prev, deliveryMethod: method }));
+      saveDraft(step, { ...formData, deliveryMethod: method });
+    };
+
+    return (
+      <div className="wizard-step">
+        <h2>Choisissez maintenant un mode de location</h2>
+        <div className="delivery-methods">
+          <div 
+            className={`delivery-method ${formData.deliveryMethod === 'livraison au client' ? 'active' : ''}`}
+            onClick={() => handleDeliverySelect('livraison au client')}
+          >
+            <div className="delivery-radio">
+              <input 
+                type="radio" 
+                name="deliveryMethod" 
+                value="livraison au client"
+                checked={formData.deliveryMethod === 'livraison au client'}
+                onChange={() => {}}
+                readOnly
+              />
+              <span>🚚 Vous livrez la voiture au locataire</span>
+            </div>
+            <p>Vous livrez la voiture à l'adresse du locataire</p>
+          </div>
+          <div 
+            className={`delivery-method ${formData.deliveryMethod === 'client rencontre le conducteur' ? 'active' : ''}`}
+            onClick={() => handleDeliverySelect('client rencontre le conducteur')}
+          >
+            <div className="delivery-radio">
+              <input 
+                type="radio" 
+                name="deliveryMethod" 
+                value="client rencontre le conducteur"
+                checked={formData.deliveryMethod === 'client rencontre le conducteur'}
+                onChange={() => {}}
+                readOnly
+              />
+              <span>🤝 Client rencontre le conducteur</span>
+            </div>
+            <p>Le client vient récupérer la voiture à l'adresse indiquée</p>
+          </div>
+        </div>
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">Choisir</button>
+        </div>
+      </div>
+    );
+  };
+
+  // ========== RENDER STEP 14 (Prix simplifié) ==========
+  const renderStep14 = () => {
+    return (
+      <div className="wizard-step">
+        <h2>💰 Définissez vos tarifs</h2>
+        
+        <div className="form-group">
+          <label>💰 Prix par jour (TND) *</label>
+          <input 
+            type="number" 
+            name="pricePerDay" 
+            value={formData.pricePerDay || 0} 
+            onChange={handleChange} 
+            placeholder="Ex: 80" 
+            min="0"
+            step="1"
+            required
+          />
+          <small className="form-hint">Vous pouvez modifier ce prix à tout moment</small>
+        </div>
+        
+        <div className="caution-section">
+          <h3>🔒 Dépôt de garantie (Caution)</h3>
+          <p className="caution-description">
+            Le dépôt de garantie est versé <strong>en espèces</strong> par le locataire au propriétaire le jour de la remise des clés.
+          </p>
+          
+          <div className="warning-box">
+            <p className="warning-icon">⚠️</p>
+            <div className="warning-text">
+              <strong>Important :</strong>
+              <ul>
+                <li>✅ Paiement de la caution en <strong>espèces</strong> entre propriétaire et locataire</li>
+                <li>❌ La plateforme <strong>ne gère pas</strong> le paiement de la caution</li>
+                <li>⚠️ La plateforme <strong>n'est pas responsable</strong> en cas d'accident ou de litige</li>
+                <li>📝 Un constat d'état des lieux doit être signé par les deux parties</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label>Montant de la caution (TND)</label>
+            <input 
+              type="number" 
+              name="caution" 
+              value={formData.caution || 500} 
+              onChange={handleChange} 
+              placeholder="Ex: 500" 
+              min="0"
+              step="50"
+            />
+            <small className="form-hint">Recommandé: 500 à 1000 TND selon la voiture</small>
+          </div>
+        </div>
+        
+        <div className="info-box">
+          <h4>📊 Calcul de vos gains</h4>
+          <p>💰 <strong>Prix par jour:</strong> {formData.pricePerDay || 0} TND/jour</p>
+          <p>💸 <strong>Commission plateforme (5%):</strong> -{((formData.pricePerDay || 0) * 0.05).toFixed(2)} TND/jour</p>
+          <p>✨ <strong>Vos gains nets par jour:</strong> {((formData.pricePerDay || 0) * 0.95).toFixed(2)} TND</p>
+          <p>🔒 <strong>Caution:</strong> {formData.caution || 500} TND (versée en espèces)</p>
+        </div>
+        
+        <div className="motivation-message">
+          🚀 Votre voiture est presque prête à être louée !<br />
+          Encore une étape pour publier votre annonce.
+        </div>
+        
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">
+            Suivant →
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ========== RENDER STEP 15 (Photos amélioré) ==========
+  const renderStep15 = () => {
+    const handleImageUpload = (e) => {
+      const files = Array.from(e.target.files);
+      console.log(`📸 Selected ${files.length} images`);
+      const previews = files.map(file => URL.createObjectURL(file));
+      setImagePreviews(previews);
+      setFormData(prev => ({ ...prev, carImages: files }));
+    };
+    
+    const handleInsuranceFrontUpload = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setInsuranceFrontPreview(URL.createObjectURL(file));
+        setFormData(prev => ({ ...prev, insuranceFront: file }));
+      }
+    };
+    
+    const handleInsuranceBackUpload = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setInsuranceBackPreview(URL.createObjectURL(file));
+        setFormData(prev => ({ ...prev, insuranceBack: file }));
+      }
+    };
+    
+    const imageCount = formData.carImages?.length || 0;
+    
+    return (
+      <div className="wizard-step">
+        <h2>📸 Photos de votre voiture</h2>
+        <p className="step-note">Ajoutez au moins 4 photos pour que votre annonce soit plus attractive</p>
+        
+        <div className="photo-guidelines">
+          <h4>Photos recommandées :</h4>
+          <div className="photo-types">
+            <div className="photo-type">🚗 Avant de la voiture</div>
+            <div className="photo-type">🔙 Arrière de la voiture</div>
+            <div className="photo-type">🪑 Intérieur (sièges)</div>
+            <div className="photo-type">📊 Tableau de bord</div>
+          </div>
+          <p className="photo-tip">💡 Les annonces avec plusieurs photos reçoivent <strong>3 fois plus de réservations</strong></p>
+        </div>
+        
+        <div className="form-group">
+          <label>📸 Photos de la voiture (max 5) *</label>
+          <input type="file" multiple accept="image/*" onChange={handleImageUpload} />
+          {imagePreviews.length > 0 && (
+            <div className="image-previews">
+              <p className="preview-label">{imagePreviews.length} photo(s) sélectionnée(s)</p>
+              <div className="preview-grid">
+                {imagePreviews.map((src, idx) => (
+                  <img key={idx} src={src} alt={`preview-${idx}`} className="preview-thumb" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="form-group">
+          <label>📄 Carte grise (recto) *</label>
+          <input type="file" accept="image/*" onChange={handleInsuranceFrontUpload} />
+          {insuranceFrontPreview && (
+            <img src={insuranceFrontPreview} alt="Carte grise recto" className="preview-thumb" />
+          )}
+        </div>
+        
+        <div className="form-group">
+          <label>📄 Carte grise (verso) *</label>
+          <input type="file" accept="image/*" onChange={handleInsuranceBackUpload} />
+          {insuranceBackPreview && (
+            <img src={insuranceBackPreview} alt="Carte grise verso" className="preview-thumb" />
+          )}
+        </div>
+        
+        {imageCount === 0 && (
+          <div className="warning-message">
+            ⚠️ Veuillez ajouter au moins une photo de votre voiture pour continuer
+          </div>
+        )}
+        
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button 
+            onClick={handleComplete} 
+            className="step-button" 
+            disabled={loading || imageCount === 0}
+          >
+            {loading ? 'Envoi en cours...' : 'Publier mon annonce'}
+          </button>
         </div>
       </div>
     );
@@ -818,6 +919,18 @@ const CarWizard = ({ initialData, onComplete }) => {
 
   return (
     <div className="wizard-container">
+      {/* Barre de progression */}
+      <div className="progress-bar-container">
+        <div className="progress-bar" style={{ width: `${getProgressPercentage()}%` }}>
+          <span className="progress-text">{getProgressPercentage()}%</span>
+        </div>
+        <div className="progress-step-text">
+          Étape {step} sur 15
+        </div>
+      </div>
+      
+      {saving && <div className="saving-indicator">💾 Sauvegarde en cours...</div>}
+      
       <div className="wizard-progress">
         {[...Array(15)].map((_, i) => (
           <div key={i} className={`progress-step ${step > i + 1 ? 'completed' : step === i + 1 ? 'active' : ''}`}>
