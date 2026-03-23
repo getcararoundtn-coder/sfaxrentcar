@@ -65,15 +65,21 @@ const Navbar = () => {
     return 'U';
   };
 
-  // ✅ Google Login Handler
+  // ✅ Google Login Handler - مع تمرير الدور من التسجيل
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
     try {
-      const result = await loginWithFirebaseGoogle();
+      // ✅ الحصول على الدور المختار من نموذج التسجيل (إذا كان مفتوحاً)
+      // أو استخدام الدور الافتراضي 'user'
+      const selectedRole = registerData.role || 'user';
+      console.log('🔵 Google login with role:', selectedRole);
+      
+      const result = await loginWithFirebaseGoogle(selectedRole); // ✅ تمرير الدور
       if (result.success) {
         showSuccess('✅ تم تسجيل الدخول بنجاح');
         setShowLoginModal(false);
+        setShowRegisterModal(false);
         navigate('/');
       } else {
         setError(result.error || 'فشل تسجيل الدخول');
@@ -148,6 +154,7 @@ const Navbar = () => {
       if (response.data.success) {
         showSuccess('✅ تم إنشاء الحساب بنجاح');
         setShowRegisterModal(false);
+        // ✅ بعد التسجيل، نفتح نافذة تسجيل الدخول مع حفظ الدور
         setRegisterData({ name: '', email: '', password: '', phone: '', role: 'user', agreeToTerms: false });
         setShowLoginModal(true);
       }
@@ -214,7 +221,6 @@ const Navbar = () => {
                     
                     <div className="popup-menu-title">Menu propriétaire</div>
                     
-                    {/* ✅ إضافة Profile */}
                     <Link to="/profile" className="popup-menu-item" onClick={closeMenus}>
                       <span className="popup-menu-icon">👤</span>
                       <span>Mon profil</span>
