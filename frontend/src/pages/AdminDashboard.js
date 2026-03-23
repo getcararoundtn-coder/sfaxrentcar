@@ -243,6 +243,41 @@ const AdminDashboard = () => {
     }
   };
 
+  // ✅ دالة عرض البطاقة الرمادية (carte grise)
+  const handleViewInsuranceDocuments = (car) => {
+    if (car.insuranceFront || car.insuranceBack) {
+      // فتح نافذة منبثقة لعرض الصور
+      const modalContent = `
+        <div style="padding:20px; font-family: sans-serif;">
+          <h3 style="margin-bottom:20px;">📄 البطاقة الرمادية - ${car.brand} ${car.model}</h3>
+          ${car.insuranceFront ? `
+            <div style="margin-bottom:20px;">
+              <strong>Recto (الوجه الأمامي):</strong><br/>
+              <img src="${car.insuranceFront}" style="max-width:100%; margin-top:10px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);" />
+              <br/>
+              <a href="${car.insuranceFront}" target="_blank" style="color:#007bff; text-decoration:none;">🔍 فتح الصورة في علامة تبويب جديدة</a>
+            </div>
+          ` : ''}
+          ${car.insuranceBack ? `
+            <div style="margin-bottom:20px;">
+              <strong>Verso (الوجه الخلفي):</strong><br/>
+              <img src="${car.insuranceBack}" style="max-width:100%; margin-top:10px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);" />
+              <br/>
+              <a href="${car.insuranceBack}" target="_blank" style="color:#007bff; text-decoration:none;">🔍 فتح الصورة في علامة تبويب جديدة</a>
+            </div>
+          ` : ''}
+          <button onclick="window.close()" style="margin-top:20px; padding:8px 16px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer;">إغلاق</button>
+        </div>
+      `;
+      
+      const newWindow = window.open();
+      newWindow.document.write(modalContent);
+      newWindow.document.close();
+    } else {
+      showError('لا توجد صور للبطاقة الرمادية لهذه السيارة');
+    }
+  };
+
   // ==================== دوال الحجوزات ====================
   const handleApproveBooking = async (bookingId) => {
     try {
@@ -395,7 +430,7 @@ const AdminDashboard = () => {
     { id: 'settings', label: '⚙️ الإعدادات', count: null },
     { id: 'notifications', label: '🔔 الإشعارات', count: unreadNotifications },
     { id: 'reports', label: '📈 التقارير', count: null },
-    { id: 'support', label: '📩 دعم سريع', count: null }, // ✅ إضافة تبويب الدعم
+    { id: 'support', label: '📩 دعم سريع', count: null },
   ];
 
   if (loading) {
@@ -478,6 +513,7 @@ const AdminDashboard = () => {
               onEdit={handleEditCar}
               onDelete={handleDeleteCar}
               onToggleFeatured={handleToggleFeatured}
+              onViewInsurance={handleViewInsuranceDocuments}  // ✅ إضافة دالة عرض البطاقة الرمادية
             />
           )}
           
