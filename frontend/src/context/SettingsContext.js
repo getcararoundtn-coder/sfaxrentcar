@@ -13,52 +13,52 @@ export const SettingsProvider = ({ children }) => {
       setSettings(data.data);
     } catch (err) {
       console.error('Error fetching settings:', err);
-      // بيانات افتراضية في حالة فشل الاتصال بالخادم
+      // Données par défaut en cas d'échec de connexion au serveur
       setSettings({
-        // معلومات المنصة
-        platformName: 'SfaxRentCar',
+        // Informations de la plateforme
+        platformName: 'DriveTunisia',
         platformLogo: '',
         platformFavicon: '',
         
-        // معلومات الاتصال - تم التحديث
-        contactEmail: 'getcararoundtn@gmail.com', // ✅ تم التحديث
-        contactPhone: '+216 12 345 678',
-        contactAddress: 'صفاقس، تونس',
+        // Coordonnées de contact
+        contactEmail: 'getcararoundtn@gmail.com', // ✅ conservé
+        contactPhone: '+216 22 345 678',
+        contactAddress: 'Sfax, Tunisie', // ✅ conservé
         
-        // التواصل الاجتماعي
-        facebook: 'https://facebook.com/sfaxrentcar',
-        instagram: 'https://instagram.com/sfaxrentcar',
-        twitter: 'https://twitter.com/sfaxrentcar',
-        linkedin: 'https://linkedin.com/company/sfaxrentcar',
+        // Réseaux sociaux
+        facebook: 'https://facebook.com/drivetunisia',
+        instagram: 'https://instagram.com/drivetunisia',
+        twitter: 'https://twitter.com/drivetunisia',
+        linkedin: 'https://linkedin.com/company/drivetunisia',
         
-        // العمولات والرسوم
-        commissionRate: 10,
+        // Commissions et frais
+        commissionRate: 5,
         minCommission: 5,
         maxCommission: 50,
         
-        // إعدادات الحجوزات
+        // Paramètres de réservation
         maxBookingDays: 30,
         minRenterAge: 21,
         requireIdVerification: true,
         allowCompanyRentals: true,
         
-        // الإشعارات
+        // Notifications
         emailNotifications: true,
         smsNotifications: false,
         adminEmailNotifications: true,
         
-        // نصوص الموقع
-        termsAndConditions: 'شروط وأحكام المنصة...',
-        privacyPolicy: 'سياسة الخصوصية...',
-        aboutUs: 'منصة SfaxRentCar هي منصة تونسية لكراء السيارات بين الأفراد والشركات...',
+        // Textes du site
+        termsAndConditions: 'Conditions générales d\'utilisation de DriveTunisia...',
+        privacyPolicy: 'Politique de confidentialité de DriveTunisia...',
+        aboutUs: 'DriveTunisia est une plateforme tunisienne de location de voitures entre particuliers et professionnels. Nous connectons les propriétaires de véhicules avec des locataires de confiance pour une expérience simple, sécurisée et sans intermédiaires.',
         
-        // إعدادات الدفع
+        // Paramètres de paiement
         paymentMethods: ['card', 'cash'],
         bankName: '',
         bankAccountNumber: '',
         bankIban: '',
         
-        // إعدادات متقدمة
+        // Paramètres avancés
         maintenanceMode: false,
         allowNewRegistrations: true,
         requireEmailVerification: true,
