@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
         firebaseUid,
         email,
         name,
-        role // ✅ إضافة role
+        role
       });
       console.log('🔵 Firebase login response:', data);
       console.log('🔵 User role from firebase login:', data.data?.role);
@@ -48,19 +48,18 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ✅ تسجيل الدخول بالبريد الإلكتروني وكلمة المرور (مع دعم الدور)
+  // ✅ تسجيل الدخول بالبريد الإلكتروني وكلمة المرور
   const loginWithFirebaseEmail = useCallback(async (email, password, userRole) => {
     try {
       console.log('🔵 loginWithFirebaseEmail called with role:', userRole);
       const userCredential = await loginWithEmail(email, password);
       const firebaseUser = userCredential.user;
       
-      // ربط مع Backend مع تمرير الدور
       const userData = await linkFirebaseAccount(
         firebaseUser.uid,
         firebaseUser.email,
         firebaseUser.displayName || firebaseUser.email.split('@')[0],
-        userRole // ✅ تمرير الدور
+        userRole
       );
       
       return { success: true, user: userData };
@@ -70,19 +69,18 @@ export const AuthProvider = ({ children }) => {
     }
   }, [linkFirebaseAccount]);
 
-  // ✅ تسجيل الدخول بحساب Google (مع دعم الدور)
+  // ✅ تسجيل الدخول بحساب Google
   const loginWithFirebaseGoogle = useCallback(async (userRole) => {
     try {
       console.log('🔵 loginWithFirebaseGoogle called with role:', userRole);
       const result = await loginWithGoogle();
       const firebaseUser = result.user;
       
-      // ربط مع Backend مع تمرير الدور
       const userData = await linkFirebaseAccount(
         firebaseUser.uid,
         firebaseUser.email,
         firebaseUser.displayName,
-        userRole // ✅ تمرير الدور
+        userRole
       );
       
       return { success: true, user: userData };
@@ -92,12 +90,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, [linkFirebaseAccount]);
 
-  // تسجيل الخروج (من Firebase و Backend)
+  // تسجيل الخروج
   const logout = useCallback(async () => {
     try {
-      // تسجيل الخروج من Firebase
       await logoutFirebase();
-      // تسجيل الخروج من Backend
       await API.post('/auth/logout');
       setUser(null);
       setFirebaseUser(null);
@@ -107,19 +103,17 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // مراقبة حالة Firebase Auth (مع دعم الدور الافتراضي)
+  // ✅ مراقبة حالة Firebase Auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
       
       if (firebaseUser && !user) {
-        // إذا كان المستخدم مسجلاً في Firebase ولكن ليس في Backend
-        // نستخدم دور افتراضي 'user' لأنه لا يوجد دور مخزن
         await linkFirebaseAccount(
           firebaseUser.uid,
           firebaseUser.email,
           firebaseUser.displayName || firebaseUser.email.split('@')[0],
-          'user' // ✅ دور افتراضي للمستخدمين الموجودين مسبقاً
+          'user'
         );
       }
     });
@@ -127,24 +121,38 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, [user, linkFirebaseAccount]);
 
-  // جلب المستخدم من Backend عند تحميل الصفحة
+  // ✅ جلب المستخدم من Backend عند تحميل الصفحة (محسن)
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        console.log('🔵 Stored user from localStorage:', parsedUser);
-        console.log('🔵 Stored user role:', parsedUser?.role);
-        setUser(parsedUser);
-        setLoading(false);
-        fetchUser();
-      } catch (e) {
-        localStorage.removeItem('user');
-        setLoading(false);
+    const initAuth = async () => {
+      setLoading(true);
+      const storedUser = localStorage.getItem('user');
+      
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          console.log('🔵 Stored user from localStorage:', parsedUser);
+          console.log('🔵 Stored user role:', parsedUser?.role);
+          setUser(parsedUser);
+          
+          // ✅ التحقق من صحة التوكن
+          const userData = await fetchUser();
+          if (!userData) {
+            setUser(null);
+            localStorage.removeItem('user');
+          }
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      } else {
+        // ✅ حتى لو لم يكن هناك مستخدم مخزن، نحاول جلب المستخدم من الـ API
+        await fetchUser();
       }
-    } else {
       setLoading(false);
-    }
+    };
+    
+    initAuth();
   }, [fetchUser]);
 
   return (
