@@ -8,6 +8,9 @@ const CarWizard = ({ initialData }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [insuranceFrontPreview, setInsuranceFrontPreview] = useState(null);
+  const [insuranceBackPreview, setInsuranceBackPreview] = useState(null);
   const [formData, setFormData] = useState({
     // الخطوة 1: معلومات أساسية
     brand: initialData?.brand || '',
@@ -56,7 +59,12 @@ const CarWizard = ({ initialData }) => {
     deliveryMethod: '',
     
     // الخطوة 14: السعر
-    pricePerDay: 0
+    pricePerDay: 0,
+    
+    // الخطوة 15: الصور
+    carImages: [],
+    insuranceFront: null,
+    insuranceBack: null
   });
 
   // تحميل المسودة المحفوظة
@@ -129,7 +137,7 @@ const CarWizard = ({ initialData }) => {
   const handleComplete = async () => {
     setLoading(true);
     try {
-      // التحقق من البيانات المطلوبة قبل الإرسال
+      // التحقق من البيانات المطلوبة
       const requiredFields = ['brand', 'model', 'year', 'mileage', 'licensePlate', 
         'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
         'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 'pricePerDay'];
@@ -142,7 +150,50 @@ const CarWizard = ({ initialData }) => {
         return;
       }
       
-      const { data } = await API.post('/cars/wizard/complete');
+      // التحقق من وجود صور
+      if (step === 15 && (!formData.carImages || formData.carImages.length === 0)) {
+        showError('الرجاء إضافة صورة واحدة على الأقل للسيارة');
+        setLoading(false);
+        return;
+      }
+      
+      // إنشاء FormData لرفع الصور
+      const formDataToSend = new FormData();
+      
+      // إضافة البيانات النصية
+      Object.keys(formData).forEach(key => {
+        if (key !== 'carImages' && key !== 'insuranceFront' && key !== 'insuranceBack') {
+          if (formData[key] !== undefined && formData[key] !== null && formData[key] !== '') {
+            if (Array.isArray(formData[key])) {
+              formData[key].forEach((item, index) => {
+                formDataToSend.append(`${key}[${index}]`, item);
+              });
+            } else {
+              formDataToSend.append(key, formData[key]);
+            }
+          }
+        }
+      });
+      
+      // إضافة صور السيارة
+      if (formData.carImages && formData.carImages.length > 0) {
+        formData.carImages.forEach((file, index) => {
+          formDataToSend.append('images', file);
+        });
+      }
+      
+      // إضافة صورة البطاقة الرمادية
+      if (formData.insuranceFront) {
+        formDataToSend.append('insuranceFront', formData.insuranceFront);
+      }
+      if (formData.insuranceBack) {
+        formDataToSend.append('insuranceBack', formData.insuranceBack);
+      }
+      
+      const { data } = await API.post('/cars/wizard/complete', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
       if (data.success) {
         showSuccess('✅ تم إضافة السيارة بنجاح!');
         navigate('/owner-cars?tab=cars');
@@ -156,25 +207,24 @@ const CarWizard = ({ initialData }) => {
     }
   };
 
-  // ========== الخطوة 8: تاريخ الميلاد (المعدلة) ==========
+  // ========== الخطوة 8: تاريخ الميلاد (المعدلة مع labels) ==========
   const renderStep8 = () => {
-    // استخراج اليوم والشهر والسنة من ownerBirthDate
-    let day = '', month = '', year = '';
+    let selectedDay = '', selectedMonth = '', selectedYear = '';
     if (formData.ownerBirthDate && formData.ownerBirthDate.includes('-')) {
       const parts = formData.ownerBirthDate.split('-');
-      year = parts[0] || '';
-      month = parts[1] || '';
-      day = parts[2] || '';
+      selectedYear = parts[0] || '';
+      selectedMonth = parts[1] || '';
+      selectedDay = parts[2] || '';
     }
 
     const handleBirthDateChange = (type, value) => {
-      let newDay = day, newMonth = month, newYear = year;
+      let newDay = selectedDay, newMonth = selectedMonth, newYear = selectedYear;
       if (type === 'day') newDay = value;
       if (type === 'month') newMonth = value;
       if (type === 'year') newYear = value;
       
       if (newDay && newMonth && newYear) {
-        const formattedDate = `${newYear}-${newMonth}-${newDay}`;
+        const formattedDate = `${newYear}-${newMonth.padStart(2, '0')}-${newDay.padStart(2, '0')}`;
         setFormData(prev => ({ ...prev, ownerBirthDate: formattedDate }));
         saveDraft(step, { ...formData, ownerBirthDate: formattedDate });
       } else {
@@ -182,43 +232,131 @@ const CarWizard = ({ initialData }) => {
       }
     };
 
+    // قائمة الأيام
+    const days = [];
+    for (let i = 1; i <= 31; i++) days.push(i);
+    
+    // قائمة الأشهر
+    const months = [
+      { value: '01', label: 'Janvier' }, { value: '02', label: 'Février' },
+      { value: '03', label: 'Mars' }, { value: '04', label: 'Avril' },
+      { value: '05', label: 'Mai' }, { value: '06', label: 'Juin' },
+      { value: '07', label: 'Juillet' }, { value: '08', label: 'Août' },
+      { value: '09', label: 'Septembre' }, { value: '10', label: 'Octobre' },
+      { value: '11', label: 'Novembre' }, { value: '12', label: 'Décembre' }
+    ];
+    
+    // قائمة السنوات
+    const years = [];
+    for (let i = 2025; i >= 1900; i--) years.push(i);
+
     return (
       <div className="wizard-step">
         <h2>Quelle est votre date de naissance ?</h2>
         <div className="birthdate-group">
-          <select 
-            onChange={(e) => handleBirthDateChange('day', e.target.value)} 
-            value={day}
-          >
-            <option value="">Jour</option>
-            {[...Array(31)].map((_, i) => (
-              <option key={i + 1} value={String(i + 1).padStart(2, '0')}>{i + 1}</option>
-            ))}
-          </select>
-          <select 
-            onChange={(e) => handleBirthDateChange('month', e.target.value)} 
-            value={month}
-          >
-            <option value="">Mois</option>
-            {[...Array(12)].map((_, i) => (
-              <option key={i + 1} value={String(i + 1).padStart(2, '0')}>{i + 1}</option>
-            ))}
-          </select>
-          <select 
-            onChange={(e) => handleBirthDateChange('year', e.target.value)} 
-            value={year}
-          >
-            <option value="">Année</option>
-            {[...Array(121)].map((_, i) => {
-              const yearOption = 1906 + i;
-              return <option key={yearOption} value={yearOption}>{yearOption}</option>;
-            })}
-          </select>
+          <div className="birthdate-select">
+            <label>Jour</label>
+            <select onChange={(e) => handleBirthDateChange('day', e.target.value)} value={selectedDay}>
+              <option value="">Jour</option>
+              {days.map(day => (
+                <option key={day} value={String(day).padStart(2, '0')}>{day}</option>
+              ))}
+            </select>
+          </div>
+          <div className="birthdate-select">
+            <label>Mois</label>
+            <select onChange={(e) => handleBirthDateChange('month', e.target.value)} value={selectedMonth}>
+              <option value="">Mois</option>
+              {months.map(month => (
+                <option key={month.value} value={month.value}>{month.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="birthdate-select">
+            <label>Année</label>
+            <select onChange={(e) => handleBirthDateChange('year', e.target.value)} value={selectedYear}>
+              <option value="">Année</option>
+              {years.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <p className="step-note">nous devons vous demander cette information pour des raisons légales</p>
         <div className="step-buttons">
           <button onClick={handlePrev} className="step-button secondary">Précédent</button>
           <button onClick={handleNext} className="step-button">Suivant</button>
+        </div>
+      </div>
+    );
+  };
+
+  // الخطوة 15: Ajouter des photos
+  const renderStep15 = () => {
+    const handleImageUpload = (e) => {
+      const files = Array.from(e.target.files);
+      const previews = files.map(file => URL.createObjectURL(file));
+      setImagePreviews(previews);
+      setFormData(prev => ({ ...prev, carImages: files }));
+    };
+    
+    const handleInsuranceFrontUpload = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setInsuranceFrontPreview(URL.createObjectURL(file));
+        setFormData(prev => ({ ...prev, insuranceFront: file }));
+      }
+    };
+    
+    const handleInsuranceBackUpload = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setInsuranceBackPreview(URL.createObjectURL(file));
+        setFormData(prev => ({ ...prev, insuranceBack: file }));
+      }
+    };
+    
+    return (
+      <div className="wizard-step">
+        <h2>Ajoutez des photos de votre voiture</h2>
+        <p className="step-note">Ajoutez au moins 3 photos pour que votre annonce soit plus attractive</p>
+        
+        <div className="form-group">
+          <label>📸 Photos de la voiture (max 5)</label>
+          <input type="file" multiple accept="image/*" onChange={handleImageUpload} />
+          {imagePreviews.length > 0 && (
+            <div className="image-previews">
+              <p className="preview-label">{imagePreviews.length} photo(s) sélectionnée(s)</p>
+              <div className="preview-grid">
+                {imagePreviews.map((src, idx) => (
+                  <img key={idx} src={src} alt={`preview-${idx}`} className="preview-thumb" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="form-group">
+          <label>📄 Carte grise (recto)</label>
+          <input type="file" accept="image/*" onChange={handleInsuranceFrontUpload} />
+          {insuranceFrontPreview && (
+            <img src={insuranceFrontPreview} alt="Carte grise recto" className="preview-thumb" />
+          )}
+        </div>
+        
+        <div className="form-group">
+          <label>📄 Carte grise (verso)</label>
+          <input type="file" accept="image/*" onChange={handleInsuranceBackUpload} />
+          {insuranceBackPreview && (
+            <img src={insuranceBackPreview} alt="Carte grise verso" className="preview-thumb" />
+          )}
+        </div>
+        
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleComplete} className="step-button" disabled={loading}>
+            {loading ? 'Confirmation...' : 'Confirmer et publier'}
+          </button>
         </div>
       </div>
     );
@@ -565,8 +703,8 @@ const CarWizard = ({ initialData }) => {
       </div>
       <div className="step-buttons">
         <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-        <button onClick={handleComplete} className="step-button" disabled={loading}>
-          {loading ? 'Confirmation...' : 'Confirmer et publier'}
+        <button onClick={handleNext} className="step-button">
+          Suivant
         </button>
       </div>
     </div>
@@ -589,6 +727,7 @@ const CarWizard = ({ initialData }) => {
       case 12: return renderStep12();
       case 13: return renderStep13();
       case 14: return renderStep14();
+      case 15: return renderStep15();
       default: return null;
     }
   };
@@ -596,7 +735,7 @@ const CarWizard = ({ initialData }) => {
   return (
     <div className="wizard-container">
       <div className="wizard-progress">
-        {[...Array(14)].map((_, i) => (
+        {[...Array(15)].map((_, i) => (
           <div key={i} className={`progress-step ${step > i + 1 ? 'completed' : step === i + 1 ? 'active' : ''}`}>
             {i + 1}
           </div>
