@@ -12,62 +12,34 @@ const CarWizard = ({ initialData }) => {
   const [insuranceFrontPreview, setInsuranceFrontPreview] = useState(null);
   const [insuranceBackPreview, setInsuranceBackPreview] = useState(null);
   const [formData, setFormData] = useState({
-    // الخطوة 1: معلومات أساسية
     brand: initialData?.brand || '',
     model: initialData?.model || '',
     year: initialData?.year || '',
     mileage: initialData?.mileage || '',
-    
-    // الخطوة 2: لوحة السيارة
     licensePlate: '',
     registrationCountry: 'Tunisie',
     registrationYear: '',
-    
-    // الخطوة 4: تفاصيل إضافية
     fuelType: '',
     transmission: '',
-    
-    // الخطوة 5: المقاعد والأبواب
     doors: 4,
     seats: 5,
-    
-    // الخطوة 6: المعدات
     features: [],
-    
-    // الخطوة 7: نوع المستخدم
     userType: 'particulier',
-    
-    // الخطوة 8: تاريخ الميلاد
     ownerBirthDate: '',
-    
-    // الخطوة 9: خطة الدفع
     paymentPlan: 'hebdomadaire',
-    
-    // الخطوة 10: رقم الهاتف
     ownerPhone: '',
     ownerPhoneCountry: 'Tunisie',
-    
-    // الخطوة 11: مكان ركن السيارة
     parkingType: '',
-    
-    // الخطوة 12: العنوان
     address: '',
     city: initialData?.location || '',
     delegation: initialData?.delegation || '',
-    
-    // الخطوة 13: طريقة التسليم
     deliveryMethod: '',
-    
-    // الخطوة 14: السعر
     pricePerDay: 0,
-    
-    // الخطوة 15: الصور
     carImages: [],
     insuranceFront: null,
     insuranceBack: null
   });
 
-  // تحميل المسودة المحفوظة
   useEffect(() => {
     const fetchDraft = async () => {
       try {
@@ -83,7 +55,6 @@ const CarWizard = ({ initialData }) => {
     fetchDraft();
   }, []);
 
-  // حفظ المسودة
   const saveDraft = async (currentStep, newData) => {
     try {
       await API.post('/cars/wizard/save', {
@@ -137,7 +108,6 @@ const CarWizard = ({ initialData }) => {
   const handleComplete = async () => {
     setLoading(true);
     try {
-      // التحقق من البيانات المطلوبة
       const requiredFields = ['brand', 'model', 'year', 'mileage', 'licensePlate', 
         'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
         'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 'pricePerDay'];
@@ -150,39 +120,36 @@ const CarWizard = ({ initialData }) => {
         return;
       }
       
-      // التحقق من وجود صور
-      if (step === 15 && (!formData.carImages || formData.carImages.length === 0)) {
-        showError('الرجاء إضافة صورة واحدة على الأقل للسيارة');
-        setLoading(false);
-        return;
-      }
-      
-      // إنشاء FormData لرفع الصور
       const formDataToSend = new FormData();
       
-      // إضافة البيانات النصية
-      Object.keys(formData).forEach(key => {
-        if (key !== 'carImages' && key !== 'insuranceFront' && key !== 'insuranceBack') {
-          if (formData[key] !== undefined && formData[key] !== null && formData[key] !== '') {
-            if (Array.isArray(formData[key])) {
-              formData[key].forEach((item, index) => {
-                formDataToSend.append(`${key}[${index}]`, item);
-              });
-            } else {
-              formDataToSend.append(key, formData[key]);
-            }
-          }
+      const textFields = ['brand', 'model', 'year', 'mileage', 'licensePlate', 
+        'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
+        'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 
+        'pricePerDay', 'userType', 'paymentPlan', 'ownerPhone', 'ownerPhoneCountry',
+        'doors', 'seats'];
+      
+      textFields.forEach(field => {
+        if (formData[field] !== undefined && formData[field] !== null && formData[field] !== '') {
+          formDataToSend.append(field, formData[field]);
         }
       });
       
-      // إضافة صور السيارة
+      if (formData.features && formData.features.length > 0) {
+        formData.features.forEach(feature => {
+          formDataToSend.append('features[]', feature);
+        });
+      }
+      
+      if (formData.ownerBirthDate) {
+        formDataToSend.append('ownerBirthDate', formData.ownerBirthDate);
+      }
+      
       if (formData.carImages && formData.carImages.length > 0) {
-        formData.carImages.forEach((file, index) => {
+        formData.carImages.forEach((file) => {
           formDataToSend.append('images', file);
         });
       }
       
-      // إضافة صورة البطاقة الرمادية
       if (formData.insuranceFront) {
         formDataToSend.append('insuranceFront', formData.insuranceFront);
       }
@@ -190,6 +157,7 @@ const CarWizard = ({ initialData }) => {
         formDataToSend.append('insuranceBack', formData.insuranceBack);
       }
       
+      console.log('Sending data...');
       const { data } = await API.post('/cars/wizard/complete', formDataToSend, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -207,7 +175,59 @@ const CarWizard = ({ initialData }) => {
     }
   };
 
-  // ========== الخطوة 8: تاريخ الميلاد (المعدلة مع labels) ==========
+  // ========== الخطوة 13 المعدلة مع راديو بوتن ==========
+  const renderStep13 = () => {
+    const handleDeliverySelect = (method) => {
+      setFormData(prev => ({ ...prev, deliveryMethod: method }));
+      saveDraft(step, { ...formData, deliveryMethod: method });
+    };
+
+    return (
+      <div className="wizard-step">
+        <h2>Choisissez maintenant un mode de location</h2>
+        <div className="delivery-methods">
+          <div 
+            className={`delivery-method ${formData.deliveryMethod === 'livraison au client' ? 'active' : ''}`}
+            onClick={() => handleDeliverySelect('livraison au client')}
+          >
+            <div className="delivery-radio">
+              <input 
+                type="radio" 
+                name="deliveryMethod" 
+                value="livraison au client"
+                checked={formData.deliveryMethod === 'livraison au client'}
+                onChange={() => {}}
+              />
+              <span>🚚 Livraison au client</span>
+            </div>
+            <p>Vous livrez la voiture à l'adresse du client</p>
+          </div>
+          <div 
+            className={`delivery-method ${formData.deliveryMethod === 'client rencontre le conducteur' ? 'active' : ''}`}
+            onClick={() => handleDeliverySelect('client rencontre le conducteur')}
+          >
+            <div className="delivery-radio">
+              <input 
+                type="radio" 
+                name="deliveryMethod" 
+                value="client rencontre le conducteur"
+                checked={formData.deliveryMethod === 'client rencontre le conducteur'}
+                onChange={() => {}}
+              />
+              <span>🤝 Client rencontre le conducteur</span>
+            </div>
+            <p>Le client vient récupérer la voiture à l'adresse indiquée</p>
+          </div>
+        </div>
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">Choisir</button>
+        </div>
+      </div>
+    );
+  };
+
+  // ========== باقي الخطوات (نفس الكود السابق) ==========
   const renderStep8 = () => {
     let selectedDay = '', selectedMonth = '', selectedYear = '';
     if (formData.ownerBirthDate && formData.ownerBirthDate.includes('-')) {
@@ -232,11 +252,9 @@ const CarWizard = ({ initialData }) => {
       }
     };
 
-    // قائمة الأيام
     const days = [];
     for (let i = 1; i <= 31; i++) days.push(i);
     
-    // قائمة الأشهر
     const months = [
       { value: '01', label: 'Janvier' }, { value: '02', label: 'Février' },
       { value: '03', label: 'Mars' }, { value: '04', label: 'Avril' },
@@ -246,7 +264,6 @@ const CarWizard = ({ initialData }) => {
       { value: '11', label: 'Novembre' }, { value: '12', label: 'Décembre' }
     ];
     
-    // قائمة السنوات
     const years = [];
     for (let i = 2025; i >= 1900; i--) years.push(i);
 
@@ -291,7 +308,6 @@ const CarWizard = ({ initialData }) => {
     );
   };
 
-  // الخطوة 15: Ajouter des photos
   const renderStep15 = () => {
     const handleImageUpload = (e) => {
       const files = Array.from(e.target.files);
@@ -362,7 +378,7 @@ const CarWizard = ({ initialData }) => {
     );
   };
 
-  // الخطوة 1
+  // الخطوة 1-7, 9-12, 14 (نفس الكود السابق - أضفها هنا)
   const renderStep1 = () => (
     <div className="wizard-step">
       <h2>Confirmez le modèle de votre voiture</h2>
@@ -395,7 +411,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 2
   const renderStep2 = () => (
     <div className="wizard-step">
       <h2>Inscrire ma voiture</h2>
@@ -431,7 +446,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 3
   const renderStep3 = () => (
     <div className="wizard-step">
       <h2>Confirmez le kilométrage</h2>
@@ -454,7 +468,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 4
   const renderStep4 = () => (
     <div className="wizard-step">
       <h2>Ajouter plus de détails</h2>
@@ -485,7 +498,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 5
   const renderStep5 = () => (
     <div className="wizard-step">
       <h2>Ajouter plus de détails</h2>
@@ -513,7 +525,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 6
   const renderStep6 = () => (
     <div className="wizard-step">
       <h2>Rendre votre annonce unique</h2>
@@ -532,7 +543,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 7
   const renderStep7 = () => (
     <div className="wizard-step">
       <h2>Louez vous en tant que particulier ou professionnel ?</h2>
@@ -553,7 +563,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 9
   const renderStep9 = () => (
     <div className="wizard-step">
       <h2>Confirmer la paiement de frais de services du site</h2>
@@ -575,7 +584,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 10
   const renderStep10 = () => (
     <div className="wizard-step">
       <h2>Quel est votre numéro de téléphone ?</h2>
@@ -596,7 +604,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 11
   const renderStep11 = () => (
     <div className="wizard-step">
       <h2>Où garerez vous votre voiture ?</h2>
@@ -617,7 +624,6 @@ const CarWizard = ({ initialData }) => {
     </div>
   );
 
-  // الخطوة 12
   const renderStep12 = () => {
     const tunisianCities = [
       'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
@@ -654,40 +660,6 @@ const CarWizard = ({ initialData }) => {
     );
   };
 
-  // الخطوة 13
-  const renderStep13 = () => (
-    <div className="wizard-step">
-      <h2>Choisissez maintenant un mode de location</h2>
-      <div className="delivery-methods">
-        <div 
-          className={`delivery-method ${formData.deliveryMethod === 'livraison au client' ? 'active' : ''}`}
-          onClick={() => {
-            setFormData(prev => ({ ...prev, deliveryMethod: 'livraison au client' }));
-            saveDraft(step, { ...formData, deliveryMethod: 'livraison au client' });
-          }}
-        >
-          <h3>🚚 Livraison au client</h3>
-          <p>Vous livrez la voiture à l'adresse du client</p>
-        </div>
-        <div 
-          className={`delivery-method ${formData.deliveryMethod === 'client rencontre le conducteur' ? 'active' : ''}`}
-          onClick={() => {
-            setFormData(prev => ({ ...prev, deliveryMethod: 'client rencontre le conducteur' }));
-            saveDraft(step, { ...formData, deliveryMethod: 'client rencontre le conducteur' });
-          }}
-        >
-          <h3>🤝 Client rencontre le conducteur</h3>
-          <p>Le client vient récupérer la voiture à l'adresse indiquée</p>
-        </div>
-      </div>
-      <div className="step-buttons">
-        <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-        <button onClick={handleNext} className="step-button">Choisir</button>
-      </div>
-    </div>
-  );
-
-  // الخطوة 14
   const renderStep14 = () => (
     <div className="wizard-step">
       <h2>Comment fonctionnent vos gains ?</h2>
@@ -703,14 +675,11 @@ const CarWizard = ({ initialData }) => {
       </div>
       <div className="step-buttons">
         <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-        <button onClick={handleNext} className="step-button">
-          Suivant
-        </button>
+        <button onClick={handleNext} className="step-button">Suivant</button>
       </div>
     </div>
   );
 
-  // دالة عرض الخطوات
   const renderStep = () => {
     switch(step) {
       case 1: return renderStep1();
