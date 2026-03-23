@@ -29,7 +29,7 @@ const carSchema = new mongoose.Schema({
   // الخطوة 6: المعدات (features)
   features: [{ type: String }],
   
-  // ✅ نوع السيارة (جديد)
+  // ✅ نوع السيارة
   carType: {
     type: String,
     enum: ['Citadine', 'SUV', 'Berline', 'Utilitaire', 'Luxe', 'Économique'],
@@ -83,10 +83,20 @@ const carSchema = new mongoose.Schema({
   updatedAt: { type: Date }
 });
 
-// تحديث updatedAt قبل الحفظ
+// ✅ تحديث updatedAt قبل الحفظ
 carSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
+
+// ✅ الفهارس (Indexes) لتحسين الأداء
+carSchema.index({ status: 1, isAvailable: 1 });        // للبحث عن السيارات المتاحة
+carSchema.index({ city: 1 });                           // للبحث حسب المدينة
+carSchema.index({ delegation: 1 });                     // للبحث حسب المعتمدية
+carSchema.index({ carType: 1 });                        // للبحث حسب نوع السيارة
+carSchema.index({ pricePerDay: 1 });                    // للترتيب حسب السعر
+carSchema.index({ createdAt: -1 });                     // للترتيب حسب الأحدث
+carSchema.index({ isFeatured: -1, createdAt: -1 });     // للسيارات المميزة أولاً
+carSchema.index({ ownerId: 1 });                        // لجلب سيارات مستخدم معين
 
 module.exports = mongoose.model('Car', carSchema);
