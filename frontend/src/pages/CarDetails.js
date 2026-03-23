@@ -103,7 +103,6 @@ const CarDetails = () => {
       return;
     }
 
-    // فتح نافذة تأكيد الحجز
     setShowBookingModal(true);
   };
 
@@ -121,7 +120,37 @@ const CarDetails = () => {
     return stars;
   };
 
-  // التأكد من أن reviews هي مصفوفة قبل استخدام reduce
+  // ترجمة طريقة التسليم
+  const getDeliveryMethodText = (method) => {
+    if (method === 'livraison au client') {
+      return { text: '🚚 Livraison au client', description: 'Le propriétaire livre la voiture à l\'adresse du locataire' };
+    } else if (method === 'client rencontre le conducteur') {
+      return { text: '🤝 Rencontre avec le conducteur', description: 'Le locataire vient récupérer la voiture à l\'adresse indiquée' };
+    }
+    return { text: method || 'Non spécifié', description: '' };
+  };
+
+  // ترجمة نوع الوقود
+  const getFuelTypeText = (fuelType) => {
+    const fuelMap = {
+      'Essence': 'Essence',
+      'Diesel': 'Diesel',
+      'Hybride': 'Hybride',
+      'Électrique': 'Électrique',
+      'Autre': 'Autre'
+    };
+    return fuelMap[fuelType] || fuelType || 'Essence';
+  };
+
+  // ترجمة ناقل الحركة
+  const getTransmissionText = (transmission) => {
+    const transMap = {
+      'Manuelle': 'Manuelle',
+      'Automatique': 'Automatique'
+    };
+    return transMap[transmission] || transmission || 'Manuelle';
+  };
+
   const averageRating = Array.isArray(reviews) && reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
     : 0;
@@ -152,8 +181,9 @@ const CarDetails = () => {
     );
   }
 
-  // حساب المجموع الكلي مع الضمان
-  const totalWithDeposit = totalPrice + (car.deposit || 0);
+  const deliveryInfo = getDeliveryMethodText(car.deliveryMethod);
+  const cautionAmount = car.caution || 500;
+  const totalWithCaution = totalPrice + cautionAmount;
 
   return (
     <>
@@ -200,50 +230,56 @@ const CarDetails = () => {
               <span className="per-day">/ jour</span>
             </div>
 
-            {/* ✅ إضافة مبلغ الضمان */}
-            {car.deposit && (
-              <div className="car-deposit-box">
-                <span className="deposit-label">💰 Caution</span>
-                <span className="deposit-value">{car.deposit} DT</span>
-                <span className="deposit-note">(remboursable)</span>
+            {/* ✅ إضافة مبلغ الضمان (Caution) */}
+            <div className="car-caution-box">
+              <span className="caution-icon">🔒</span>
+              <div className="caution-info">
+                <span className="caution-label">Dépôt de garantie (Caution)</span>
+                <span className="caution-value">{cautionAmount} DT</span>
+                <span className="caution-note">(versé en espèces le jour de la remise des clés)</span>
               </div>
-            )}
+            </div>
 
+            {/* ✅ إضافة طريقة التسليم (Delivery Method) */}
+            <div className="car-delivery-box">
+              <span className="delivery-icon">🚗</span>
+              <div className="delivery-info">
+                <span className="delivery-label">{deliveryInfo.text}</span>
+                <span className="delivery-description">{deliveryInfo.description}</span>
+              </div>
+            </div>
+
+            {/* مواصفات السيارة */}
             <div className="car-specs">
               <div className="spec-item">
                 <span className="spec-icon">⛽</span>
                 <span className="spec-label">Carburant</span>
-                <span className="spec-value">
-                  {car.fuelType === 'petrol' ? 'Essence' : 
-                   car.fuelType === 'diesel' ? 'Diesel' :
-                   car.fuelType === 'electric' ? 'Électrique' : 'Hybride'}
-                </span>
+                <span className="spec-value">{getFuelTypeText(car.fuelType)}</span>
               </div>
               <div className="spec-item">
                 <span className="spec-icon">⚙️</span>
                 <span className="spec-label">Transmission</span>
-                <span className="spec-value">
-                  {car.transmission === 'manual' ? 'Manuelle' : 'Automatique'}
-                </span>
+                <span className="spec-value">{getTransmissionText(car.transmission)}</span>
               </div>
               <div className="spec-item">
                 <span className="spec-icon">👥</span>
                 <span className="spec-label">Places</span>
-                <span className="spec-value">{car.seats}</span>
+                <span className="spec-value">{car.seats || 5}</span>
               </div>
               <div className="spec-item">
                 <span className="spec-icon">🚪</span>
                 <span className="spec-label">Portes</span>
-                <span className="spec-value">{car.doors}</span>
+                <span className="spec-value">{car.doors || 4}</span>
               </div>
               <div className="spec-item">
                 <span className="spec-icon">📊</span>
                 <span className="spec-label">Kilométrage</span>
-                <span className="spec-value">{car.mileage?.toLocaleString()} km</span>
+                <span className="spec-value">{car.mileage || '0-15000'} km</span>
               </div>
             </div>
 
-            {car.features?.length > 0 && (
+            {/* ✅ عرض المعدات (Features) */}
+            {car.features && car.features.length > 0 && (
               <div className="car-features">
                 <h3>Équipements</h3>
                 <div className="features-list">
@@ -305,21 +341,17 @@ const CarDetails = () => {
                   <span>{totalPrice} DT</span>
                 </div>
                 {/* ✅ إضافة مبلغ الضمان في تفاصيل السعر */}
-                {car.deposit > 0 && (
-                  <div className="breakdown-item caution-item">
-                    <span>💰 Caution (remboursable)</span>
-                    <span>{car.deposit} DT</span>
-                  </div>
-                )}
+                <div className="breakdown-item caution-item">
+                  <span>🔒 Caution (remboursable)</span>
+                  <span>{cautionAmount} DT</span>
+                </div>
                 <div className="breakdown-item total">
                   <span>Total à payer</span>
-                  <span>{totalWithDeposit.toFixed(2)} DT</span>
+                  <span>{totalWithCaution.toFixed(2)} DT</span>
                 </div>
-                {car.deposit > 0 && (
-                  <div className="caution-note-booking">
-                    <small>⚠️ La caution vous sera restituée après la fin de la location, sous réserve d'absence de dommages.</small>
-                  </div>
-                )}
+                <div className="caution-note-booking">
+                  <small>⚠️ La caution est versée en espèces le jour de la remise des clés et vous sera restituée après la location, sous réserve d'absence de dommages.</small>
+                </div>
               </div>
             )}
 
@@ -378,6 +410,7 @@ const CarDetails = () => {
         startDate={startDate}
         endDate={endDate}
         totalPrice={totalPrice}
+        caution={cautionAmount}
         onSuccess={handleBookingSuccess}
       />
 
