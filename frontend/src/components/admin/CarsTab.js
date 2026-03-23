@@ -7,7 +7,8 @@ const CarsTab = ({
   onReject, 
   onEdit, 
   onDelete,
-  onToggleFeatured  // ✅ إضافة دالة لتفعيل/إلغاء التميز
+  onToggleFeatured,
+  onViewInsurance  // ✅ إضافة دالة عرض البطاقة الرمادية
 }) => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,6 +16,7 @@ const CarsTab = ({
   const [showCarModal, setShowCarModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [showFeaturedModal, setShowFeaturedModal] = useState(false);
+  const [showInsuranceModal, setShowInsuranceModal] = useState(false); // ✅ Modal للبطاقة الرمادية
   const [featuredDuration, setFeaturedDuration] = useState(7);
   const [editFormData, setEditFormData] = useState({
     brand: '',
@@ -91,6 +93,12 @@ const CarsTab = ({
   const handleConfirmFeatured = () => {
     onToggleFeatured(selectedCar._id, !selectedCar.isFeatured, featuredDuration);
     setShowFeaturedModal(false);
+  };
+
+  // ✅ دالة عرض البطاقة الرمادية
+  const handleViewInsurance = (car) => {
+    setSelectedCar(car);
+    setShowInsuranceModal(true);
   };
 
   const getStatusBadge = (status) => {
@@ -181,6 +189,7 @@ const CarsTab = ({
               <th>الموقع</th>
               <th>الحالة</th>
               <th>⭐ مميزة</th>
+              <th>📄 carte grise</th>
               <th>تاريخ الإضافة</th>
               <th>الإجراءات</th>
             </tr>
@@ -188,11 +197,12 @@ const CarsTab = ({
           <tbody>
             {filteredCars.length === 0 ? (
               <tr>
-                <td colSpan="8" style={styles.noData}>لا توجد سيارات تطابق البحث</td>
+                <td colSpan="9" style={styles.noData}>لا توجد سيارات تطابق البحث</td>
               </tr>
             ) : (
               filteredCars.map(car => {
                 const status = getStatusBadge(car.status);
+                const hasInsurance = car.insuranceFront || car.insuranceBack;
                 return (
                   <tr key={car._id}>
                     <td>
@@ -216,7 +226,7 @@ const CarsTab = ({
                       <small style={styles.ownerEmail}>{car.ownerId?.email || ''}</small>
                     </td>
                     <td style={styles.priceCell}>{car.pricePerDay} د.ت</td>
-                    <td>{car.location}</td>
+                    <td>{car.location || car.city || 'غير محدد'}</td>
                     <td>
                       <span style={{
                         ...styles.statusBadge,
@@ -240,6 +250,20 @@ const CarsTab = ({
                         </button>
                       )}
                       {car.status !== 'approved' && <span style={{ color: '#999' }}>-</span>}
+                    </td>
+                    {/* ✅ عمود البطاقة الرمادية */}
+                    <td style={{ textAlign: 'center' }}>
+                      {hasInsurance ? (
+                        <button
+                          onClick={() => handleViewInsurance(car)}
+                          style={styles.insuranceButton}
+                          title="عرض البطاقة الرمادية"
+                        >
+                          📄 عرض
+                        </button>
+                      ) : (
+                        <span style={{ color: '#999', fontSize: '12px' }}>لا توجد</span>
+                      )}
                     </td>
                     <td>{new Date(car.createdAt).toLocaleDateString('ar-TN')}</td>
                     <td>
@@ -311,7 +335,6 @@ const CarsTab = ({
 
             <div style={styles.modalBody}>
               {!editMode ? (
-                // عرض التفاصيل
                 <>
                   <div style={styles.carImages}>
                     {selectedCar.images && selectedCar.images.length > 0 ? (
@@ -338,21 +361,39 @@ const CarsTab = ({
                     
                     <div style={styles.detailGrid}>
                       <div><strong>السعر اليومي:</strong> {selectedCar.pricePerDay} د.ت</div>
-                      <div><strong>الموقع:</strong> {selectedCar.location}</div>
+                      <div><strong>الموقع:</strong> {selectedCar.location || selectedCar.city}</div>
                       <div><strong>نوع الوقود:</strong> {getFuelTypeText(selectedCar.fuelType)}</div>
                       <div><strong>عدد المقاعد:</strong> {selectedCar.seats}</div>
+                      <div><strong>مبلغ الضمان:</strong> {selectedCar.caution || 500} د.ت</div>
+                      <div><strong>طريقة التسليم:</strong> {
+                        selectedCar.deliveryMethod === 'livraison au client' ? 'توصيل للعميل' :
+                        selectedCar.deliveryMethod === 'client rencontre le conducteur' ? 'استلام من المالك' :
+                        'غير محدد'
+                      }</div>
                     </div>
 
-                    {selectedCar.insuranceFront && (
-                      <div style={styles.detailRow}>
-                        <strong>صورة التأمين (أمامي):</strong>{' '}
-                        <a href={selectedCar.insuranceFront} target="_blank" rel="noopener noreferrer">عرض</a>
-                      </div>
-                    )}
-                    {selectedCar.insuranceBack && (
-                      <div style={styles.detailRow}>
-                        <strong>صورة التأمين (خلفي):</strong>{' '}
-                        <a href={selectedCar.insuranceBack} target="_blank" rel="noopener noreferrer">عرض</a>
+                    {/* ✅ عرض البطاقة الرمادية في التفاصيل */}
+                    {(selectedCar.insuranceFront || selectedCar.insuranceBack) && (
+                      <div style={styles.insuranceSection}>
+                        <strong>📄 البطاقة الرمادية (Carte grise):</strong>
+                        <div style={styles.insuranceImages}>
+                          {selectedCar.insuranceFront && (
+                            <div style={styles.insuranceItem}>
+                              <span>Recto:</span>
+                              <a href={selectedCar.insuranceFront} target="_blank" rel="noopener noreferrer">
+                                <img src={selectedCar.insuranceFront} alt="Carte grise recto" style={styles.insuranceThumb} />
+                              </a>
+                            </div>
+                          )}
+                          {selectedCar.insuranceBack && (
+                            <div style={styles.insuranceItem}>
+                              <span>Verso:</span>
+                              <a href={selectedCar.insuranceBack} target="_blank" rel="noopener noreferrer">
+                                <img src={selectedCar.insuranceBack} alt="Carte grise verso" style={styles.insuranceThumb} />
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -372,7 +413,6 @@ const CarsTab = ({
                   </div>
                 </>
               ) : (
-                // نموذج التعديل
                 <div style={styles.editForm}>
                   <div style={styles.formGroup}>
                     <label>الماركة</label>
@@ -470,6 +510,51 @@ const CarsTab = ({
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Modal عرض البطاقة الرمادية */}
+      {showInsuranceModal && selectedCar && (
+        <div style={styles.modal} onClick={() => setShowInsuranceModal(false)}>
+          <div style={styles.insuranceModalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>📄 البطاقة الرمادية - {selectedCar.brand} {selectedCar.model}</h3>
+              <button 
+                onClick={() => setShowInsuranceModal(false)}
+                style={styles.modalCloseButton}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={styles.modalBody}>
+              <div style={styles.insuranceFullImages}>
+                {selectedCar.insuranceFront && (
+                  <div style={styles.insuranceFullItem}>
+                    <strong>Recto (الوجه الأمامي):</strong>
+                    <img src={selectedCar.insuranceFront} alt="Carte grise recto" style={styles.insuranceFullImage} />
+                    <a href={selectedCar.insuranceFront} target="_blank" rel="noopener noreferrer" style={styles.openLink}>
+                      🔍 فتح الصورة في علامة تبويب جديدة
+                    </a>
+                  </div>
+                )}
+                {selectedCar.insuranceBack && (
+                  <div style={styles.insuranceFullItem}>
+                    <strong>Verso (الوجه الخلفي):</strong>
+                    <img src={selectedCar.insuranceBack} alt="Carte grise verso" style={styles.insuranceFullImage} />
+                    <a href={selectedCar.insuranceBack} target="_blank" rel="noopener noreferrer" style={styles.openLink}>
+                      🔍 فتح الصورة في علامة تبويب جديدة
+                    </a>
+                  </div>
+                )}
+                {!selectedCar.insuranceFront && !selectedCar.insuranceBack && (
+                  <p style={{ textAlign: 'center', color: '#999' }}>لا توجد صور للبطاقة الرمادية</p>
+                )}
+              </div>
+            </div>
+            <div style={styles.modalFooter}>
+              <button onClick={() => setShowInsuranceModal(false)} style={styles.closeButton}>إغلاق</button>
             </div>
           </div>
         </div>
@@ -664,10 +749,21 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s',
   },
+  insuranceButton: {
+    padding: '4px 12px',
+    borderRadius: '20px',
+    border: 'none',
+    backgroundColor: '#17a2b8',
+    color: 'white',
+    fontSize: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+  },
   actionButtons: {
     display: 'flex',
     gap: '5px',
     justifyContent: 'center',
+    flexWrap: 'wrap',
   },
   viewButton: {
     width: '32px',
@@ -744,6 +840,14 @@ const styles = {
     maxHeight: '80vh',
     overflow: 'auto',
   },
+  insuranceModalContent: {
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    maxWidth: '800px',
+    width: '90%',
+    maxHeight: '80vh',
+    overflow: 'auto',
+  },
   modalHeader: {
     padding: '15px 20px',
     borderBottom: '1px solid #ddd',
@@ -796,6 +900,60 @@ const styles = {
     gridTemplateColumns: '1fr 1fr',
     gap: '10px',
     marginTop: '10px',
+  },
+  insuranceSection: {
+    marginTop: '15px',
+    padding: '10px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '8px',
+  },
+  insuranceImages: {
+    display: 'flex',
+    gap: '15px',
+    marginTop: '10px',
+    flexWrap: 'wrap',
+  },
+  insuranceItem: {
+    textAlign: 'center',
+  },
+  insuranceThumb: {
+    width: '120px',
+    height: '80px',
+    objectFit: 'cover',
+    borderRadius: '4px',
+    marginTop: '5px',
+    cursor: 'pointer',
+  },
+  insuranceFullImages: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+  insuranceFullItem: {
+    textAlign: 'center',
+  },
+  insuranceFullImage: {
+    width: '100%',
+    maxWidth: '500px',
+    margin: '10px auto',
+    display: 'block',
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  },
+  openLink: {
+    display: 'inline-block',
+    marginTop: '8px',
+    color: '#007bff',
+    textDecoration: 'none',
+    fontSize: '13px',
+  },
+  closeButton: {
+    padding: '8px 16px',
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
   },
   editForm: {
     display: 'flex',
