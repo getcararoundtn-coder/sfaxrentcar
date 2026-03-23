@@ -12,45 +12,10 @@ const wilayasData = [
   'Gabès', 'Médenine', 'Tataouine', 'Gafsa', 'Tozeur', 'Kébili'
 ];
 
-// Délégations par wilaya
-const delegationsData = {
-  'Tunis': ['Tunis Centre', 'El Menzah', 'Le Bardo', 'La Marsa', 'Carthage', 'Sidi Hassine', 'El Omrane', 'Ettahrir', 'Bab El Bhar'],
-  'Ariana': ['Ariana Ville', 'Raoued', 'Soukra', 'Kalâat El Andalous', 'Sidi Thabet', 'Ettadhamen', 'Mnihla'],
-  'Ben Arous': ['Ben Arous', 'Bou Mhel', 'El Mourouj', 'Hammam Lif', 'Hammam Chott', 'Mégrine', 'Mornag', 'Radès', 'Fouchana', 'Mohamedia'],
-  'Manouba': ['Manouba', 'Djedeida', 'Douar Hicher', 'Mornaguia', 'Borj El Amri', 'Oued Ellil'],
-  'Nabeul': ['Nabeul', 'Hammamet', 'Kélibia', 'Dar Chaabane', 'Beni Khiar', 'Korba', 'Menzel Temime', 'Takelsa', 'Soliman', 'Grombalia', 'Bou Argoub', 'El Haouaria'],
-  'Zaghouan': ['Zaghouan', 'Fahs', 'Bir Mcherga', 'Zriba', 'El Fahs', 'Saouaf'],
-  'Bizerte': ['Bizerte Nord', 'Bizerte Sud', 'Menzel Bourguiba', 'Menzel Jemil', 'Ras Jebel', 'Ghezala', 'Tinja', 'Sejnane', 'Joumine', 'Utique'],
-  'Béja': ['Béja Nord', 'Béja Sud', 'Amdoun', 'Goubellat', 'Nefza', 'Téboursouk', 'Testour'],
-  'Jendouba': ['Jendouba Nord', 'Jendouba Sud', 'Tabarka', 'Aïn Draham', 'Fernana', 'Bousalem', 'Ghardimaou', 'Oued Meliz'],
-  'Le Kef': ['Le Kef Est', 'Le Kef Ouest', 'Dahmani', 'Sakiet Sidi Youssef', 'Tajerouine', 'Kalaat Senan', 'Kalaa Khasba', 'Jerissa'],
-  'Siliana': ['Siliana Nord', 'Siliana Sud', 'Gaâfour', 'Bou Arada', 'El Krib', 'Makthar', 'Rohia', 'Kesra'],
-  'Sousse': ['Sousse Ville', 'Sousse Jawhara', 'Sousse Riadh', 'Hammam Sousse', 'Msaken', 'Kalâa Kebira', 'Kalâa Seghira', 'Sidi Bou Ali', 'Enfidha', 'Bouficha'],
-  'Monastir': ['Monastir', 'Jemmal', 'Moknine', 'Bekalta', 'Ksar Hellal', 'Bembla', 'Zeramdine', 'Sahline', 'Ouerdanine', 'Sayada', 'Téboulba'],
-  'Mahdia': ['Mahdia', 'Chebba', 'Ksour Essaf', 'Souassi', 'Mellouleche', 'Bou Merdes', 'El Jem', 'Hebira', 'Ouled Chamekh'],
-  'Sfax': ['Sfax Ville', 'Sakiet Ezzit', 'Sakiet Eddaier', 'El Ain', 'Bir Ali Ben Khalifa', 'Agareb', 'Ghraiba', 'Mahrès', 'Menzel Chaker', 'Skhira', 'Thyna', 'Jebiniana'],
-  'Kairouan': ['Kairouan Nord', 'Kairouan Sud', 'Hajeb El Ayoun', 'Sbikha', 'Oueslatia', 'Bou Hajla', 'Chebika', 'Nasrallah', 'El Ala', 'Menzel Mehiri'],
-  'Kasserine': ['Kasserine Nord', 'Kasserine Sud', 'Sbeitla', 'Feriana', 'Foussana', 'Thala', 'Majel Bel Abbes', 'Hassi El Ferid', 'Jedeliane'],
-  'Sidi Bouzid': ['Sidi Bouzid Est', 'Sidi Bouzid Ouest', 'Meknassy', 'Menzel Bouzaiane', 'Regueb', 'Jilma', 'Souk Jedid', 'Ouled Haffouz'],
-  'Gabès': ['Gabès Ville', 'Gabès Médina', 'Gabès Ouest', 'Mareth', 'Métouia', 'El Hamma', 'Matmata', 'Menzel Habib'],
-  'Médenine': ['Médenine Nord', 'Médenine Sud', 'Ben Gardane', 'Zarzis', 'Djerba Houmet Essouk', 'Djerba Midoun', 'Djerba Ajim', 'Sidi Makhlouf'],
-  'Tataouine': ['Tataouine Nord', 'Tataouine Sud', 'Bir Lahmar', 'Ghomrassen', 'Dehiba', 'Remada'],
-  'Gafsa': ['Gafsa Nord', 'Gafsa Sud', 'Métlaoui', 'Moularès', 'Redeyef', 'Sened', 'El Ksar', 'Belkhir'],
-  'Tozeur': ['Tozeur', 'Degueche', 'Hazoua', 'Nefta', 'Tameghza'],
-  'Kébili': ['Kébili Nord', 'Kébili Sud', 'Douz', 'Souk Lahad', 'Bechri', 'Faouar', 'El Golâa']
-};
-
 const Home = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [searchData, setSearchData] = useState({
-    wilaya: '',
-    delegation: '',
-    startDate: '',
-    endDate: ''
-  });
-  const [wilayas, setWilayas] = useState([]);
-  const [delegations, setDelegations] = useState([]);
+  const [selectedCity, setSelectedCity] = useState('');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -62,33 +27,20 @@ const Home = () => {
         localStorage.removeItem('user');
       }
     }
-
-    setWilayas(wilayasData);
   }, []);
-
-  useEffect(() => {
-    if (searchData.wilaya) {
-      setDelegations(delegationsData[searchData.wilaya] || []);
-    } else {
-      setDelegations([]);
-    }
-  }, [searchData.wilaya]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchData.delegation) params.append('delegation', searchData.delegation);
-    if (searchData.wilaya) params.append('city', searchData.wilaya);
-    if (searchData.startDate) params.append('startDate', searchData.startDate);
-    if (searchData.endDate) params.append('endDate', searchData.endDate);
+    if (selectedCity) {
+      params.append('city', selectedCity);
+    }
     navigate(`/cars?${params.toString()}`);
   };
 
   const handleCarTypeClick = (type) => {
     navigate(`/cars?type=${type}`);
   };
-
-  const today = new Date().toISOString().split('T')[0];
 
   return (
     <>
@@ -138,59 +90,26 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Search Hero */}
+      {/* Search Hero - Simplifié */}
       <div className="search-hero">
         <div className="search-container">
           <h2 className="search-title">
             Location de voitures entre particuliers et professionnels en Tunisie
           </h2>
           
-          <form onSubmit={handleSearch} className="search-form">
+          <form onSubmit={handleSearch} className="search-form-simplified">
             <div className="search-field">
               <input
                 type="text"
-                placeholder="Où souhaitez-vous louer ?"
-                value={searchData.wilaya}
-                onChange={(e) => setSearchData({...searchData, wilaya: e.target.value, delegation: ''})}
+                placeholder="Où souhaitez-vous louer ? (ex: Tunis, Sfax, Sousse...)"
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
                 list="wilayas-list"
                 className="search-input"
               />
               <datalist id="wilayas-list">
-                {wilayas.map(w => <option key={w} value={w} />)}
+                {wilayasData.map(w => <option key={w} value={w} />)}
               </datalist>
-              
-              {searchData.wilaya && delegations.length > 0 && (
-                <select
-                  value={searchData.delegation}
-                  onChange={(e) => setSearchData({...searchData, delegation: e.target.value})}
-                  className="delegation-select"
-                >
-                  <option value="">Choisir une délégation</option>
-                  {delegations.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-              )}
-            </div>
-            
-            <div className="search-field">
-              <input
-                type="date"
-                value={searchData.startDate}
-                onChange={(e) => setSearchData({...searchData, startDate: e.target.value})}
-                min={today}
-                className="search-input"
-                placeholder="Date de début"
-              />
-            </div>
-            
-            <div className="search-field">
-              <input
-                type="date"
-                value={searchData.endDate}
-                onChange={(e) => setSearchData({...searchData, endDate: e.target.value})}
-                min={searchData.startDate || today}
-                className="search-input"
-                placeholder="Date de fin"
-              />
             </div>
             
             <button type="submit" className="search-button">
@@ -200,6 +119,9 @@ const Home = () => {
           
           <p className="search-note">
             DriveTunisia - Location de voitures entre particuliers et professionnels en Tunisie
+          </p>
+          <p className="search-hint">
+            💡 Utilisez les filtres avancés sur la page des résultats pour affiner votre recherche
           </p>
         </div>
       </div>
