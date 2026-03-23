@@ -122,6 +122,7 @@
     padding: 20px;
   }
 }
+
 /* Modal Upload Styles */
 .modal-upload {
   text-align: center;
@@ -196,6 +197,7 @@
   background: #cbd5e0;
   cursor: not-allowed;
 }
+
 /* Modal Filter Styles */
 .modal-filter {
   padding: 10px 0;
@@ -256,6 +258,7 @@
 .clear-filters-btn-modal:hover {
   background: #e2e8f0;
 }
+
 /* Support Form Styles */
 .support-form {
   display: flex;
@@ -317,6 +320,7 @@
   background: #cbd5e0;
   cursor: not-allowed;
 }
+
 /* Terms Group Styles */
 .terms-group {
   margin: 10px 0;
@@ -345,6 +349,7 @@
 .terms-label a:hover {
   text-decoration: underline;
 }
+
 /* Caution / Deposit Styles */
 .price-item.caution {
   color: #b45309;
@@ -361,6 +366,8 @@
   font-size: 11px;
   color: #92400e;
 }
+
+/* ✅ Google Login Button */
 .google-login-button {
   display: flex;
   align-items: center;

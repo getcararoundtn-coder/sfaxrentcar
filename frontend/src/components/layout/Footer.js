@@ -28,10 +28,10 @@ const Footer = () => {
           
           <div>
             <h4>تواصل معنا</h4>
-            <p>📧 <a href={`mailto:${settings?.contactEmail || 'support@drivetunisia.com'}`} style={styles.emailLink}>
-              {settings?.contactEmail || 'support@drivetunisia.com'}
+            <p>📧 <a href={`mailto:${settings?.contactEmail || 'getcararoundtn@gmail.com'}`} style={styles.emailLink}>
+              {settings?.contactEmail || 'getcararoundtn@gmail.com'}
             </a></p>
-            <p>📞 {settings?.contactPhone || '+216 12 345 678'}</p>
+            <p>📞 {settings?.contactPhone || '+216 22 345 678'}</p>
             <p>📍 {settings?.contactAddress || 'صفاقس، تونس'}</p>
             
             {/* ✅ زر الدعم السريع */}
@@ -63,7 +63,7 @@ const Footer = () => {
         <div style={styles.copyright}>
           © {new Date().getFullYear()} {settings?.platformName || 'DriveTunisia'}. جميع الحقوق محفوظة.
           <br />
-          <span style={styles.contactNote}>للاستفسارات: <a href="mailto:support@drivetunisia.com" style={styles.emailLink}>support@drivetunisia.com</a></span>
+          <span style={styles.contactNote}>للاستفسارات: <a href="mailto:getcararoundtn@gmail.com" style={styles.emailLink}>getcararoundtn@gmail.com</a></span>
         </div>
       </footer>
 

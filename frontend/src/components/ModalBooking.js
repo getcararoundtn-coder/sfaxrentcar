@@ -37,6 +37,10 @@ const ModalBooking = ({ isOpen, onClose, car, startDate, endDate, totalPrice, on
   const days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
   const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR');
 
+  // حساب مبلغ الضمان (caution)
+  const deposit = car?.deposit || 0;
+  const totalWithDeposit = totalPrice + deposit;
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Confirmer la réservation" size="small">
       <div className="modal-booking">
@@ -65,11 +69,25 @@ const ModalBooking = ({ isOpen, onClose, car, startDate, endDate, totalPrice, on
             <span>{car?.pricePerDay} DT × {days} jours</span>
             <span>{car?.pricePerDay * days} DT</span>
           </div>
-          {/* ✅ تم إزالة قسم رسوم الخدمة (Frais de service) */}
+          
+          {/* ✅ إضافة مبلغ الضمان */}
+          {deposit > 0 && (
+            <div className="price-item caution">
+              <span>💰 Caution (remboursable)</span>
+              <span>{deposit} DT</span>
+            </div>
+          )}
+          
           <div className="price-item total">
-            <span>Total</span>
-            <span>{totalPrice.toFixed(2)} DT</span>
+            <span>Total à payer</span>
+            <span>{totalWithDeposit.toFixed(2)} DT</span>
           </div>
+          
+          {deposit > 0 && (
+            <div className="caution-note">
+              <small>⚠️ La caution vous sera restituée après la fin de la location, sous réserve d'absence de dommages.</small>
+            </div>
+          )}
         </div>
 
         {error && <div className="booking-error">{error}</div>}
