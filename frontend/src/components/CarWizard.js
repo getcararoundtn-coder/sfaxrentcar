@@ -4,13 +4,15 @@ import API from '../services/api';
 import { showSuccess, showError } from '../utils/ToastConfig';
 import './CarWizard.css';
 
-const CarWizard = ({ initialData }) => {
+const CarWizard = ({ initialData, onComplete }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [insuranceFrontPreview, setInsuranceFrontPreview] = useState(null);
   const [insuranceBackPreview, setInsuranceBackPreview] = useState(null);
+  const [cautionType, setCautionType] = useState('fixed');
+  
   const [formData, setFormData] = useState({
     brand: initialData?.brand || '',
     model: initialData?.model || '',
@@ -35,6 +37,9 @@ const CarWizard = ({ initialData }) => {
     delegation: initialData?.delegation || '',
     deliveryMethod: '',
     pricePerDay: 0,
+    caution: 500,
+    cautionFixed: 500,
+    cautionPercentage: 10,
     carImages: [],
     insuranceFront: null,
     insuranceBack: null
@@ -106,13 +111,24 @@ const CarWizard = ({ initialData }) => {
   };
 
   const handleComplete = async () => {
+    console.log('🔵 CONFIRM BUTTON CLICKED');
     setLoading(true);
+    
     try {
-      const requiredFields = ['brand', 'model', 'year', 'mileage', 'licensePlate', 
+      // التحقق من الحقول المطلوبة
+      const requiredFields = [
+        'brand', 'model', 'year', 'mileage', 'licensePlate', 
         'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
-        'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 'pricePerDay'];
+        'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 'pricePerDay'
+      ];
       
-      const missingFields = requiredFields.filter(field => !formData[field]);
+      const missingFields = [];
+      for (const field of requiredFields) {
+        const value = formData[field];
+        if (!value || value === '' || value === undefined || value === null) {
+          missingFields.push(field);
+        }
+      }
       
       if (missingFields.length > 0) {
         showError(`الرجاء تعبئة جميع الحقول المطلوبة: ${missingFields.join(', ')}`);
@@ -120,30 +136,45 @@ const CarWizard = ({ initialData }) => {
         return;
       }
       
+      // التحقق من وجود صور
+      if (!formData.carImages || formData.carImages.length === 0) {
+        showError('الرجاء إضافة صورة واحدة على الأقل للسيارة');
+        setLoading(false);
+        return;
+      }
+      
+      // إنشاء FormData
       const formDataToSend = new FormData();
       
-      const textFields = ['brand', 'model', 'year', 'mileage', 'licensePlate', 
+      // إضافة الحقول النصية
+      const textFields = [
+        'brand', 'model', 'year', 'mileage', 'licensePlate', 
         'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
         'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 
         'pricePerDay', 'userType', 'paymentPlan', 'ownerPhone', 'ownerPhoneCountry',
-        'doors', 'seats'];
+        'doors', 'seats', 'caution'
+      ];
       
       textFields.forEach(field => {
-        if (formData[field] !== undefined && formData[field] !== null && formData[field] !== '') {
-          formDataToSend.append(field, formData[field]);
+        const value = formData[field];
+        if (value !== undefined && value !== null && value !== '') {
+          formDataToSend.append(field, String(value));
         }
       });
       
+      // إضافة المعدات
       if (formData.features && formData.features.length > 0) {
         formData.features.forEach(feature => {
           formDataToSend.append('features[]', feature);
         });
       }
       
+      // إضافة تاريخ الميلاد
       if (formData.ownerBirthDate) {
         formDataToSend.append('ownerBirthDate', formData.ownerBirthDate);
       }
       
+      // إضافة الصور
       if (formData.carImages && formData.carImages.length > 0) {
         formData.carImages.forEach((file) => {
           formDataToSend.append('images', file);
@@ -157,25 +188,66 @@ const CarWizard = ({ initialData }) => {
         formDataToSend.append('insuranceBack', formData.insuranceBack);
       }
       
-      console.log('Sending data...');
+      console.log('Sending to backend...');
       const { data } = await API.post('/cars/wizard/complete', formDataToSend, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000
       });
       
       if (data.success) {
         showSuccess('✅ تم إضافة السيارة بنجاح!');
+        if (onComplete) onComplete();
         navigate('/owner-cars?tab=cars');
+      } else {
+        showError(data.message || 'حدث خطأ في إضافة السيارة');
       }
     } catch (err) {
-      console.error('Error completing wizard:', err);
-      const errorMessage = err.response?.data?.message || 'فشل إضافة السيارة. الرجاء التأكد من تعبئة جميع البيانات.';
+      console.error('Error:', err);
+      let errorMessage = 'فشل إضافة السيارة. ';
+      if (err.response) {
+        errorMessage += err.response.data?.message || 'خطأ من الخادم.';
+      } else if (err.request) {
+        errorMessage += 'لم يتم استلام رد من الخادم.';
+      } else {
+        errorMessage += err.message;
+      }
       showError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // ========== الخطوة 13 المعدلة مع راديو بوتن ==========
+  // ========== الخطوة 8: تاريخ الميلاد ==========
+  const renderStep8 = () => {
+    const handleBirthDateChange = (e) => {
+      const value = e.target.value;
+      setFormData(prev => ({ ...prev, ownerBirthDate: value }));
+      saveDraft(step, { ...formData, ownerBirthDate: value });
+    };
+
+    return (
+      <div className="wizard-step">
+        <h2>Quelle est votre date de naissance ?</h2>
+        <div className="form-group">
+          <label>Date de naissance</label>
+          <input 
+            type="date" 
+            name="ownerBirthDate" 
+            value={formData.ownerBirthDate || ''} 
+            onChange={handleBirthDateChange}
+          />
+          <small className="form-hint">Format: JJ/MM/AAAA (ex: 15/05/1985)</small>
+        </div>
+        <p className="step-note">nous devons vous demander cette information pour des raisons légales</p>
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">Suivant</button>
+        </div>
+      </div>
+    );
+  };
+
+  // ========== الخطوة 13: طريقة التسليم ==========
   const renderStep13 = () => {
     const handleDeliverySelect = (method) => {
       setFormData(prev => ({ ...prev, deliveryMethod: method }));
@@ -197,6 +269,7 @@ const CarWizard = ({ initialData }) => {
                 value="livraison au client"
                 checked={formData.deliveryMethod === 'livraison au client'}
                 onChange={() => {}}
+                readOnly
               />
               <span>🚚 Livraison au client</span>
             </div>
@@ -213,6 +286,7 @@ const CarWizard = ({ initialData }) => {
                 value="client rencontre le conducteur"
                 checked={formData.deliveryMethod === 'client rencontre le conducteur'}
                 onChange={() => {}}
+                readOnly
               />
               <span>🤝 Client rencontre le conducteur</span>
             </div>
@@ -227,87 +301,148 @@ const CarWizard = ({ initialData }) => {
     );
   };
 
-  // ========== باقي الخطوات (نفس الكود السابق) ==========
-  const renderStep8 = () => {
-    let selectedDay = '', selectedMonth = '', selectedYear = '';
-    if (formData.ownerBirthDate && formData.ownerBirthDate.includes('-')) {
-      const parts = formData.ownerBirthDate.split('-');
-      selectedYear = parts[0] || '';
-      selectedMonth = parts[1] || '';
-      selectedDay = parts[2] || '';
-    }
-
-    const handleBirthDateChange = (type, value) => {
-      let newDay = selectedDay, newMonth = selectedMonth, newYear = selectedYear;
-      if (type === 'day') newDay = value;
-      if (type === 'month') newMonth = value;
-      if (type === 'year') newYear = value;
-      
-      if (newDay && newMonth && newYear) {
-        const formattedDate = `${newYear}-${newMonth.padStart(2, '0')}-${newDay.padStart(2, '0')}`;
-        setFormData(prev => ({ ...prev, ownerBirthDate: formattedDate }));
-        saveDraft(step, { ...formData, ownerBirthDate: formattedDate });
+  // ========== الخطوة 14: Gains + Caution (مع توضيح الدفع النقدي) ==========
+  const renderStep14 = () => {
+    const handleCautionTypeChange = (type) => {
+      setCautionType(type);
+      if (type === 'fixed') {
+        setFormData(prev => ({ ...prev, caution: prev.cautionFixed || 500 }));
       } else {
-        setFormData(prev => ({ ...prev, ownerBirthDate: '' }));
+        setFormData(prev => ({ ...prev, caution: prev.cautionPercentage || 10 }));
       }
+      saveDraft(step, { ...formData, caution: formData.caution });
     };
-
-    const days = [];
-    for (let i = 1; i <= 31; i++) days.push(i);
     
-    const months = [
-      { value: '01', label: 'Janvier' }, { value: '02', label: 'Février' },
-      { value: '03', label: 'Mars' }, { value: '04', label: 'Avril' },
-      { value: '05', label: 'Mai' }, { value: '06', label: 'Juin' },
-      { value: '07', label: 'Juillet' }, { value: '08', label: 'Août' },
-      { value: '09', label: 'Septembre' }, { value: '10', label: 'Octobre' },
-      { value: '11', label: 'Novembre' }, { value: '12', label: 'Décembre' }
-    ];
+    const handleCautionChange = (value) => {
+      const numValue = parseFloat(value) || 0;
+      setFormData(prev => ({ ...prev, caution: numValue }));
+      if (cautionType === 'fixed') {
+        setFormData(prev => ({ ...prev, cautionFixed: numValue }));
+      } else {
+        setFormData(prev => ({ ...prev, cautionPercentage: numValue }));
+      }
+      saveDraft(step, { ...formData, caution: numValue });
+    };
     
-    const years = [];
-    for (let i = 2025; i >= 1900; i--) years.push(i);
-
     return (
       <div className="wizard-step">
-        <h2>Quelle est votre date de naissance ?</h2>
-        <div className="birthdate-group">
-          <div className="birthdate-select">
-            <label>Jour</label>
-            <select onChange={(e) => handleBirthDateChange('day', e.target.value)} value={selectedDay}>
-              <option value="">Jour</option>
-              {days.map(day => (
-                <option key={day} value={String(day).padStart(2, '0')}>{day}</option>
-              ))}
-            </select>
+        <h2>Comment fonctionnent vos gains ?</h2>
+        
+        {/* Prix par jour */}
+        <div className="form-group">
+          <label>💰 Prix par jour (TND)</label>
+          <input 
+            type="number" 
+            name="pricePerDay" 
+            value={formData.pricePerDay || 0} 
+            onChange={handleChange} 
+            placeholder="Ex: 80" 
+            min="0"
+            step="1"
+          />
+          <small className="form-hint">Le prix que vous souhaitez facturer par jour de location</small>
+        </div>
+        
+        {/* Section Caution */}
+        <div className="caution-section">
+          <h3>🔒 Dépôt de garantie (Caution)</h3>
+          <p className="caution-description">
+            Le dépôt de garantie est versé en espèces par le locataire au propriétaire le jour de la remise des clés.
+            Il sera restitué au locataire après vérification du véhicule (absence de dommages, carburant, etc.).
+          </p>
+          
+          {/* ⚠️ AVERTISSEMENT IMPORTANT */}
+          <div className="warning-box">
+            <p className="warning-icon">⚠️</p>
+            <div className="warning-text">
+              <strong>Important :</strong>
+              <ul>
+                <li>Le paiement de la caution se fait <strong>en espèces</strong> entre le propriétaire et le locataire le jour de la rencontre</li>
+                <li>La plateforme <strong>ne gère pas</strong> le paiement de la caution</li>
+                <li>La plateforme <strong>n'est pas responsable</strong> en cas d'accident, de dommages ou de litige concernant la caution</li>
+                <li>Un constat d'état des lieux doit être signé par les deux parties avant et après la location</li>
+              </ul>
+            </div>
           </div>
-          <div className="birthdate-select">
-            <label>Mois</label>
-            <select onChange={(e) => handleBirthDateChange('month', e.target.value)} value={selectedMonth}>
-              <option value="">Mois</option>
-              {months.map(month => (
-                <option key={month.value} value={month.value}>{month.label}</option>
-              ))}
-            </select>
+          
+          <div className="caution-type-group">
+            <label className={`caution-type ${cautionType === 'fixed' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="cautionType"
+                checked={cautionType === 'fixed'}
+                onChange={() => handleCautionTypeChange('fixed')}
+              />
+              <span>Montant fixe (TND)</span>
+            </label>
+            <label className={`caution-type ${cautionType === 'percentage' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="cautionType"
+                checked={cautionType === 'percentage'}
+                onChange={() => handleCautionTypeChange('percentage')}
+              />
+              <span>Pourcentage du prix total (%)</span>
+            </label>
           </div>
-          <div className="birthdate-select">
-            <label>Année</label>
-            <select onChange={(e) => handleBirthDateChange('year', e.target.value)} value={selectedYear}>
-              <option value="">Année</option>
-              {years.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+          
+          {cautionType === 'fixed' ? (
+            <div className="form-group">
+              <label>Montant de la caution (TND)</label>
+              <input
+                type="number"
+                value={formData.cautionFixed || 500}
+                onChange={(e) => handleCautionChange(e.target.value)}
+                placeholder="Ex: 500"
+                min="0"
+                step="50"
+              />
+              <small className="form-hint">Recommandé: 500 à 1000 TND selon la voiture</small>
+            </div>
+          ) : (
+            <div className="form-group">
+              <label>Pourcentage de la caution (%)</label>
+              <input
+                type="number"
+                value={formData.cautionPercentage || 10}
+                onChange={(e) => handleCautionChange(e.target.value)}
+                placeholder="Ex: 10"
+                min="0"
+                max="50"
+                step="5"
+              />
+              <small className="form-hint">Pourcentage du prix total de la réservation</small>
+            </div>
+          )}
+          
+          <div className="caution-preview">
+            <p>
+              <strong>Aperçu:</strong> Caution de{' '}
+              {cautionType === 'fixed' 
+                ? `${formData.cautionFixed || 500} TND` 
+                : `${formData.cautionPercentage || 10}% du prix total`}
+            </p>
           </div>
         </div>
-        <p className="step-note">nous devons vous demander cette information pour des raisons légales</p>
+        
+        <div className="info-box">
+          <h4>📊 Comment sont calculés vos gains ?</h4>
+          <p>💰 <strong>Prix par jour:</strong> {formData.pricePerDay || 0} TND/jour</p>
+          <p>💸 <strong>Commission plateforme (5%):</strong> Déduite automatiquement</p>
+          <p>🔒 <strong>Caution:</strong> Versée en espèces, non déduite de vos gains</p>
+        </div>
+        
         <div className="step-buttons">
           <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-          <button onClick={handleNext} className="step-button">Suivant</button>
+          <button onClick={handleNext} className="step-button">
+            Suivant
+          </button>
         </div>
       </div>
     );
   };
 
+  // ========== الخطوة 15: Photos ==========
   const renderStep15 = () => {
     const handleImageUpload = (e) => {
       const files = Array.from(e.target.files);
@@ -371,14 +506,14 @@ const CarWizard = ({ initialData }) => {
         <div className="step-buttons">
           <button onClick={handlePrev} className="step-button secondary">Précédent</button>
           <button onClick={handleComplete} className="step-button" disabled={loading}>
-            {loading ? 'Confirmation...' : 'Confirmer et publier'}
+            {loading ? 'Envoi en cours...' : 'Confirmer et publier'}
           </button>
         </div>
       </div>
     );
   };
 
-  // الخطوة 1-7, 9-12, 14 (نفس الكود السابق - أضفها هنا)
+  // ========== الخطوات 1-7, 9-12 ==========
   const renderStep1 = () => (
     <div className="wizard-step">
       <h2>Confirmez le modèle de votre voiture</h2>
@@ -388,7 +523,7 @@ const CarWizard = ({ initialData }) => {
       </div>
       <div className="form-group">
         <label>Modèle</label>
-        <input type="text" name="model" value={formData.model} onChange={handleChange} placeholder="Ex: Clio, 208..." />
+        <input type="text" name="model" value={formData.model} onChange={handleChange} placeholder="Ex: Clio, 208, Symbol..." />
       </div>
       <div className="form-group">
         <label>Année</label>
@@ -659,26 +794,6 @@ const CarWizard = ({ initialData }) => {
       </div>
     );
   };
-
-  const renderStep14 = () => (
-    <div className="wizard-step">
-      <h2>Comment fonctionnent vos gains ?</h2>
-      <div className="form-group">
-        <label>Prix par jour (TND)</label>
-        <input type="number" name="pricePerDay" value={formData.pricePerDay} onChange={handleChange} placeholder="Ex: 80" min="0" />
-      </div>
-      <div className="info-box">
-        <p>💰 Vous définissez un prix par jour</p>
-        <p>📊 Nous calculons le prix de réservation</p>
-        <p>💸 Nous déduisons 5% de frais de service</p>
-        <p>⚡ Vous êtes indemnisés des frais additionnels (essence manquante, pénalités)</p>
-      </div>
-      <div className="step-buttons">
-        <button onClick={handlePrev} className="step-button secondary">Précédent</button>
-        <button onClick={handleNext} className="step-button">Suivant</button>
-      </div>
-    </div>
-  );
 
   const renderStep = () => {
     switch(step) {
