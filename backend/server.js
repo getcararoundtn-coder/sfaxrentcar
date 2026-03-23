@@ -35,8 +35,8 @@ app.use((req, res, next) => {
   
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
-  // ✅ إضافة Cache-Control إلى الـ allowed headers
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept, Cache-Control');
+  // ✅ إضافة Pragma و Cache-Control إلى الـ allowed headers
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept, Cache-Control, Pragma');
   res.header('Access-Control-Expose-Headers', 'Set-Cookie');
   
   if (req.method === 'OPTIONS') {
