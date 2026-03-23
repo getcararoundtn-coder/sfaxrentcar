@@ -15,9 +15,8 @@ exports.addCar = async (req, res) => {
     }
 
     try {
-      const { brand, model, year, licensePlate, pricePerDay, deposit, location, city, delegation, fuelType, transmission, seats, doors, mileage, features } = req.body;
+      const { brand, model, year, licensePlate, pricePerDay, deposit, location, city, delegation, fuelType, transmission, seats, doors, mileage, features, carType } = req.body;
       
-      // التحقق من الحقول المطلوبة
       if (!brand || !model || !year || !licensePlate || !pricePerDay || !deposit || !location || !city || !delegation || !fuelType || !transmission || !seats || !doors || !mileage) {
         return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
       }
@@ -33,7 +32,6 @@ exports.addCar = async (req, res) => {
         console.log('إضافة سيارة من قبل فرد');
       }
 
-      // معالجة الميزات (features) إذا كانت موجودة
       let featuresArray = [];
       if (features) {
         featuresArray = typeof features === 'string' ? features.split(',').map(f => f.trim()) : features;
@@ -59,13 +57,13 @@ exports.addCar = async (req, res) => {
         doors,
         mileage,
         features: featuresArray,
+        carType: carType || 'Berline', // ✅ إضافة carType
         images,
         status: 'pending',
         isAvailable: true,
         isFeatured: false
       });
 
-      // إشعار للمشرفين بسيارة جديدة
       try {
         const admins = await User.find({ role: 'admin' }).select('_id');
         for (const admin of admins) {
@@ -89,7 +87,7 @@ exports.addCar = async (req, res) => {
   });
 };
 
-// @desc    جلب جميع السيارات المتاحة (مع تصفية حسب التاريخ)
+// @desc    جلب جميع السيارات المتاحة (مع تصفية حسب التاريخ والترتيب)
 // @route   GET /api/cars
 // @access  Public
 exports.getCars = async (req, res) => {
@@ -98,7 +96,10 @@ exports.getCars = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    const { startDate, endDate, city, delegation, minPrice, maxPrice, transmission, fuelType, seats } = req.query;
+    const { 
+      startDate, endDate, city, delegation, type, minPrice, maxPrice, 
+      transmission, fuelType, seats, sort 
+    } = req.query;
 
     let query = {
       status: 'approved',
@@ -108,38 +109,44 @@ exports.getCars = async (req, res) => {
       ]
     };
 
-    // فلترة حسب المدينة
+    // ✅ فلترة حسب المدينة
     if (city) {
       query.city = city;
     }
 
-    // فلترة حسب المعتمدية
+    // ✅ فلترة حسب المعتمدية
     if (delegation) {
       query.delegation = delegation;
     }
 
-    // فلترة حسب السعر
+    // ✅ فلترة حسب نوع السيارة (carType)
+    if (type) {
+      query.carType = type;
+    }
+
+    // ✅ فلترة حسب السعر
     if (minPrice || maxPrice) {
       query.pricePerDay = {};
       if (minPrice) query.pricePerDay.$gte = parseInt(minPrice);
       if (maxPrice) query.pricePerDay.$lte = parseInt(maxPrice);
     }
 
-    // فلترة حسب ناقل الحركة
+    // ✅ فلترة حسب ناقل الحركة
     if (transmission) {
       query.transmission = transmission;
     }
 
-    // فلترة حسب نوع الوقود
+    // ✅ فلترة حسب نوع الوقود
     if (fuelType) {
       query.fuelType = fuelType;
     }
 
-    // فلترة حسب عدد المقاعد
+    // ✅ فلترة حسب عدد المقاعد
     if (seats) {
       query.seats = { $gte: parseInt(seats) };
     }
 
+    // ✅ فلترة حسب التوفر (تواريخ الحجز)
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -152,12 +159,21 @@ exports.getCars = async (req, res) => {
       query._id = { $nin: bookedCars };
     }
 
-    // 🔥 ترتيب السيارات: المميزة أولاً، ثم الأحدث
-    const sort = { isFeatured: -1, createdAt: -1 };
+    // ✅ ترتيب النتائج (sort)
+    let sortOption = {};
+    if (sort === 'price_asc') {
+      sortOption = { pricePerDay: 1 };
+    } else if (sort === 'price_desc') {
+      sortOption = { pricePerDay: -1 };
+    } else if (sort === 'rating') {
+      sortOption = { averageRating: -1 };
+    } else {
+      sortOption = { isFeatured: -1, createdAt: -1 }; // المميزة أولاً، ثم الأحدث
+    }
 
     const cars = await Car.find(query)
       .populate('ownerId', 'name email role')
-      .sort(sort)
+      .sort(sortOption)
       .skip(skip)
       .limit(limit);
 
@@ -306,7 +322,6 @@ exports.toggleFeatured = async (req, res) => {
 
     car.isFeatured = isFeatured !== undefined ? isFeatured : !car.isFeatured;
     
-    // إذا تم تفعيل المميزة، قم بتعيين تاريخ الانتهاء
     if (car.isFeatured && durationDays) {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + durationDays);
