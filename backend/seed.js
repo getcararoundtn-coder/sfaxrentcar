@@ -5,7 +5,9 @@ const User = require('./models/User');
 
 dotenv.config();
 
-// بيانات السيارات الوهمية
+// صورة placeholder
+const placeholderImage = 'https://placehold.co/600x400/6b46c0/white?text=DriveTunisia';
+
 const carsData = [
   {
     brand: 'Peugeot',
@@ -29,7 +31,7 @@ const carsData = [
     deliveryMethod: 'livraison au client',
     pricePerDay: 80,
     caution: 500,
-    images: ['https://res.cloudinary.com/demo/image/upload/car1.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -56,7 +58,7 @@ const carsData = [
     deliveryMethod: 'client rencontre le conducteur',
     pricePerDay: 70,
     caution: 400,
-    images: ['https://res.cloudinary.com/demo/image/upload/car2.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -83,7 +85,7 @@ const carsData = [
     deliveryMethod: 'livraison au client',
     pricePerDay: 150,
     caution: 800,
-    images: ['https://res.cloudinary.com/demo/image/upload/car3.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: true
@@ -110,7 +112,7 @@ const carsData = [
     deliveryMethod: 'client rencontre le conducteur',
     pricePerDay: 90,
     caution: 500,
-    images: ['https://res.cloudinary.com/demo/image/upload/car4.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -137,7 +139,7 @@ const carsData = [
     deliveryMethod: 'livraison au client',
     pricePerDay: 140,
     caution: 700,
-    images: ['https://res.cloudinary.com/demo/image/upload/car5.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -164,7 +166,7 @@ const carsData = [
     deliveryMethod: 'livraison au client',
     pricePerDay: 250,
     caution: 1500,
-    images: ['https://res.cloudinary.com/demo/image/upload/car6.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: true
@@ -191,7 +193,7 @@ const carsData = [
     deliveryMethod: 'client rencontre le conducteur',
     pricePerDay: 100,
     caution: 600,
-    images: ['https://res.cloudinary.com/demo/image/upload/car7.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -218,7 +220,7 @@ const carsData = [
     deliveryMethod: 'livraison au client',
     pricePerDay: 130,
     caution: 650,
-    images: ['https://res.cloudinary.com/demo/image/upload/car8.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -245,7 +247,7 @@ const carsData = [
     deliveryMethod: 'client rencontre le conducteur',
     pricePerDay: 60,
     caution: 400,
-    images: ['https://res.cloudinary.com/demo/image/upload/car9.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -272,7 +274,7 @@ const carsData = [
     deliveryMethod: 'livraison au client',
     pricePerDay: 300,
     caution: 2000,
-    images: ['https://res.cloudinary.com/demo/image/upload/car10.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: true
@@ -299,7 +301,7 @@ const carsData = [
     deliveryMethod: 'client rencontre le conducteur',
     pricePerDay: 120,
     caution: 500,
-    images: ['https://res.cloudinary.com/demo/image/upload/car11.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -326,7 +328,7 @@ const carsData = [
     deliveryMethod: 'livraison au client',
     pricePerDay: 110,
     caution: 550,
-    images: ['https://res.cloudinary.com/demo/image/upload/car12.jpg'],
+    images: [placeholderImage],
     status: 'approved',
     isAvailable: true,
     isFeatured: false
@@ -338,24 +340,21 @@ const seedDatabase = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ Connected to MongoDB');
 
-    // الحصول على مستخدم موجود (admin أو أي مستخدم)
     const user = await User.findOne({ role: 'admin' });
     if (!user) {
       console.log('❌ No admin user found. Please create a user first.');
       process.exit(1);
     }
 
-    // إضافة ownerId لكل سيارة
     const carsWithOwner = carsData.map(car => ({
       ...car,
       ownerId: user._id
     }));
 
-    // حذف السيارات الموجودة (اختياري)
+    // حذف السيارات الموجودة (اختياري - أزل التعليق إذا أردت)
     // await Car.deleteMany({});
     // console.log('🗑️ Existing cars deleted');
 
-    // إضافة السيارات الجديدة
     const result = await Car.insertMany(carsWithOwner);
     console.log(`✅ ${result.length} cars added successfully`);
 

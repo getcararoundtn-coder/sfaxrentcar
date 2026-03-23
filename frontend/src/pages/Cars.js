@@ -15,6 +15,7 @@ const Cars = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [sortBy, setSortBy] = useState('recent'); // 'recent', 'price_asc', 'price_desc', 'rating'
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -57,18 +58,21 @@ const Cars = () => {
       
       const params = new URLSearchParams({
         page: pageNum,
-        limit: pagination.limit
+        limit: pagination.limit,
+        sort: sortBy
       });
       
       if (filters.city) params.append('city', filters.city);
       if (filters.delegation) params.append('delegation', filters.delegation);
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
+      if (filters.type) params.append('type', filters.type);
       if (filters.minPrice) params.append('minPrice', filters.minPrice);
       if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
       if (filters.transmission) params.append('transmission', filters.transmission);
       if (filters.fuelType) params.append('fuelType', filters.fuelType);
       if (filters.seats) params.append('seats', filters.seats);
+      if (filters.minRating) params.append('minRating', filters.minRating);
       
       const { data } = await API.get(`/cars?${params}`);
       
@@ -102,11 +106,11 @@ const Cars = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [filters, pagination.limit]);
+  }, [filters, pagination.limit, sortBy]);
 
   useEffect(() => {
     fetchCars(1, false);
-  }, [filters, fetchCars]);
+  }, [filters, sortBy, fetchCars]);
 
   const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
@@ -130,6 +134,10 @@ const Cars = () => {
     }
   };
 
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -138,40 +146,74 @@ const Cars = () => {
 
   const renderStars = (rating) => {
     const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
     for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span key={i} className={i <= Math.round(rating) ? 'star filled' : 'star'}>★</span>
-      );
+      if (i <= fullStars) {
+        stars.push(<span key={i} className="star filled">★</span>);
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(<span key={i} className="star half">½</span>);
+      } else {
+        stars.push(<span key={i} className="star">☆</span>);
+      }
     }
     return stars;
   };
 
   const locationText = filters.delegation ? `${filters.delegation}, ${filters.city}` : filters.city;
+  const hasActiveFilters = Object.values(filters).some(v => v && v !== '');
 
   return (
     <>
       <Navbar />
       <div className="cars-page">
         {/* معلومات البحث */}
-        <div className="search-info">
-          {locationText && <span className="search-location">{locationText}</span>}
-          {filters.startDate && filters.endDate && (
-            <span className="search-dates">
-              {formatDate(filters.startDate)} → {formatDate(filters.endDate)}
-            </span>
-          )}
-        </div>
+        {(locationText || (filters.startDate && filters.endDate)) && (
+          <div className="search-info">
+            {locationText && <span className="search-location">📍 {locationText}</span>}
+            {filters.startDate && filters.endDate && (
+              <span className="search-dates">
+                📅 {formatDate(filters.startDate)} → {formatDate(filters.endDate)}
+              </span>
+            )}
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="clear-filters-btn">
+                ✖ Effacer les filtres
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="cars-container">
-          {/* زر الفلاتر - يفتح Modal */}
-          <button onClick={() => setShowFilterModal(true)} className="filter-toggle-btn">
-            🔍 Filtres
-          </button>
+          {/* Barre d'outils */}
+          <div className="toolbar">
+            <button onClick={() => setShowFilterModal(true)} className="filter-toggle-btn">
+              🔍 Filtres
+              {hasActiveFilters && <span className="filter-badge">●</span>}
+            </button>
+            
+            <div className="sort-section">
+              <label className="sort-label">Trier par :</label>
+              <select value={sortBy} onChange={handleSortChange} className="sort-select">
+                <option value="recent">Plus récent</option>
+                <option value="price_asc">Prix croissant</option>
+                <option value="price_desc">Prix décroissant</option>
+                <option value="rating">Mieux noté</option>
+              </select>
+            </div>
+          </div>
 
           {/* عدد النتائج */}
           <div className="results-header">
-            <p className="results-count">{pagination.total} voitures disponibles</p>
-            <p className="filter-hint">Utilisez le filtre pour trouver la voiture idéale.</p>
+            <p className="results-count">
+              {pagination.total} {pagination.total === 1 ? 'voiture disponible' : 'voitures disponibles'}
+            </p>
+            {hasActiveFilters && (
+              <p className="filter-active">
+                Filtres actifs : {Object.values(filters).filter(v => v).length} filtre(s)
+              </p>
+            )}
           </div>
 
           <div className="cars-layout">
@@ -184,35 +226,62 @@ const Cars = () => {
                 </div>
               ) : cars.length === 0 ? (
                 <div className="no-results">
-                  <p>Aucune voiture trouvée</p>
-                  <button onClick={clearFilters} className="reset-btn">Afficher toutes les voitures</button>
+                  <div className="no-results-icon">😕</div>
+                  <p className="no-results-title">Aucune voiture trouvée</p>
+                  <p className="no-results-text">
+                    Essayez de modifier vos critères de recherche<br />
+                    ou soyez le premier à ajouter une voiture dans cette région
+                  </p>
+                  <Link to="/rent-your-car" className="add-car-btn">
+                    ➕ Ajouter ma voiture
+                  </Link>
+                  <button onClick={clearFilters} className="reset-btn">
+                    Afficher toutes les voitures
+                  </button>
                 </div>
               ) : (
                 <>
                   {cars.map(car => {
                     const ownerRating = ownerRatings[car.ownerId?._id] || { rating: 0, count: 0 };
+                    
                     return (
                       <div key={car._id} className="car-card">
-                        <LazyLoad height={180} offset={100} once>
-                          <img 
-                            src={car.images?.[0] || '/default-car.jpg'} 
-                            alt={`${car.brand} ${car.model}`} 
-                            className="car-image" 
-                          />
+                        <LazyLoad height={200} offset={100} once>
+                          <div className="car-image-container">
+                            <img 
+                              src={car.images?.[0] || '/default-car.jpg'} 
+                              alt={`${car.brand} ${car.model}`} 
+                              className="car-image" 
+                            />
+                            {car.isFeatured && <span className="featured-badge">⭐ Mis en avant</span>}
+                          </div>
                         </LazyLoad>
                         <div className="car-info">
-                          <h3 className="car-title">{car.brand} {car.model}</h3>
-                          <p className="car-price">{car.pricePerDay} DT / jour</p>
+                          <div className="car-header">
+                            <h3 className="car-title">{car.brand} {car.model}</h3>
+                            <span className="car-year">{car.year}</span>
+                          </div>
+                          <p className="car-price">
+                            <span className="price">{car.pricePerDay} DT</span>
+                            <span className="per-day">/ jour</span>
+                          </p>
                           <div className="car-meta">
                             <div className="owner-rating">
                               <span className="stars">{renderStars(ownerRating.rating)}</span>
                               <span className="rating-value">{ownerRating.rating?.toFixed(1) || 'Nouveau'}</span>
                               <span className="review-count">({ownerRating.count || 0})</span>
                             </div>
-                            <span className="car-location">📍 {car.delegation || car.city || car.location}</span>
+                            <span className="car-location">
+                              📍 {car.delegation || car.city || car.location}
+                            </span>
+                          </div>
+                          <div className="car-specs-mini">
+                            <span>⚙️ {car.transmission === 'Manuelle' ? 'Manuelle' : 'Auto'}</span>
+                            <span>⛽ {car.fuelType}</span>
+                            <span>👥 {car.seats || 5} places</span>
                           </div>
                           <Link to={`/car/${car._id}`} className="car-details-btn">
-                            Voir les détails
+                            Voir les détails →
                           </Link>
                         </div>
                       </div>
