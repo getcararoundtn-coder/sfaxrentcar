@@ -56,6 +56,18 @@ const delegationsList = [
   'Bir Mcherga', 'El Fahs', 'Nadhour', 'Saouaf', 'Zaghouan', 'Zriba'
 ];
 
+// ========== قائمة الماركات (مع خيار Autre) ==========
+const carBrandsList = [
+  'Abarth', 'Alfa Romeo', 'Alpine', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'Bugatti', 'Buick',
+  'BYD', 'Cadillac', 'Chery', 'Chevrolet', 'Chrysler', 'Citroën', 'Cupra', 'Dacia', 'Daewoo',
+  'Daihatsu', 'Dodge', 'DS Automobiles', 'Ferrari', 'Fiat', 'Ford', 'Geely', 'Genesis', 'GMC',
+  'Great Wall', 'Honda', 'Hyundai', 'Infiniti', 'Isuzu', 'Jaguar', 'Jeep', 'Kia', 'Lamborghini',
+  'Lancia', 'Land Rover', 'Lexus', 'Lincoln', 'Lotus', 'Maserati', 'Mazda', 'McLaren', 'Mercedes-Benz',
+  'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 'Renault', 'Rolls-Royce',
+  'Seat', 'Skoda', 'Smart', 'SsangYong', 'Subaru', 'Suzuki', 'Tata', 'Tesla', 'Toyota',
+  'Volkswagen', 'Volvo', 'Autre'
+];
+
 // ========== قائمة خيارات السيارة الكاملة ==========
 const allFeatures = [
   'GPS', 'Bluetooth', 'Caméra de recul', 'Radar de stationnement', 
@@ -296,7 +308,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     }
   };
 
-  // ========== RENDER STEP 1 ==========
+  // ========== RENDER STEP 1 (avec Autre) ==========
   const renderStep1 = () => {
     const tunisianCities = [
       'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
@@ -305,14 +317,42 @@ const CarWizard = ({ initialData, onComplete }) => {
       'Tozeur', 'Tunis', 'Zaghouan'
     ];
 
+    // التحقق إذا كانت الماركة من النوع "Autre" (ليست في القائمة)
+    const isCustomBrand = formData.brand && !carBrandsList.includes(formData.brand) && formData.brand !== 'Autre';
+    const isAutreSelected = formData.brand === 'Autre';
+
     return (
       <div className="wizard-step">
         <h2>Confirmez le modèle de votre voiture</h2>
         
         <div className="form-group">
           <label>Marque *</label>
-          <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Ex: Renault, Peugeot, Ford..." />
-          <small className="form-hint">Entrez la marque de votre voiture</small>
+          {isCustomBrand || isAutreSelected ? (
+            <input
+              type="text"
+              name="brand"
+              value={formData.brand === 'Autre' ? '' : formData.brand}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, brand: e.target.value }));
+                saveDraft(step, { ...formData, brand: e.target.value });
+              }}
+              placeholder="Entrez la marque de votre voiture"
+              required
+            />
+          ) : (
+            <select name="brand" value={formData.brand} onChange={handleChange} required>
+              <option value="">Sélectionner une marque</option>
+              {carBrandsList.map(brand => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
+          )}
+          {!isCustomBrand && !isAutreSelected && (
+            <small className="form-hint">Vous pouvez aussi sélectionner "Autre" pour saisir une marque personnalisée</small>
+          )}
+          {(isCustomBrand || isAutreSelected) && (
+            <small className="form-hint">Entrez la marque exacte de votre véhicule</small>
+          )}
         </div>
         
         <div className="form-group">
