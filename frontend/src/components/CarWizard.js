@@ -4,68 +4,41 @@ import API from '../services/api';
 import { showSuccess, showError } from '../utils/ToastConfig';
 import './CarWizard.css';
 
-// ========== قائمة المعتمديات الكاملة ==========
-const delegationsList = [
-  // Ariana
-  'Ariana Ville', 'Ettadhamen', 'Kalâat el-Andalous', 'La Soukra', 'Mnihla', 'Raoued', 'Sidi Thabet',
-  // Béja
-  'Amdoun', 'Béja Nord', 'Béja Sud', 'Goubellat', 'Medjez el-Bab', 'Nefza', 'Téboursouk', 'Testour', 'Thibar',
-  // Ben Arous
-  'Ben Arous', 'Bou Mhel el-Bassatine', 'Ezzahra', 'Fouchana', 'Hammam Chott', 'Hammam Lif', 'Mégrine', 'Mohamedia', 'Mornag', 'Radès', 'El Mourouj',
-  // Bizerte
-  'Bizerte Nord', 'Bizerte Sud', 'El Alia', 'Ghezala', 'Joumine', 'Mateur', 'Menzel Bourguiba', 'Menzel Jemil', 'Ras Jebel', 'Sejnane', 'Tinja', 'Utique', 'Zarzouna', 'Ghar El Melh',
-  // Gabès
-  'Gabès Médina', 'Gabès Ouest', 'Gabès Sud', 'El Hamma', 'El Hamma Ouest', 'Mareth-Dkhila', 'Menzel El Habib', 'Matmata', 'Métouia', 'Nouvelle Matmata', 'Oudhref', 'Toujane', 'Ghannouch',
-  // Gafsa
-  'Belkhir', 'El Guettar', 'El Ksar', 'Gafsa Nord', 'Gafsa Sud', 'Mdhilla', 'Métlaoui', 'Moularès', 'Redeyef', 'Sened', 'Sidi Aïch', 'Sidi Boubaker', 'Zannouch',
-  // Jendouba
-  'Aïn Draham', 'Balta-Bou Aouane', 'Bou Salem', 'Fernana', 'Ghardimaou', 'Jendouba', 'Jendouba Nord', 'Oued Meliz', 'Tabarka',
-  // Kairouan
-  'Aïn Djeloula', 'Bou Hajla', 'Chebika', 'Echrarda', 'El Alâa', 'Haffouz', 'Hajeb El Ayoun', 'Kairouan Nord', 'Kairouan Sud', 'Menzel Mehiri', 'Nasrallah', 'Oueslatia', 'Sbikha',
-  // Kasserine
-  'El Ayoun', 'Ezzouhour', 'Fériana', 'Foussana', 'Haïdra', 'Hassi El Ferid', 'Jedelienne', 'Kasserine Nord', 'Kasserine Sud', 'Majel Bel Abbès', 'Sbeïtla', 'Sbiba', 'Thala',
-  // Kébili
-  'Douz Nord', 'Douz Sud', 'Faouar', 'Kébili Nord', 'Kébili Sud', 'Rjim Maatoug', 'Souk Lahad',
-  // Le Kef
-  'Dahmani', 'El Ksour', 'Jérissa', 'Kalâat Khasba', 'Kalaat Senan', 'Kef Est', 'Kef Ouest', 'Nebeur', 'Sakiet Sidi Youssef', 'Sers', 'Tajerouine', 'Touiref',
-  // Mahdia
-  'Bou Merdes', 'Chebba', 'Chorbane', 'El Bradâa', 'El Jem', 'Essouassi', 'Hebira', 'Ksour Essef', 'Mahdia', 'Melloulèche', 'Ouled Chamekh', 'Rejiche', 'Sidi Alouane',
-  // Manouba
-  'Borj El Amri', 'Djedeida', 'Douar Hicher', 'El Batan', 'La Manouba', 'Mornaguia', 'Oued Ellil', 'Tebourba',
-  // Médenine
-  'Ben Gardane', 'Beni Khedache', 'Djerba - Ajim', 'Djerba - Houmt Souk', 'Djerba - Midoun', 'Médenine Nord', 'Médenine Sud', 'Sidi Makhlouf', 'Zarzis',
-  // Monastir
-  'Bekalta', 'Bembla', 'Beni Hassen', 'Jemmal', 'Ksar Hellal', 'Ksibet el-Médiouni', 'Moknine', 'Monastir', 'Ouerdanine', 'Sahline', 'Sayada-Lamta-Bou Hajar', 'Téboulba', 'Zéramdine',
-  // Nabeul
-  'Béni Khalled', 'Béni Khiar', 'Bou Argoub', 'Dar Chaâbane El Fehri', 'El Haouaria', 'El Mida', 'Grombalia', 'Hammam Ghezèze', 'Kélibia', 'Korba', 'Menzel Bouzelfa', 'Menzel Temime', 'Nabeul', 'Soliman', 'Takelsa',
-  // Sfax
-  'Agareb', 'Bir Ali Ben Khalifa', 'El Amra', 'El Hencha', 'Graïba', 'Jebiniana', 'Kerkennah', 'Mahrès', 'Menzel Chaker', 'Sakiet Eddaïer', 'Sakiet Ezzit', 'Sfax Sud', 'Sfax Ouest', 'Sfax Ville', 'Skhira', 'Thyna',
-  // Sidi Bouzid
-  'Bir El Hafey', 'Cebbala Ouled Asker', 'Essaïda', 'Hichria', 'Jilma', 'Meknassy', 'Menzel Bouzaiane', 'Mezzouna', 'Ouled Haffouz', 'Regueb', 'Sidi Ali Ben Aoun', 'Sidi Bouzid Est', 'Sidi Bouzid Ouest', 'Souk Jedid',
-  // Siliana
-  'Bargou', 'Bou Arada', 'El Aroussa', 'El Krib', 'Gaâfour', 'Kesra', 'Makthar', 'Rouhia', 'Sidi Bou Rouis', 'Siliana Nord', 'Siliana Sud',
-  // Sousse
-  'Akouda', 'Bouficha', 'Enfida', 'Hammam Sousse', 'Hergla', 'Kalâa Kebira', 'Kalâa Seghira', 'Kondar', "M'saken", 'Sidi Bou Ali', 'Sidi El Hani', 'Sousse Jawhara', 'Sousse Médina', 'Sousse Riadh', 'Sousse Sidi Abdelhamid', 'Zaouiet Ksibet Thrayet',
-  // Tataouine
-  'Beni Mhira', 'Bir Lahmar', 'Dehiba', 'Ghomrassen', 'Remada', 'Smâr', 'Tataouine Nord', 'Tataouine Sud',
-  // Tozeur
-  'Degache', 'El Hamma du Jérid', 'Hazoua', 'Nefta', 'Tameghza', 'Tozeur',
-  // Tunis
-  'Bab El Bhar', 'Bab Souika', 'Carthage', 'Cité El Khadra', 'Djebel Jelloud', 'El Kabaria', 'El Menzah', 'El Omrane', 'El Omrane supérieur', 'El Ouardia', 'Ettahrir', 'Ezzouhour', 'Hraïria', 'La Goulette', 'La Marsa', 'Le Bardo', 'Le Kram', 'Médina', 'Séjoumi', 'Sidi El Béchir', 'Sidi Hassine',
-  // Zaghouan
-  'Bir Mcherga', 'El Fahs', 'Nadhour', 'Saouaf', 'Zaghouan', 'Zriba'
-];
+// ========== المعتمديات حسب الولاية ==========
+const delegationsByCity = {
+  'Tunis': ['Tunis Médina', 'Bab El Bhar', 'Bab Souika', 'Carthage', 'La Goulette', 'La Marsa', 'Le Bardo', 'Le Kram', 'Sidi Bou Said', 'El Omrane', 'Ettahrir', 'Ezzouhour', 'Séjoumi', 'Sidi Hassine', 'Hraïria', 'El Kabaria', 'El Menzah', 'El Ouardia', 'Djebel Jelloud', 'Cité El Khadra', 'Sidi El Béchir'],
+  'Sfax': ['Sfax Médina', 'Sfax Ouest', 'Sfax Sud', 'Sakiet Ezzit', 'Sakiet Eddaïer', 'Bir Ali Ben Khalifa', 'El Amra', 'El Hencha', 'Ghraiba', 'Jebiniana', 'Mahrès', 'Menzel Chaker', 'Thyna', 'Agareb', 'Skhira', 'Kerkennah'],
+  'Sousse': ['Sousse Médina', 'Sousse Jawhara', 'Sousse Riadh', 'Sousse Sidi Abdelhamid', 'Akouda', 'Bouficha', 'Enfidha', 'Hammam Sousse', 'Hergla', 'Kalâa Kebira', 'Kalâa Seghira', "M'saken", 'Sidi Bou Ali', 'Sidi El Hani', 'Kondar', 'Zaouiet Ksibet Thrayet'],
+  'Monastir': ['Monastir', 'Bekalta', 'Bembla', 'Beni Hassen', 'Jemmal', 'Ksar Hellal', 'Ksibet el-Médiouni', 'Moknine', 'Ouerdanine', 'Sahline', 'Sayada-Lamta-Bou Hajar', 'Téboulba', 'Zéramdine'],
+  'Nabeul': ['Nabeul', 'Béni Khalled', 'Béni Khiar', 'Bou Argoub', 'Dar Chaâbane El Fehri', 'El Haouaria', 'El Mida', 'Grombalia', 'Hammam Ghezèze', 'Hammamet', 'Kélibia', 'Korba', 'Menzel Bouzelfa', 'Menzel Temime', 'Soliman', 'Takelsa'],
+  'Bizerte': ['Bizerte Nord', 'Bizerte Sud', 'El Alia', 'Ghezala', 'Joumine', 'Mateur', 'Menzel Bourguiba', 'Menzel Jemil', 'Ras Jebel', 'Sejnane', 'Tinja', 'Utique', 'Zarzouna', 'Ghar El Melh'],
+  'Ariana': ['Ariana Ville', 'Ettadhamen', 'Kalâat el-Andalous', 'La Soukra', 'Mnihla', 'Raoued', 'Sidi Thabet'],
+  'Ben Arous': ['Ben Arous', 'Bou Mhel el-Bassatine', 'Ezzahra', 'Fouchana', 'Hammam Chott', 'Hammam Lif', 'Mégrine', 'Mohamedia', 'Mornag', 'Radès', 'El Mourouj'],
+  'Manouba': ['Manouba', 'Borj El Amri', 'Djedeida', 'Douar Hicher', 'El Batan', 'Mornaguia', 'Oued Ellil', 'Tebourba'],
+  'Gabès': ['Gabès Médina', 'Gabès Ouest', 'Gabès Sud', 'El Hamma', 'El Hamma Ouest', 'Mareth-Dkhila', 'Menzel El Habib', 'Matmata', 'Métouia', 'Nouvelle Matmata', 'Oudhref', 'Toujane', 'Ghannouch'],
+  'Gafsa': ['Gafsa Nord', 'Gafsa Sud', 'Belkhir', 'El Guettar', 'El Ksar', 'Mdhilla', 'Métlaoui', 'Moularès', 'Redeyef', 'Sened', 'Sidi Aïch', 'Sidi Boubaker', 'Zannouch'],
+  'Kairouan': ['Kairouan Nord', 'Kairouan Sud', 'Aïn Djeloula', 'Bou Hajla', 'Chebika', 'Echrarda', 'El Alâa', 'Haffouz', 'Hajeb El Ayoun', 'Menzel Mehiri', 'Nasrallah', 'Oueslatia', 'Sbikha'],
+  'Kasserine': ['Kasserine Nord', 'Kasserine Sud', 'El Ayoun', 'Fériana', 'Foussana', 'Haïdra', 'Hassi El Ferid', 'Jedelienne', 'Majel Bel Abbès', 'Sbeïtla', 'Sbiba', 'Thala'],
+  'Sidi Bouzid': ['Sidi Bouzid Est', 'Sidi Bouzid Ouest', 'Bir El Hafey', 'Cebbala Ouled Asker', 'Essaïda', 'Hichria', 'Jilma', 'Meknassy', 'Menzel Bouzaiane', 'Mezzouna', 'Ouled Haffouz', 'Regueb', 'Sidi Ali Ben Aoun', 'Souk Jedid'],
+  'Mahdia': ['Mahdia', 'Bou Merdes', 'Chebba', 'Chorbane', 'El Bradâa', 'El Jem', 'Essouassi', 'Hebira', 'Ksour Essef', 'Melloulèche', 'Ouled Chamekh', 'Rejiche', 'Sidi Alouane'],
+  'Médenine': ['Médenine Nord', 'Médenine Sud', 'Ben Gardane', 'Beni Khedache', 'Djerba - Ajim', 'Djerba - Houmt Souk', 'Djerba - Midoun', 'Sidi Makhlouf', 'Zarzis'],
+  'Kébili': ['Kébili Nord', 'Kébili Sud', 'Douz Nord', 'Douz Sud', 'Faouar', 'Rjim Maatoug', 'Souk Lahad'],
+  'Tozeur': ['Tozeur', 'Degache', 'El Hamma du Jérid', 'Hazoua', 'Nefta', 'Tameghza'],
+  'Béja': ['Béja Nord', 'Béja Sud', 'Amdoun', 'Goubellat', 'Majaz El Bab', 'Nefza', 'Téboursouk', 'Testour', 'Thibar'],
+  'Jendouba': ['Jendouba', 'Jendouba Nord', 'Aïn Draham', 'Balta-Bou Aouane', 'Bou Salem', 'Fernana', 'Ghardimaou', 'Oued Meliz', 'Tabarka'],
+  'Le Kef': ['Le Kef Est', 'Le Kef Ouest', 'Dahmani', 'El Ksour', 'Jérissa', 'Kalâat Khasba', 'Kalaat Senan', 'Nebeur', 'Sakiet Sidi Youssef', 'Sers', 'Tajerouine', 'Touiref'],
+  'Siliana': ['Siliana Nord', 'Siliana Sud', 'Bargou', 'Bou Arada', 'El Aroussa', 'El Krib', 'Gaâfour', 'Kesra', 'Makthar', 'Rouhia', 'Sidi Bou Rouis'],
+  'Zaghouan': ['Zaghouan', 'Bir Mcherga', 'El Fahs', 'Nadhour', 'Saouaf', 'Zriba']
+};
 
-// ========== قائمة الماركات (مع خيار Autre) ==========
+// ========== قائمة الماركات ==========
 const carBrandsList = [
-  'Abarth', 'Alfa Romeo', 'Alpine', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'Bugatti', 'Buick',
-  'BYD', 'Cadillac', 'Chery', 'Chevrolet', 'Chrysler', 'Citroën', 'Cupra', 'Dacia', 'Daewoo',
-  'Daihatsu', 'Dodge', 'DS Automobiles', 'Ferrari', 'Fiat', 'Ford', 'Geely', 'Genesis', 'GMC',
-  'Great Wall', 'Honda', 'Hyundai', 'Infiniti', 'Isuzu', 'Jaguar', 'Jeep', 'Kia', 'Lamborghini',
-  'Lancia', 'Land Rover', 'Lexus', 'Lincoln', 'Lotus', 'Maserati', 'Mazda', 'McLaren', 'Mercedes-Benz',
-  'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 'Renault', 'Rolls-Royce',
-  'Seat', 'Skoda', 'Smart', 'SsangYong', 'Subaru', 'Suzuki', 'Tata', 'Tesla', 'Toyota',
-  'Volkswagen', 'Volvo', 'Autre'
+  'Peugeot', 'Renault', 'Citroën', 'Volkswagen', 'Toyota', 'Hyundai', 'Kia', 
+  'Fiat', 'Dacia', 'Mercedes-Benz', 'BMW', 'Audi', 'Nissan', 'Seat', 'Skoda', 
+  'Suzuki', 'Mitsubishi', 'MG', 'Chery', 'Ford', 'Opel', 'Honda', 'Mazda', 
+  'Volvo', 'Jeep', 'Land Rover', 'Porsche', 'Tesla', 'BYD', 'Geely', 'Lynk & Co',
+  'Alfa Romeo', 'Jaguar', 'Lexus', 'Mini', 'Smart', 'SsangYong', 'Subaru', 'Tata',
+  'Autre'
 ];
 
 // ========== قائمة خيارات السيارة الكاملة ==========
@@ -86,6 +59,15 @@ const CarWizard = ({ initialData, onComplete }) => {
   const [insuranceFrontPreview, setInsuranceFrontPreview] = useState(null);
   const [insuranceBackPreview, setInsuranceBackPreview] = useState(null);
   const saveTimeoutRef = useRef(null);
+  
+  // State for step 14 (price and caution)
+  const [isCustomPrice, setIsCustomPrice] = useState(false);
+  const [isCustomCaution, setIsCustomCaution] = useState(false);
+  const [customPrice, setCustomPrice] = useState('');
+  const [customCaution, setCustomCaution] = useState('');
+  
+  // State for delegations
+  const [availableDelegations, setAvailableDelegations] = useState([]);
   
   const [formData, setFormData] = useState({
     brand: initialData?.brand || '',
@@ -136,6 +118,15 @@ const CarWizard = ({ initialData, onComplete }) => {
     };
     fetchDraft();
   }, []);
+
+  // تحديث المعتمديات عند تغيير الولاية
+  useEffect(() => {
+    if (formData.city && delegationsByCity[formData.city]) {
+      setAvailableDelegations(delegationsByCity[formData.city]);
+    } else {
+      setAvailableDelegations([]);
+    }
+  }, [formData.city]);
 
   // Sauvegarde automatique
   const saveDraft = async (currentStep, newData) => {
@@ -194,11 +185,6 @@ const CarWizard = ({ initialData, onComplete }) => {
         showError('Veuillez remplir tous les champs obligatoires');
         return;
       }
-    }
-    
-    if (step === 14 && formData.pricePerDay < 20) {
-      const confirm = window.confirm('Le prix semble très bas (moins de 20 TND/jour). Voulez-vous continuer ?');
-      if (!confirm) return;
     }
     
     setLoading(true);
@@ -308,16 +294,14 @@ const CarWizard = ({ initialData, onComplete }) => {
     }
   };
 
-  // ========== RENDER STEP 1 (avec Autre) ==========
+  // ========== RENDER STEP 1 ==========
   const renderStep1 = () => {
     const tunisianCities = [
-      'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
-      'Kairouan', 'Kasserine', 'Kébili', 'Le Kef', 'Mahdia', 'Manouba', 'Médenine',
-      'Monastir', 'Nabeul', 'Sfax', 'Sidi Bouzid', 'Siliana', 'Sousse', 'Tataouine',
-      'Tozeur', 'Tunis', 'Zaghouan'
+      'Tunis', 'Sfax', 'Sousse', 'Nabeul', 'Bizerte', 'Ariana', 'Ben Arous', 'Manouba',
+      'Gabès', 'Gafsa', 'Kairouan', 'Kasserine', 'Sidi Bouzid', 'Mahdia', 'Médenine', 
+      'Kébili', 'Tozeur', 'Béja', 'Jendouba', 'Le Kef', 'Siliana', 'Zaghouan', 'Monastir'
     ];
 
-    // التحقق إذا كانت الماركة من النوع "Autre" (ليست في القائمة)
     const isCustomBrand = formData.brand && !carBrandsList.includes(formData.brand) && formData.brand !== 'Autre';
     const isAutreSelected = formData.brand === 'Autre';
 
@@ -347,12 +331,9 @@ const CarWizard = ({ initialData, onComplete }) => {
               ))}
             </select>
           )}
-          {!isCustomBrand && !isAutreSelected && (
-            <small className="form-hint">Vous pouvez aussi sélectionner "Autre" pour saisir une marque personnalisée</small>
-          )}
-          {(isCustomBrand || isAutreSelected) && (
-            <small className="form-hint">Entrez la marque exacte de votre véhicule</small>
-          )}
+          <small className="form-hint">
+            {!isCustomBrand && !isAutreSelected ? 'Vous pouvez aussi sélectionner "Autre" pour saisir une marque personnalisée' : 'Entrez la marque exacte de votre véhicule'}
+          </small>
         </div>
         
         <div className="form-group">
@@ -399,12 +380,15 @@ const CarWizard = ({ initialData, onComplete }) => {
         
         <div className="form-group">
           <label>Délégation *</label>
-          <select name="delegation" value={formData.delegation} onChange={handleChange} required>
+          <select name="delegation" value={formData.delegation} onChange={handleChange} required disabled={!formData.city}>
             <option value="">Sélectionner une délégation</option>
-            {delegationsList.map(delegation => (
+            {availableDelegations.map(delegation => (
               <option key={delegation} value={delegation}>{delegation}</option>
             ))}
           </select>
+          {!formData.city && (
+            <small className="form-hint">Veuillez d'abord sélectionner un gouvernorat</small>
+          )}
         </div>
         
         <p className="step-note">dans quelques minutes, votre annonce sera mise en ligne</p>
@@ -669,10 +653,9 @@ const CarWizard = ({ initialData, onComplete }) => {
   // ========== RENDER STEP 12 ==========
   const renderStep12 = () => {
     const tunisianCities = [
-      'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
-      'Kairouan', 'Kasserine', 'Kébili', 'Le Kef', 'Mahdia', 'Manouba', 'Médenine',
-      'Monastir', 'Nabeul', 'Sfax', 'Sidi Bouzid', 'Siliana', 'Sousse', 'Tataouine',
-      'Tozeur', 'Tunis', 'Zaghouan'
+      'Tunis', 'Sfax', 'Sousse', 'Nabeul', 'Bizerte', 'Ariana', 'Ben Arous', 'Manouba',
+      'Gabès', 'Gafsa', 'Kairouan', 'Kasserine', 'Sidi Bouzid', 'Mahdia', 'Médenine', 
+      'Kébili', 'Tozeur', 'Béja', 'Jendouba', 'Le Kef', 'Siliana', 'Zaghouan', 'Monastir'
     ];
 
     return (
@@ -694,12 +677,15 @@ const CarWizard = ({ initialData, onComplete }) => {
         </div>
         <div className="form-group">
           <label>Délégation *</label>
-          <select name="delegation" value={formData.delegation} onChange={handleChange} required>
+          <select name="delegation" value={formData.delegation} onChange={handleChange} required disabled={!formData.city}>
             <option value="">Sélectionner une délégation</option>
-            {delegationsList.map(delegation => (
+            {availableDelegations.map(delegation => (
               <option key={delegation} value={delegation}>{delegation}</option>
             ))}
           </select>
+          {!formData.city && (
+            <small className="form-hint">Veuillez d'abord sélectionner un gouvernorat</small>
+          )}
         </div>
         <div className="step-buttons">
           <button onClick={handlePrev} className="step-button secondary">Précédent</button>
@@ -763,25 +749,58 @@ const CarWizard = ({ initialData, onComplete }) => {
     );
   };
 
-  // ========== RENDER STEP 14 (Prix simplifié) ==========
+  // ========== RENDER STEP 14 (Prix simplifié - avec Autre) ==========
   const renderStep14 = () => {
+    const priceOptions = ['50', '60', '70', '80', '90', '100', '120', '150', '200', 'Autre'];
+    const cautionOptions = ['200', '300', '500', '600', '800', '1000', '1500', 'Autre'];
+
     return (
       <div className="wizard-step">
         <h2>💰 Définissez vos tarifs</h2>
         
         <div className="form-group">
           <label>💰 Prix par jour (TND) *</label>
-          <input 
-            type="number" 
-            name="pricePerDay" 
-            value={formData.pricePerDay || 0} 
-            onChange={handleChange} 
-            placeholder="Ex: 80" 
-            min="0"
-            step="1"
-            required
-          />
-          <small className="form-hint">Vous pouvez modifier ce prix à tout moment</small>
+          {isCustomPrice ? (
+            <input
+              type="number"
+              value={customPrice}
+              onChange={(e) => {
+                setCustomPrice(e.target.value);
+                setFormData(prev => ({ ...prev, pricePerDay: parseFloat(e.target.value) || 0 }));
+                saveDraft(step, { ...formData, pricePerDay: parseFloat(e.target.value) || 0 });
+              }}
+              placeholder="Entrez le prix personnalisé"
+              min="0"
+              step="1"
+              required
+              className="price-input-large"
+            />
+          ) : (
+            <select
+              name="pricePerDay"
+              value={formData.pricePerDay || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === 'Autre') {
+                  setIsCustomPrice(true);
+                  setFormData(prev => ({ ...prev, pricePerDay: 0 }));
+                } else {
+                  setFormData(prev => ({ ...prev, pricePerDay: parseFloat(value) || 0 }));
+                  saveDraft(step, { ...formData, pricePerDay: parseFloat(value) || 0 });
+                }
+              }}
+              required
+              className="price-select"
+            >
+              <option value="">Sélectionner un prix</option>
+              {priceOptions.map(price => (
+                <option key={price} value={price}>{price === 'Autre' ? 'Autre (saisir manuellement)' : `${price} TND / jour`}</option>
+              ))}
+            </select>
+          )}
+          <small className="form-hint">
+            {!isCustomPrice ? 'Vous pouvez aussi sélectionner "Autre" pour saisir un prix personnalisé' : 'Entrez le prix que vous souhaitez facturer par jour'}
+          </small>
         </div>
         
         <div className="caution-section">
@@ -805,16 +824,45 @@ const CarWizard = ({ initialData, onComplete }) => {
           
           <div className="form-group">
             <label>Montant de la caution (TND)</label>
-            <input 
-              type="number" 
-              name="caution" 
-              value={formData.caution || 500} 
-              onChange={handleChange} 
-              placeholder="Ex: 500" 
-              min="0"
-              step="50"
-            />
-            <small className="form-hint">Recommandé: 500 à 1000 TND selon la voiture</small>
+            {isCustomCaution ? (
+              <input
+                type="number"
+                value={customCaution}
+                onChange={(e) => {
+                  setCustomCaution(e.target.value);
+                  setFormData(prev => ({ ...prev, caution: parseFloat(e.target.value) || 0 }));
+                  saveDraft(step, { ...formData, caution: parseFloat(e.target.value) || 0 });
+                }}
+                placeholder="Entrez le montant personnalisé"
+                min="0"
+                step="50"
+                className="caution-input-large"
+              />
+            ) : (
+              <select
+                name="caution"
+                value={formData.caution || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'Autre') {
+                    setIsCustomCaution(true);
+                    setFormData(prev => ({ ...prev, caution: 0 }));
+                  } else {
+                    setFormData(prev => ({ ...prev, caution: parseFloat(value) || 0 }));
+                    saveDraft(step, { ...formData, caution: parseFloat(value) || 0 });
+                  }
+                }}
+                className="caution-select"
+              >
+                <option value="">Sélectionner un montant</option>
+                {cautionOptions.map(caution => (
+                  <option key={caution} value={caution}>{caution === 'Autre' ? 'Autre (saisir manuellement)' : `${caution} TND`}</option>
+                ))}
+              </select>
+            )}
+            <small className="form-hint">
+              {!isCustomCaution ? 'Recommandé: 500 à 1000 TND selon la voiture' : 'Entrez le montant de la caution'}
+            </small>
           </div>
         </div>
         
@@ -823,7 +871,7 @@ const CarWizard = ({ initialData, onComplete }) => {
           <p>💰 <strong>Prix par jour:</strong> {formData.pricePerDay || 0} TND/jour</p>
           <p>💸 <strong>Commission plateforme (5%):</strong> -{((formData.pricePerDay || 0) * 0.05).toFixed(2)} TND/jour</p>
           <p>✨ <strong>Vos gains nets par jour:</strong> {((formData.pricePerDay || 0) * 0.95).toFixed(2)} TND</p>
-          <p>🔒 <strong>Caution:</strong> {formData.caution || 500} TND (versée en espèces)</p>
+          <p>🔒 <strong>Caution:</strong> {formData.caution || 0} TND (versée en espèces)</p>
         </div>
         
         <div className="motivation-message">
