@@ -7,9 +7,9 @@ import CarWizard from '../components/CarWizard';
 import API from '../services/api';
 import './RentYourCar.css';
 
-// ========== قائمة الماركات العالمية الشاملة ==========
+// ========== قائمة الماركات العالمية الشاملة (مع خيار Autre) ==========
 const carBrands = [
-  'AC Cars', 'Acura', 'Alfa Romeo', 'Alpine', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'Bugatti', 'Buick', 
+  'Abarth', 'Acura', 'Alfa Romeo', 'Alpine', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'Bugatti', 'Buick',
   'BYD', 'Cadillac', 'Chery', 'Chevrolet', 'Chrysler', 'Citroën', 'Cupra', 'Dacia', 'Daewoo', 'Daihatsu',
   'Datsun', 'Dodge', 'DS Automobiles', 'Ferrari', 'Fiat', 'Fisker', 'Ford', 'Geely', 'Genesis', 'GMC',
   'Great Wall', 'Haval', 'Honda', 'Hongqi', 'Hyundai', 'Infiniti', 'Isuzu', 'Iveco', 'JAC', 'Jaguar',
@@ -18,7 +18,7 @@ const carBrands = [
   'MG', 'Mini', 'Mitsubishi', 'Mobilize', 'Morgan', 'Nio', 'Nissan', 'NSU', 'Oldsmobile', 'Opel', 'Pagani',
   'Peugeot', 'Polestar', 'Pontiac', 'Porsche', 'Proton', 'Ram', 'Renault', 'Rimac', 'Rolls-Royce', 'Rover',
   'Saab', 'Saturn', 'Scania', 'Seat', 'Skoda', 'Smart', 'SsangYong', 'Subaru', 'Suzuki', 'Tata', 'Tesla',
-  'Toyota', 'Triumph', 'Vauxhall', 'Volkswagen', 'Volvo', 'Wuling', 'Xpeng', 'Zeekr', 'Zotye'
+  'Toyota', 'Triumph', 'Vauxhall', 'Volkswagen', 'Volvo', 'Wuling', 'Xpeng', 'Zeekr', 'Zotye', 'Autre'
 ];
 
 // ========== الموديلات حسب الماركة (شاملة) ==========
@@ -85,48 +85,82 @@ const carModels = {
   'Lincoln': ['Navigator', 'Aviator', 'Nautilus', 'Corsair', 'Zephyr'],
   'Buick': ['Encore', 'Encore GX', 'Envision', 'Enclave', 'LaCrosse'],
   'Subaru': ['Impreza', 'WRX', 'Forester', 'Outback', 'Crosstrek', 'Ascent', 'Legacy', 'BRZ', 'Solterra'],
-  'Tata': ['Nexon', 'Harrier', 'Safari', 'Altroz', 'Tiago', 'Tigor', 'Punch', 'Nano']
+  'Tata': ['Nexon', 'Harrier', 'Safari', 'Altroz', 'Tiago', 'Tigor', 'Punch', 'Nano'],
+  'Autre': [] // Pour les marques personnalisées
 };
 
-// ========== الولايات التونسية ==========
+// ========== قائمة المعتمديات الكاملة ==========
+const delegationsList = [
+  // Ariana
+  'Ariana Ville', 'Ettadhamen', 'Kalâat el-Andalous', 'La Soukra', 'Mnihla', 'Raoued', 'Sidi Thabet',
+  // Béja
+  'Amdoun', 'Béja Nord', 'Béja Sud', 'Goubellat', 'Medjez el-Bab', 'Nefza', 'Téboursouk', 'Testour', 'Thibar',
+  // Ben Arous
+  'Ben Arous', 'Bou Mhel el-Bassatine', 'Ezzahra', 'Fouchana', 'Hammam Chott', 'Hammam Lif', 'Mégrine', 'Mohamedia', 'Mornag', 'Radès', 'El Mourouj',
+  // Bizerte
+  'Bizerte Nord', 'Bizerte Sud', 'El Alia', 'Ghezala', 'Joumine', 'Mateur', 'Menzel Bourguiba', 'Menzel Jemil', 'Ras Jebel', 'Sejnane', 'Tinja', 'Utique', 'Zarzouna', 'Ghar El Melh',
+  // Gabès
+  'Gabès Médina', 'Gabès Ouest', 'Gabès Sud', 'El Hamma', 'El Hamma Ouest', 'Mareth-Dkhila', 'Menzel El Habib', 'Matmata', 'Métouia', 'Nouvelle Matmata', 'Oudhref', 'Toujane', 'Ghannouch',
+  // Gafsa
+  'Belkhir', 'El Guettar', 'El Ksar', 'Gafsa Nord', 'Gafsa Sud', 'Mdhilla', 'Métlaoui', 'Moularès', 'Redeyef', 'Sened', 'Sidi Aïch', 'Sidi Boubaker', 'Zannouch',
+  // Jendouba
+  'Aïn Draham', 'Balta-Bou Aouane', 'Bou Salem', 'Fernana', 'Ghardimaou', 'Jendouba', 'Jendouba Nord', 'Oued Meliz', 'Tabarka',
+  // Kairouan
+  'Aïn Djeloula', 'Bou Hajla', 'Chebika', 'Echrarda', 'El Alâa', 'Haffouz', 'Hajeb El Ayoun', 'Kairouan Nord', 'Kairouan Sud', 'Menzel Mehiri', 'Nasrallah', 'Oueslatia', 'Sbikha',
+  // Kasserine
+  'El Ayoun', 'Ezzouhour', 'Fériana', 'Foussana', 'Haïdra', 'Hassi El Ferid', 'Jedelienne', 'Kasserine Nord', 'Kasserine Sud', 'Majel Bel Abbès', 'Sbeïtla', 'Sbiba', 'Thala',
+  // Kébili
+  'Douz Nord', 'Douz Sud', 'Faouar', 'Kébili Nord', 'Kébili Sud', 'Rjim Maatoug', 'Souk Lahad',
+  // Le Kef
+  'Dahmani', 'El Ksour', 'Jérissa', 'Kalâat Khasba', 'Kalaat Senan', 'Kef Est', 'Kef Ouest', 'Nebeur', 'Sakiet Sidi Youssef', 'Sers', 'Tajerouine', 'Touiref',
+  // Mahdia
+  'Bou Merdes', 'Chebba', 'Chorbane', 'El Bradâa', 'El Jem', 'Essouassi', 'Hebira', 'Ksour Essef', 'Mahdia', 'Melloulèche', 'Ouled Chamekh', 'Rejiche', 'Sidi Alouane',
+  // Manouba
+  'Borj El Amri', 'Djedeida', 'Douar Hicher', 'El Batan', 'La Manouba', 'Mornaguia', 'Oued Ellil', 'Tebourba',
+  // Médenine
+  'Ben Gardane', 'Beni Khedache', 'Djerba - Ajim', 'Djerba - Houmt Souk', 'Djerba - Midoun', 'Médenine Nord', 'Médenine Sud', 'Sidi Makhlouf', 'Zarzis',
+  // Monastir
+  'Bekalta', 'Bembla', 'Beni Hassen', 'Jemmal', 'Ksar Hellal', 'Ksibet el-Médiouni', 'Moknine', 'Monastir', 'Ouerdanine', 'Sahline', 'Sayada-Lamta-Bou Hajar', 'Téboulba', 'Zéramdine',
+  // Nabeul
+  'Béni Khalled', 'Béni Khiar', 'Bou Argoub', 'Dar Chaâbane El Fehri', 'El Haouaria', 'El Mida', 'Grombalia', 'Hammam Ghezèze', 'Kélibia', 'Korba', 'Menzel Bouzelfa', 'Menzel Temime', 'Nabeul', 'Soliman', 'Takelsa',
+  // Sfax
+  'Agareb', 'Bir Ali Ben Khalifa', 'El Amra', 'El Hencha', 'Graïba', 'Jebiniana', 'Kerkennah', 'Mahrès', 'Menzel Chaker', 'Sakiet Eddaïer', 'Sakiet Ezzit', 'Sfax Sud', 'Sfax Ouest', 'Sfax Ville', 'Skhira', 'Thyna',
+  // Sidi Bouzid
+  'Bir El Hafey', 'Cebbala Ouled Asker', 'Essaïda', 'Hichria', 'Jilma', 'Meknassy', 'Menzel Bouzaiane', 'Mezzouna', 'Ouled Haffouz', 'Regueb', 'Sidi Ali Ben Aoun', 'Sidi Bouzid Est', 'Sidi Bouzid Ouest', 'Souk Jedid',
+  // Siliana
+  'Bargou', 'Bou Arada', 'El Aroussa', 'El Krib', 'Gaâfour', 'Kesra', 'Makthar', 'Rouhia', 'Sidi Bou Rouis', 'Siliana Nord', 'Siliana Sud',
+  // Sousse
+  'Akouda', 'Bouficha', 'Enfida', 'Hammam Sousse', 'Hergla', 'Kalâa Kebira', 'Kalâa Seghira', 'Kondar', "M'saken", 'Sidi Bou Ali', 'Sidi El Hani', 'Sousse Jawhara', 'Sousse Médina', 'Sousse Riadh', 'Sousse Sidi Abdelhamid', 'Zaouiet Ksibet Thrayet',
+  // Tataouine
+  'Beni Mhira', 'Bir Lahmar', 'Dehiba', 'Ghomrassen', 'Remada', 'Smâr', 'Tataouine Nord', 'Tataouine Sud',
+  // Tozeur
+  'Degache', 'El Hamma du Jérid', 'Hazoua', 'Nefta', 'Tameghza', 'Tozeur',
+  // Tunis
+  'Bab El Bhar', 'Bab Souika', 'Carthage', 'Cité El Khadra', 'Djebel Jelloud', 'El Kabaria', 'El Menzah', 'El Omrane', 'El Omrane supérieur', 'El Ouardia', 'Ettahrir', 'Ezzouhour', 'Hraïria', 'La Goulette', 'La Marsa', 'Le Bardo', 'Le Kram', 'Médina', 'Séjoumi', 'Sidi El Béchir', 'Sidi Hassine',
+  // Zaghouan
+  'Bir Mcherga', 'El Fahs', 'Nadhour', 'Saouaf', 'Zaghouan', 'Zriba'
+];
+
+// ========== الولايات التونسية (مع خيار Autre) ==========
 const tunisianCities = [
   'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
   'Kairouan', 'Kasserine', 'Kébili', 'Le Kef', 'Mahdia', 'Manouba', 'Médenine',
   'Monastir', 'Nabeul', 'Sfax', 'Sidi Bouzid', 'Siliana', 'Sousse', 'Tataouine',
-  'Tozeur', 'Tunis', 'Zaghouan'
+  'Tozeur', 'Tunis', 'Zaghouan', 'Autre'
 ];
-
-// ========== المعتمديات حسب الولاية ==========
-const delegationsByCity = {
-  'Tunis': ['Tunis Médina', 'Bab El Bhar', 'Bab Souika', 'Carthage', 'La Goulette', 'La Marsa', 'Le Bardo', 'Le Kram', 'Sidi Bou Said', 'El Omrane', 'Ettahrir', 'Ezzouhour'],
-  'Sfax': ['Sfax Médina', 'Sfax Ouest', 'Sfax Sud', 'Sakiet Ezzit', 'Sakiet Eddaïer', 'Bir Ali Ben Khalifa', 'El Amra', 'El Hencha', 'Ghraiba', 'Jebiniana', 'Mahrès', 'Menzel Chaker', 'Thyna', 'Agareb'],
-  'Sousse': ['Sousse Médina', 'Sousse Jawhara', 'Sousse Riadh', 'Sousse Sidi Abdelhamid', 'Akouda', 'Bouficha', 'Enfidha', 'Hammam Sousse', 'Hergla', 'Kalâa Kebira', 'Kalâa Seghira', "M'saken"],
-  'Monastir': ['Monastir', 'Bekalta', 'Bembla', 'Beni Hassen', 'Jemmal', 'Ksar Hellal', 'Ksibet El Mediouni', 'Moknine', 'Ouerdanine', 'Sahline', 'Sayada', 'Téboulba', 'Zéramdine'],
-  'Nabeul': ['Nabeul', 'Béni Khalled', 'Béni Khiar', 'Bou Argoub', 'Dar Chaabane', 'El Haouaria', 'Grombalia', 'Hammam Ghezèze', 'Hammamet', 'Kélibia', 'Korba', 'Menzel Temime', 'Soliman', 'Takelsa'],
-  'Bizerte': ['Bizerte Nord', 'Bizerte Sud', 'El Alia', 'Ghezala', 'Joumine', 'Mateur', 'Menzel Bourguiba', 'Menzel Jemil', 'Ras Jebel', 'Sejnane', 'Tinja', 'Utique', 'Zarzouna'],
-  'Ariana': ['Ariana Médina', 'Ettadhamen', 'Kalâat El Andalous', 'La Soukra', 'Mnihla', 'Raoued', 'Sidi Thabet'],
-  'Ben Arous': ['Ben Arous', 'Bou Mhel El Bassatine', 'El Mourouj', 'Ezzahra', 'Fouchana', 'Hammam Chott', 'Hammam Lif', 'Mohamedia', 'Mégrine', 'Mornag', 'Rades'],
-  'Manouba': ['Manouba', 'Borj El Amri', 'Djedeida', 'Douar Hicher', 'El Battan', 'Mornaguia', 'Oued Ellil', 'Tebourba'],
-  'Gabès': ['Gabès Médina', 'Gabès Ouest', 'Gabès Sud', 'El Hamma', 'Mareth', 'Menzel Habib', 'Matmata', 'Metouia', 'Nouvelle Matmata', 'Ghannouch'],
-  'Gafsa': ['Gafsa Nord', 'Gafsa Sud', 'Belkhir', 'El Guettar', 'El Ksar', 'Mdhilla', 'Métlaoui', 'Redeyef', 'Sened', 'Sidi Aïch'],
-  'Kairouan': ['Kairouan Nord', 'Kairouan Sud', 'Bou Hajla', 'Chebika', 'El Ala', 'Haffouz', 'Hajeb El Ayoun', 'Menzel Mehiri', 'Nasrallah', 'Oueslatia', 'Sbikha'],
-  'Kasserine': ['Kasserine Nord', 'Kasserine Sud', 'El Ayoun', 'Fériana', 'Foussana', 'Haïdra', 'Hassi El Ferid', 'Majel Bel Abbès', 'Sbeïtla', 'Sbiba', 'Thala', 'Zitouna'],
-  'Sidi Bouzid': ['Sidi Bouzid Est', 'Sidi Bouzid Ouest', 'Bekalta', 'Ben Aoun', 'Jilma', 'Meknassy', 'Menzel Bouzaiane', 'Ouled Haffouz', 'Regueb', 'Souassi', 'Essaïda'],
-  'Mahdia': ['Mahdia', 'Bou Merdes', 'Chebba', 'Chorbane', 'El Jem', 'Hebira', 'Ksour Essaf', 'Melloulèche', 'Ouled Chamekh', 'Souassi', 'Sidi Alouane', 'Zeramdine'],
-  'Médenine': ['Médenine Nord', 'Médenine Sud', 'Ben Gardane', 'Beni Khedache', 'Djerba Ajim', 'Djerba Houmt Souk', 'Djerba Midoun', 'Sidi Makhlouf', 'Zarzis'],
-  'Kébili': ['Kébili Nord', 'Kébili Sud', 'Douz Nord', 'Douz Sud', 'Faouar', 'Rjim Maatoug', 'Souk Lahad', 'Bechri'],
-  'Tozeur': ['Tozeur', 'Degache', 'Hazoua', 'Nefta', 'Tameghza'],
-  'Béja': ['Béja Nord', 'Béja Sud', 'Amdoun', 'Goubellat', 'Majaz El Bab', 'Nefza', 'Téboursouk', 'Testour', 'Thibar'],
-  'Jendouba': ['Jendouba', 'Aïn Draham', 'Balta', 'Bou Salem', 'Fernana', 'Ghardimaou', 'Oued Meliz', 'Tabarka'],
-  'Le Kef': ['Le Kef Est', 'Le Kef Ouest', 'Dahmani', 'Jérissa', 'Kalaa Khasba', 'Kalaat Senan', 'Nebeur', 'Sakiet Sidi Youssef', 'Sers', 'Tajerouine'],
-  'Siliana': ['Siliana Nord', 'Siliana Sud', 'Bargou', 'Bou Arada', 'El Krib', 'Gaâfour', 'Kesra', 'Makthar', 'Rouhia', 'Sidi Bou Rouis'],
-  'Zaghouan': ['Zaghouan', 'Bir Mcherga', 'El Fahs', 'Nadhour', 'Saouaf', 'Zriba']
-};
 
 const RentYourCar = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [showWizard, setShowWizard] = useState(false);
+  const [isCustomBrand, setIsCustomBrand] = useState(false);
+  const [isCustomModel, setIsCustomModel] = useState(false);
+  const [isCustomCity, setIsCustomCity] = useState(false);
+  const [isCustomDelegation, setIsCustomDelegation] = useState(false);
+  const [customBrand, setCustomBrand] = useState('');
+  const [customModel, setCustomModel] = useState('');
+  const [customCity, setCustomCity] = useState('');
+  const [customDelegation, setCustomDelegation] = useState('');
   const [initialData, setInitialData] = useState({
     brand: '',
     model: '',
@@ -148,9 +182,11 @@ const RentYourCar = () => {
 
   // تحديث الموديلات عند تغيير الماركة
   useEffect(() => {
-    if (initialData.brand) {
+    if (initialData.brand && initialData.brand !== 'Autre') {
       setAvailableModels(carModels[initialData.brand] || []);
       setInitialData(prev => ({ ...prev, model: '' }));
+    } else if (initialData.brand === 'Autre') {
+      setAvailableModels([]);
     } else {
       setAvailableModels([]);
     }
@@ -158,9 +194,11 @@ const RentYourCar = () => {
 
   // تحديث المعتمديات عند تغيير الولاية
   useEffect(() => {
-    if (initialData.location) {
-      setAvailableDelegations(delegationsByCity[initialData.location] || []);
+    if (initialData.location && initialData.location !== 'Autre') {
+      setAvailableDelegations(delegationsList);
       setInitialData(prev => ({ ...prev, delegation: '' }));
+    } else if (initialData.location === 'Autre') {
+      setAvailableDelegations([]);
     } else {
       setAvailableDelegations([]);
     }
@@ -169,8 +207,13 @@ const RentYourCar = () => {
   const handleInitialSubmit = async (e) => {
     e.preventDefault();
     
-    if (!initialData.brand || !initialData.model || !initialData.year || 
-        !initialData.mileage || !initialData.location || !initialData.delegation) {
+    const finalBrand = initialData.brand === 'Autre' ? customBrand : initialData.brand;
+    const finalModel = initialData.model === 'Autre' ? customModel : initialData.model;
+    const finalCity = initialData.location === 'Autre' ? customCity : initialData.location;
+    const finalDelegation = initialData.delegation === 'Autre' ? customDelegation : initialData.delegation;
+    
+    if (!finalBrand || !finalModel || !initialData.year || 
+        !initialData.mileage || !finalCity || !finalDelegation) {
       alert('الرجاء تعبئة جميع الحقول المطلوبة');
       return;
     }
@@ -179,7 +222,13 @@ const RentYourCar = () => {
     try {
       await API.post('/cars/wizard/save', {
         step: 1,
-        data: initialData
+        data: { 
+          ...initialData, 
+          brand: finalBrand,
+          model: finalModel,
+          location: finalCity,
+          delegation: finalDelegation
+        }
       });
       setShowWizard(true);
     } catch (err) {
@@ -191,7 +240,57 @@ const RentYourCar = () => {
   };
 
   const handleChange = (e) => {
-    setInitialData({ ...initialData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setInitialData({ ...initialData, [name]: value });
+    
+    // Gestion des champs "Autre"
+    if (name === 'brand' && value === 'Autre') {
+      setIsCustomBrand(true);
+      setIsCustomModel(false);
+      setIsCustomCity(false);
+      setIsCustomDelegation(false);
+    } else if (name === 'brand' && value !== 'Autre') {
+      setIsCustomBrand(false);
+      setCustomBrand('');
+    }
+    
+    if (name === 'model' && value === 'Autre') {
+      setIsCustomModel(true);
+    } else if (name === 'model' && value !== 'Autre') {
+      setIsCustomModel(false);
+      setCustomModel('');
+    }
+    
+    if (name === 'location' && value === 'Autre') {
+      setIsCustomCity(true);
+      setIsCustomDelegation(false);
+    } else if (name === 'location' && value !== 'Autre') {
+      setIsCustomCity(false);
+      setCustomCity('');
+    }
+    
+    if (name === 'delegation' && value === 'Autre') {
+      setIsCustomDelegation(true);
+    } else if (name === 'delegation' && value !== 'Autre') {
+      setIsCustomDelegation(false);
+      setCustomDelegation('');
+    }
+  };
+
+  const handleCustomFieldChange = (field, value) => {
+    if (field === 'brand') {
+      setCustomBrand(value);
+      setInitialData(prev => ({ ...prev, brand: value }));
+    } else if (field === 'model') {
+      setCustomModel(value);
+      setInitialData(prev => ({ ...prev, model: value }));
+    } else if (field === 'city') {
+      setCustomCity(value);
+      setInitialData(prev => ({ ...prev, location: value }));
+    } else if (field === 'delegation') {
+      setCustomDelegation(value);
+      setInitialData(prev => ({ ...prev, delegation: value }));
+    }
   };
 
   if (!user) {
@@ -221,40 +320,70 @@ const RentYourCar = () => {
           <p className="rent-car-subtitle">inscription votre voiture</p>
 
           <form onSubmit={handleInitialSubmit} className="rent-car-form">
+            {/* Marque */}
             <div className="form-group">
               <label>Brand de voiture *</label>
-              <select
-                name="brand"
-                value={initialData.brand}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Sélectionner une marque</option>
-                {carBrands.map(brand => (
-                  <option key={brand} value={brand}>{brand}</option>
-                ))}
-              </select>
+              {isCustomBrand ? (
+                <input
+                  type="text"
+                  value={customBrand}
+                  onChange={(e) => handleCustomFieldChange('brand', e.target.value)}
+                  placeholder="Entrez la marque de votre voiture"
+                  required
+                />
+              ) : (
+                <select
+                  name="brand"
+                  value={initialData.brand}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Sélectionner une marque</option>
+                  {carBrands.map(brand => (
+                    <option key={brand} value={brand}>{brand}</option>
+                  ))}
+                </select>
+              )}
+              <small className="form-hint">
+                {!isCustomBrand ? 'Vous pouvez aussi sélectionner "Autre" pour saisir une marque personnalisée' : 'Entrez la marque exacte de votre véhicule'}
+              </small>
             </div>
 
+            {/* Modèle */}
             <div className="form-group">
               <label>Modèle *</label>
-              <select
-                name="model"
-                value={initialData.model}
-                onChange={handleChange}
-                required
-                disabled={!initialData.brand}
-              >
-                <option value="">Sélectionner un modèle</option>
-                {availableModels.map(model => (
-                  <option key={model} value={model}>{model}</option>
-                ))}
-              </select>
-              {!initialData.brand && (
+              {isCustomModel ? (
+                <input
+                  type="text"
+                  value={customModel}
+                  onChange={(e) => handleCustomFieldChange('model', e.target.value)}
+                  placeholder="Entrez le modèle de votre voiture"
+                  required
+                />
+              ) : (
+                <select
+                  name="model"
+                  value={initialData.model}
+                  onChange={handleChange}
+                  required
+                  disabled={!initialData.brand || initialData.brand === 'Autre'}
+                >
+                  <option value="">Sélectionner un modèle</option>
+                  {availableModels.map(model => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
+                  <option value="Autre">Autre (saisir manuellement)</option>
+                </select>
+              )}
+              {!initialData.brand && !isCustomModel && (
                 <small className="form-hint">Veuillez d'abord sélectionner une marque</small>
+              )}
+              {(initialData.brand === 'Autre' || isCustomModel) && (
+                <small className="form-hint">Entrez le modèle exact de votre véhicule</small>
               )}
             </div>
 
+            {/* Année */}
             <div className="form-group">
               <label>Année de fabrication *</label>
               <select
@@ -264,13 +393,15 @@ const RentYourCar = () => {
                 required
               >
                 <option value="">Sélectionner une année</option>
-                {[...Array(30)].map((_, i) => {
-                  const year = new Date().getFullYear() - i;
+                {[...Array(16)].map((_, i) => {
+                  const year = 2015 + i;
                   return <option key={year} value={year}>{year}</option>;
                 })}
               </select>
+              <small className="form-hint">Année de première mise en circulation (2015-2030)</small>
             </div>
 
+            {/* Kilométrage */}
             <div className="form-group">
               <label>Kilométrage *</label>
               <select name="mileage" value={initialData.mileage} onChange={handleChange} required>
@@ -282,39 +413,69 @@ const RentYourCar = () => {
                 <option value="150000-200000">150000-200000 km</option>
                 <option value="200000+">200000+ km</option>
               </select>
+              <small className="form-hint">Cette information aide les locataires à choisir une voiture fiable</small>
             </div>
 
+            {/* Gouvernorat */}
             <div className="form-group">
               <label>Gouvernorat *</label>
-              <select
-                name="location"
-                value={initialData.location}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Sélectionner un gouvernorat</option>
-                {tunisianCities.map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
+              {isCustomCity ? (
+                <input
+                  type="text"
+                  value={customCity}
+                  onChange={(e) => handleCustomFieldChange('city', e.target.value)}
+                  placeholder="Entrez le nom du gouvernorat"
+                  required
+                />
+              ) : (
+                <select
+                  name="location"
+                  value={initialData.location}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Sélectionner un gouvernorat</option>
+                  {tunisianCities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              )}
+              <small className="form-hint">
+                {!isCustomCity ? 'Vous pouvez aussi sélectionner "Autre" pour saisir un gouvernorat personnalisé' : 'Entrez le nom exact du gouvernorat'}
+              </small>
             </div>
 
+            {/* Délégation */}
             <div className="form-group">
               <label>Délégation *</label>
-              <select
-                name="delegation"
-                value={initialData.delegation}
-                onChange={handleChange}
-                required
-                disabled={!initialData.location}
-              >
-                <option value="">Sélectionner une délégation</option>
-                {availableDelegations.map(delegation => (
-                  <option key={delegation} value={delegation}>{delegation}</option>
-                ))}
-              </select>
-              {!initialData.location && (
+              {isCustomDelegation ? (
+                <input
+                  type="text"
+                  value={customDelegation}
+                  onChange={(e) => handleCustomFieldChange('delegation', e.target.value)}
+                  placeholder="Entrez le nom de la délégation"
+                  required
+                />
+              ) : (
+                <select
+                  name="delegation"
+                  value={initialData.delegation}
+                  onChange={handleChange}
+                  required
+                  disabled={!initialData.location || initialData.location === 'Autre'}
+                >
+                  <option value="">Sélectionner une délégation</option>
+                  {availableDelegations.map(delegation => (
+                    <option key={delegation} value={delegation}>{delegation}</option>
+                  ))}
+                  <option value="Autre">Autre (saisir manuellement)</option>
+                </select>
+              )}
+              {!initialData.location && !isCustomCity && (
                 <small className="form-hint">Veuillez d'abord sélectionner un gouvernorat</small>
+              )}
+              {(initialData.location === 'Autre' || isCustomDelegation) && (
+                <small className="form-hint">Entrez le nom exact de la délégation</small>
               )}
             </div>
 
@@ -328,15 +489,15 @@ const RentYourCar = () => {
             <div className="delivery-option">
               <span className="delivery-icon">🚚</span>
               <div>
-                <strong>توصيل السيارة للمستأجر</strong>
-                <p>نقوم بتوصيل السيارة إلى عنوان المستأجر</p>
+                <strong>Vous livrez la voiture au locataire</strong>
+                <p>Vous livrez la voiture à l'adresse du locataire</p>
               </div>
             </div>
             <div className="delivery-option">
               <span className="delivery-icon">🏠</span>
               <div>
-                <strong>المستأجر يأتي لاستلام السيارة</strong>
-                <p>يتم الاستلام في المكان المتفق عليه</p>
+                <strong>Le locataire vient récupérer la voiture</strong>
+                <p>Le client vient récupérer la voiture à l'adresse indiquée</p>
               </div>
             </div>
           </div>
