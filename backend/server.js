@@ -7,8 +7,13 @@ const fileUpload = require('express-fileupload');
 
 const app = express();
 
+// ✅ تحسينات الأداء
+app.set('trust proxy', 1); // الثقة بالـ proxy (لـ Render)
+app.disable('x-powered-by'); // إخفاء معلومات الخادم
+
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // زيادة حد الحجم
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp' }));
 
@@ -35,9 +40,9 @@ app.use((req, res, next) => {
   
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
-  // ✅ إضافة Pragma و Cache-Control إلى الـ allowed headers
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept, Cache-Control, Pragma');
   res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  res.header('Access-Control-Max-Age', '86400'); // 24 ساعة
   
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -46,8 +51,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// ✅ تحسين إعدادات MongoDB
+mongoose.set('strictQuery', true);
+mongoose.set('debug', false); // إيقاف التصحيح في الإنتاج
+
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  maxPoolSize: 10, // الحد الأقصى للاتصالات المتزامنة
+  minPoolSize: 2,
+  socketTimeoutMS: 30000,
+  connectTimeoutMS: 10000,
+})
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
@@ -137,9 +151,10 @@ const server = app.listen(PORT, () => {
   console.log(`📡 Test URL: http://localhost:${PORT}/api/test`);
   console.log(`❤️  Health URL: http://localhost:${PORT}/api/health`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`⏱️ Server timeout: ${server.timeout / 1000} seconds`);
 });
 
-// ✅ زيادة وقت المهلة للخادم إلى 120 ثانية
-server.timeout = 120000; // 120 secondes
-
-console.log(`⏱️ Server timeout set to ${server.timeout / 1000} seconds`);
+// ✅ زيادة وقت المهلة للخادم إلى 60 ثانية (كافٍ)
+server.timeout = 60000; // 60 secondes
+server.keepAliveTimeout = 65000; // 65 secondes
+server.headersTimeout = 66000; // 66 secondes
