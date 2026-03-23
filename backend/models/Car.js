@@ -29,6 +29,13 @@ const carSchema = new mongoose.Schema({
   // الخطوة 6: المعدات (features)
   features: [{ type: String }],
   
+  // ✅ نوع السيارة (جديد)
+  carType: {
+    type: String,
+    enum: ['Citadine', 'SUV', 'Berline', 'Utilitaire', 'Luxe', 'Économique'],
+    default: 'Berline'
+  },
+  
   // الخطوة 7: نوع المستخدم
   userType: { type: String, enum: ['particulier', 'professionnel'], default: 'particulier' },
   
@@ -56,15 +63,15 @@ const carSchema = new mongoose.Schema({
   // السعر اليومي
   pricePerDay: { type: Number, default: 0 },
   
-  // ✅ مبلغ الضمان (Caution)
+  // مبلغ الضمان (Caution)
   caution: { type: Number, default: 500 },
   
-  // ✅ صور السيارة
+  // صور السيارة
   images: [{ type: String }],
   
-  // ✅ صور البطاقة الرمادية (Carte grise)
-  insuranceFront: { type: String },   // صورة البطاقة الرمادية - الوجه الأمامي
-  insuranceBack: { type: String },    // صورة البطاقة الرمادية - الوجه الخلفي
+  // صور البطاقة الرمادية (Carte grise)
+  insuranceFront: { type: String },
+  insuranceBack: { type: String },
   
   // حالة السيارة
   status: { type: String, enum: ['draft', 'pending', 'approved', 'rejected'], default: 'pending' },
