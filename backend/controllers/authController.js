@@ -130,11 +130,11 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ تسجيل الدخول عبر Firebase (محسّن)
+// ✅ تسجيل الدخول عبر Firebase (محسّن مع دعم الدور)
 exports.firebaseLogin = async (req, res) => {
   try {
     console.log('🔥 Firebase login request received:', req.body);
-    const { firebaseUid, email, name } = req.body;
+    const { firebaseUid, email, name, role } = req.body; // ✅ إضافة role
 
     if (!firebaseUid || !email) {
       console.error('❌ Missing firebaseUid or email:', { firebaseUid, email });
@@ -144,36 +144,37 @@ exports.firebaseLogin = async (req, res) => {
       });
     }
 
-    // ✅ البحث عن المستخدم بالبريد الإلكتروني (بدون تمييز حالة الأحرف)
+    // البحث عن المستخدم بالبريد الإلكتروني
     let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
 
-    // ✅ إذا لم يوجد، جرب البحث بـ firebaseUid
+    // إذا لم يوجد، جرب البحث بـ firebaseUid
     if (!user) {
       user = await User.findOne({ firebaseUid });
     }
 
     if (!user) {
-      // إنشاء مستخدم جديد فقط إذا لم يوجد بأي شكل
-      console.log('📝 Creating new user for:', email);
+      // ✅ إنشاء مستخدم جديد مع الدور المطلوب
+      const userRole = role || 'user'; // إذا لم يتم إرسال دور، افتراضي 'user'
+      console.log(`📝 Creating new user for: ${email} with role: ${userRole}`);
+      
       user = await User.create({
         name: name || email.split('@')[0],
         email: email.toLowerCase(),
         password: crypto.randomBytes(20).toString('hex'),
         phone: '',
-        role: 'user',
+        role: userRole, // ✅ استخدام الدور المرسل
         verificationStatus: 'not_submitted',
         firebaseUid
       });
-      console.log('✅ New user created via Firebase:', user.email);
+      console.log('✅ New user created via Firebase:', user.email, 'Role:', user.role);
     } else {
       // تحديث Firebase UID إذا لم يكن موجوداً
       if (!user.firebaseUid) {
         user.firebaseUid = firebaseUid;
         await user.save();
         console.log('✅ Updated existing user with firebaseUid:', user.email);
-      } else {
-        console.log('✅ Existing user logged in via Firebase:', user.email);
       }
+      console.log('✅ Existing user logged in via Firebase:', user.email, 'Role:', user.role);
     }
 
     // إنشاء توكن للمستخدم
@@ -214,6 +215,7 @@ exports.logout = (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
+    console.log('🔵 getMe - user role:', user.role);
     res.json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ message: error.message });
