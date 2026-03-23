@@ -3,6 +3,7 @@ const router = express.Router();
 const carController = require('../controllers/carController');
 const carWizardController = require('../controllers/carWizardController');
 const { protect, admin } = require('../middleware/authMiddleware');
+const { uploadCarImages } = require('../config/cloudinary'); // ✅ إضافة استيراد uploadCarImages
 
 // ========== المسارات العامة (لجميع المستخدمين) ==========
 router.get('/', carController.getCars);
@@ -24,7 +25,8 @@ router.patch('/:id/featured', protect, admin, carController.toggleFeatured);
 // ========== مسارات الويزارد (Wizard) ==========
 router.post('/wizard/save', protect, carWizardController.saveDraft);
 router.get('/wizard/get', protect, carWizardController.getDraft);
-router.post('/wizard/complete', protect, carWizardController.completeWizard);
+// ✅ إضافة uploadCarImages لمعالجة رفع الصور
+router.post('/wizard/complete', protect, uploadCarImages, carWizardController.completeWizard);
 
 // ========== المسارات الديناميكية (تأتي في النهاية) ==========
 router.get('/:id', carController.getCarById);
