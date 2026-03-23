@@ -27,7 +27,7 @@ const carSchema = new mongoose.Schema({
   seats: { type: Number, min: 1, max: 9, default: 5 },
   
   // الخطوة 6: المعدات (features)
-  features: [{ type: String }], // GPS, Bluetooth, Climatisation, Caméra recul
+  features: [{ type: String }],
   
   // الخطوة 7: نوع المستخدم
   userType: { type: String, enum: ['particulier', 'professionnel'], default: 'particulier' },
@@ -53,14 +53,21 @@ const carSchema = new mongoose.Schema({
   // الخطوة 13: طريقة التسليم
   deliveryMethod: { type: String, enum: ['livraison au client', 'client rencontre le conducteur'], required: true },
   
-  // السعر اليومي (سيتم تعيينه لاحقاً في Dashboard)
+  // السعر اليومي
   pricePerDay: { type: Number, default: 0 },
   
-  // صور السيارة
+  // ✅ مبلغ الضمان (Caution)
+  caution: { type: Number, default: 500 },
+  
+  // ✅ صور السيارة
   images: [{ type: String }],
   
+  // ✅ صور البطاقة الرمادية (Carte grise)
+  insuranceFront: { type: String },   // صورة البطاقة الرمادية - الوجه الأمامي
+  insuranceBack: { type: String },    // صورة البطاقة الرمادية - الوجه الخلفي
+  
   // حالة السيارة
-  status: { type: String, enum: ['draft', 'pending', 'approved', 'rejected'], default: 'draft' },
+  status: { type: String, enum: ['draft', 'pending', 'approved', 'rejected'], default: 'pending' },
   isAvailable: { type: Boolean, default: true },
   isFeatured: { type: Boolean, default: false },
   featuredExpiresAt: { type: Date },
