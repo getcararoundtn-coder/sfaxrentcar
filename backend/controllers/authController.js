@@ -77,7 +77,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// ✅ تسجيل الدخول العادي (محسن وسريع)
+// ✅ تسجيل الدخول العادي (فائق السرعة)
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -89,10 +89,11 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ✅ استخدام lean() و select() لتسريع الاستعلام
+    // ✅ استعلام سريع مع lean() و select() و maxTimeMS
     const user = await User.findOne({ email })
-      .select('_id name email role status verificationStatus password')
-      .lean();
+      .select('_id name email role verificationStatus password')
+      .lean()
+      .maxTimeMS(3000); // حد أقصى 3 ثواني
 
     if (!user) {
       return res.status(401).json({ 
@@ -101,7 +102,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ✅ التحقق من كلمة المرور (نحتاج إلى bcrypt)
     const bcrypt = require('bcryptjs');
     const isMatch = await bcrypt.compare(password, user.password);
     
@@ -112,14 +112,15 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ✅ إزالة كلمة المرور من الرد
+    // ✅ إزالة كلمة المرور
     delete user.password;
 
+    // ✅ إنشاء التوكن
     generateToken(res, user._id);
 
+    // ✅ رد سريع بدون رسالة إضافية
     res.json({
       success: true,
-      message: 'تم تسجيل الدخول بنجاح',
       data: user
     });
   } catch (error) {
@@ -148,13 +149,15 @@ exports.firebaseLogin = async (req, res) => {
     // ✅ البحث عن المستخدم بالبريد الإلكتروني (محسن)
     let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } })
       .select('_id name email role status verificationStatus firebaseUid')
-      .lean();
+      .lean()
+      .maxTimeMS(3000);
 
     // إذا لم يوجد، جرب البحث بـ firebaseUid
     if (!user) {
       user = await User.findOne({ firebaseUid })
         .select('_id name email role status verificationStatus firebaseUid')
-        .lean();
+        .lean()
+        .maxTimeMS(3000);
     }
 
     if (!user) {
@@ -197,7 +200,6 @@ exports.firebaseLogin = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'تم تسجيل الدخول بنجاح عبر Firebase',
       data: user
     });
   } catch (error) {
