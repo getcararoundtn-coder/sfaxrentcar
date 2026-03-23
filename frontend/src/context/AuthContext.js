@@ -14,6 +14,8 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = useCallback(async () => {
     try {
       const { data } = await API.get('/auth/me');
+      console.log('🔵 fetchUser response:', data);
+      console.log('🔵 User role from backend:', data.data?.role);
       setUser(data.data);
       localStorage.setItem('user', JSON.stringify(data.data));
       return data.data;
@@ -33,6 +35,8 @@ export const AuthProvider = ({ children }) => {
         email,
         name
       });
+      console.log('🔵 Firebase login response:', data);
+      console.log('🔵 User role from firebase login:', data.data?.role);
       setUser(data.data);
       localStorage.setItem('user', JSON.stringify(data.data));
       return data.data;
@@ -113,14 +117,17 @@ export const AuthProvider = ({ children }) => {
     });
     
     return () => unsubscribe();
-  }, [user, linkFirebaseAccount]); // ✅ إضافة التبعيات
+  }, [user, linkFirebaseAccount]);
 
   // جلب المستخدم من Backend عند تحميل الصفحة
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        console.log('🔵 Stored user from localStorage:', parsedUser);
+        console.log('🔵 Stored user role:', parsedUser?.role);
+        setUser(parsedUser);
         setLoading(false);
         fetchUser();
       } catch (e) {
