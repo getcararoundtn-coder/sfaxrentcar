@@ -4,7 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import './Home.css';
 
-// جميع الولايات التونسية الـ 24
+// Toutes les wilayas tunisiennes (24)
 const wilayasData = [
   'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan',
   'Bizerte', 'Béja', 'Jendouba', 'Le Kef', 'Siliana', 'Sousse',
@@ -12,7 +12,7 @@ const wilayasData = [
   'Gabès', 'Médenine', 'Tataouine', 'Gafsa', 'Tozeur', 'Kébili'
 ];
 
-// المعتمديات لكل ولاية
+// Délégations par wilaya
 const delegationsData = {
   'Tunis': ['Tunis Centre', 'El Menzah', 'Le Bardo', 'La Marsa', 'Carthage', 'Sidi Hassine', 'El Omrane', 'Ettahrir', 'Bab El Bhar'],
   'Ariana': ['Ariana Ville', 'Raoued', 'Soukra', 'Kalâat El Andalous', 'Sidi Thabet', 'Ettadhamen', 'Mnihla'],
@@ -94,7 +94,7 @@ const Home = () => {
     <>
       <Navbar />
       
-      {/* Hero Section مع صورة خلفية */}
+      {/* Hero Section avec image de fond */}
       <div 
         className="hero-section" 
         style={{ 
@@ -106,34 +106,34 @@ const Home = () => {
       >
         <div className="hero-content">
           <h1 className="hero-title">
-            استأجر سيارتك بسهولة في تونس، بأمان وبدون وسطاء
+            Louez votre voiture facilement en Tunisie, en toute sécurité et sans intermédiaires
           </h1>
           <p className="hero-subtitle">
-            اختر سيارتك من أشخاص موثوقين في مدينتك وابدأ رحلتك اليوم
+            Choisissez votre véhicule parmi des propriétaires de confiance dans votre région et commencez votre voyage aujourd'hui
           </p>
           
           {/* Trust Signals */}
           <div className="trust-signals">
             <div className="trust-item">
               <span className="trust-icon">🔒</span>
-              <span className="trust-text">الدفع الآمن</span>
+              <span className="trust-text">Paiement sécurisé</span>
             </div>
             <div className="trust-item">
               <span className="trust-icon">⭐</span>
-              <span className="trust-text">تقييمات حقيقية</span>
+              <span className="trust-text">Avis vérifiés</span>
             </div>
             <div className="trust-item">
               <span className="trust-icon">🕒</span>
-              <span className="trust-text">دعم فوري</span>
+              <span className="trust-text">Support 24/7</span>
             </div>
             <div className="trust-item">
               <span className="trust-icon">📋</span>
-              <span className="trust-text">وثائق مؤمنة</span>
+              <span className="trust-text">Documents sécurisés</span>
             </div>
           </div>
           
           <Link to="/cars" className="hero-cta-button">
-            استكشف السيارات
+            Découvrir les voitures
           </Link>
         </div>
       </div>
@@ -199,7 +199,7 @@ const Home = () => {
           </form>
           
           <p className="search-note">
-            Location de voitures entre particuliers et professionnels
+            DriveTunisia - Location de voitures entre particuliers et professionnels en Tunisie
           </p>
         </div>
       </div>
@@ -223,7 +223,7 @@ const Home = () => {
         <div className="steps-container">
           <div className="step">
             <div className="step-icon">1️⃣</div>
-            <h3 className="step-title">Trouvez une voiture près de vous</h3>
+            <h3 className="step-title">Trouvez une voiture près de chez vous</h3>
             <p className="step-desc">Choisissez parmi des centaines de véhicules disponibles</p>
           </div>
           <div className="step">
@@ -243,7 +243,7 @@ const Home = () => {
       <div className="rent-section">
         <div className="rent-content">
           <h2 className="rent-title">Vous voulez louer votre voiture ?</h2>
-          <Link to={user ? "/add-car" : "/register"} className="rent-button">
+          <Link to={user ? "/rent-your-car" : "/register"} className="rent-button">
             Louer ma voiture
           </Link>
         </div>
