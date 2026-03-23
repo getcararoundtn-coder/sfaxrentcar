@@ -12,7 +12,7 @@ const API = axios.create({
     'Cache-Control': 'no-cache',
     'Pragma': 'no-cache'
   },
-  timeout: 30000 // 30 secondes timeout
+  timeout: 60000 // ✅ زيادة من 30 إلى 60 ثانية
 });
 
 // ✅ اعتراض الطلبات للتأكد من إرسال الكوكيز
@@ -38,7 +38,11 @@ API.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response) {
+    // ✅ معالجة خطأ timeout بشكل خاص
+    if (error.code === 'ECONNABORTED' || error.message === 'timeout of 60000ms exceeded') {
+      console.error('❌ Request timeout - الخادم بطيء، حاول مرة أخرى');
+      // يمكن إظهار رسالة للمستخدم
+    } else if (error.response) {
       console.error(`❌ API Error: ${error.response.status} - ${error.response.data?.message || error.message}`);
       
       // إذا كانت 401 (غير مصرح) أو 403 (ممنوع)
