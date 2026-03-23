@@ -50,6 +50,16 @@ const allFeatures = [
   'ABS', 'Airbags', 'Allumage automatique des phares', 'Essuie-glaces automatiques'
 ];
 
+// ========== Types de voiture ==========
+const carTypes = [
+  { value: 'Citadine', icon: '🚗', desc: 'Petite voiture idéale pour la ville' },
+  { value: 'SUV', icon: '🚙', desc: 'Véhicule spacieux pour les voyages' },
+  { value: 'Berline', icon: '🚘', desc: 'Confortable pour les longs trajets' },
+  { value: 'Utilitaire', icon: '🚚', desc: 'Idéal pour le transport' },
+  { value: 'Luxe', icon: '💎', desc: 'Voiture haut de gamme' },
+  { value: 'Économique', icon: '💰', desc: 'Location à petit prix' }
+];
+
 const CarWizard = ({ initialData, onComplete }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -60,7 +70,7 @@ const CarWizard = ({ initialData, onComplete }) => {
   const [insuranceBackPreview, setInsuranceBackPreview] = useState(null);
   const saveTimeoutRef = useRef(null);
   
-  // State for step 14 (price and caution)
+  // State for step 15 (price and caution)
   const [isCustomPrice, setIsCustomPrice] = useState(false);
   const [isCustomCaution, setIsCustomCaution] = useState(false);
   const [customPrice, setCustomPrice] = useState('');
@@ -82,6 +92,7 @@ const CarWizard = ({ initialData, onComplete }) => {
     doors: 4,
     seats: 5,
     features: [],
+    carType: 'Berline', // ✅ nouveau champ
     userType: 'particulier',
     ownerBirthDate: '',
     paymentPlan: 'hebdomadaire',
@@ -99,9 +110,9 @@ const CarWizard = ({ initialData, onComplete }) => {
     insuranceBack: null
   });
 
-  // حساب نسبة التقدم
+  // حساب نسبة التقدم (16 خطوة)
   const getProgressPercentage = () => {
-    return Math.round((step / 15) * 100);
+    return Math.round((step / 16) * 100);
   };
 
   useEffect(() => {
@@ -205,7 +216,7 @@ const CarWizard = ({ initialData, onComplete }) => {
       const requiredFields = [
         'brand', 'model', 'year', 'mileage', 'licensePlate', 
         'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
-        'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 'pricePerDay'
+        'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 'pricePerDay', 'carType'
       ];
       
       const missingFields = [];
@@ -235,7 +246,7 @@ const CarWizard = ({ initialData, onComplete }) => {
         'registrationCountry', 'registrationYear', 'fuelType', 'transmission', 
         'parkingType', 'address', 'city', 'delegation', 'deliveryMethod', 
         'pricePerDay', 'userType', 'paymentPlan', 'ownerPhone', 'ownerPhoneCountry',
-        'doors', 'seats', 'caution'
+        'doors', 'seats', 'caution', 'carType'
       ];
       
       textFields.forEach(field => {
@@ -535,8 +546,40 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
-  // ========== RENDER STEP 7 ==========
-  const renderStep7 = () => (
+  // ========== RENDER STEP 7 (Type de voiture - NOUVEAU) ==========
+  const renderStep7 = () => {
+    return (
+      <div className="wizard-step">
+        <h2>Quel type de véhicule proposez-vous ?</h2>
+        <p className="step-note">Sélectionnez la catégorie qui correspond le mieux à votre voiture</p>
+        
+        <div className="car-type-grid">
+          {carTypes.map(type => (
+            <div
+              key={type.value}
+              className={`car-type-card ${formData.carType === type.value ? 'active' : ''}`}
+              onClick={() => {
+                setFormData(prev => ({ ...prev, carType: type.value }));
+                saveDraft(step, { ...formData, carType: type.value });
+              }}
+            >
+              <div className="car-type-icon">{type.icon}</div>
+              <div className="car-type-name">{type.value}</div>
+              <div className="car-type-desc">{type.desc}</div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="step-buttons">
+          <button onClick={handlePrev} className="step-button secondary">Précédent</button>
+          <button onClick={handleNext} className="step-button">Suivant</button>
+        </div>
+      </div>
+    );
+  };
+
+  // ========== RENDER STEP 8 (Particulier/Professionnel) ==========
+  const renderStep8 = () => (
     <div className="wizard-step">
       <h2>Louez vous en tant que particulier ou professionnel ?</h2>
       <div className="radio-group">
@@ -556,8 +599,8 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
-  // ========== RENDER STEP 8 ==========
-  const renderStep8 = () => {
+  // ========== RENDER STEP 9 ==========
+  const renderStep9 = () => {
     const handleBirthDateChange = (e) => {
       const value = e.target.value;
       setFormData(prev => ({ ...prev, ownerBirthDate: value }));
@@ -586,8 +629,8 @@ const CarWizard = ({ initialData, onComplete }) => {
     );
   };
 
-  // ========== RENDER STEP 9 ==========
-  const renderStep9 = () => (
+  // ========== RENDER STEP 10 ==========
+  const renderStep10 = () => (
     <div className="wizard-step">
       <h2>Confirmer la paiement de frais de services du site</h2>
       <div className="radio-group">
@@ -608,8 +651,8 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
-  // ========== RENDER STEP 10 ==========
-  const renderStep10 = () => (
+  // ========== RENDER STEP 11 ==========
+  const renderStep11 = () => (
     <div className="wizard-step">
       <h2>Quel est votre numéro de téléphone ?</h2>
       <div className="phone-group">
@@ -629,8 +672,8 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
-  // ========== RENDER STEP 11 ==========
-  const renderStep11 = () => (
+  // ========== RENDER STEP 12 ==========
+  const renderStep12 = () => (
     <div className="wizard-step">
       <h2>Où garerez vous votre voiture ?</h2>
       <div className="radio-group">
@@ -650,8 +693,8 @@ const CarWizard = ({ initialData, onComplete }) => {
     </div>
   );
 
-  // ========== RENDER STEP 12 ==========
-  const renderStep12 = () => {
+  // ========== RENDER STEP 13 ==========
+  const renderStep13 = () => {
     const tunisianCities = [
       'Tunis', 'Sfax', 'Sousse', 'Nabeul', 'Bizerte', 'Ariana', 'Ben Arous', 'Manouba',
       'Gabès', 'Gafsa', 'Kairouan', 'Kasserine', 'Sidi Bouzid', 'Mahdia', 'Médenine', 
@@ -695,8 +738,8 @@ const CarWizard = ({ initialData, onComplete }) => {
     );
   };
 
-  // ========== RENDER STEP 13 ==========
-  const renderStep13 = () => {
+  // ========== RENDER STEP 14 ==========
+  const renderStep14 = () => {
     const handleDeliverySelect = (method) => {
       setFormData(prev => ({ ...prev, deliveryMethod: method }));
       saveDraft(step, { ...formData, deliveryMethod: method });
@@ -749,8 +792,8 @@ const CarWizard = ({ initialData, onComplete }) => {
     );
   };
 
-  // ========== RENDER STEP 14 (Prix simplifié - avec Autre) ==========
-  const renderStep14 = () => {
+  // ========== RENDER STEP 15 (Prix) ==========
+  const renderStep15 = () => {
     const priceOptions = ['50', '60', '70', '80', '90', '100', '120', '150', '200', 'Autre'];
     const cautionOptions = ['200', '300', '500', '600', '800', '1000', '1500', 'Autre'];
 
@@ -889,8 +932,8 @@ const CarWizard = ({ initialData, onComplete }) => {
     );
   };
 
-  // ========== RENDER STEP 15 (Photos amélioré) ==========
-  const renderStep15 = () => {
+  // ========== RENDER STEP 16 (Photos) ==========
+  const renderStep16 = () => {
     const handleImageUpload = (e) => {
       const files = Array.from(e.target.files);
       console.log(`📸 Selected ${files.length} images`);
@@ -992,15 +1035,16 @@ const CarWizard = ({ initialData, onComplete }) => {
       case 4: return renderStep4();
       case 5: return renderStep5();
       case 6: return renderStep6();
-      case 7: return renderStep7();
-      case 8: return renderStep8();
-      case 9: return renderStep9();
-      case 10: return renderStep10();
-      case 11: return renderStep11();
-      case 12: return renderStep12();
-      case 13: return renderStep13();
-      case 14: return renderStep14();
-      case 15: return renderStep15();
+      case 7: return renderStep7();   // ✅ Type de voiture
+      case 8: return renderStep8();   // Particulier/Professionnel
+      case 9: return renderStep9();   // Date de naissance
+      case 10: return renderStep10(); // Paiement frais
+      case 11: return renderStep11(); // Téléphone
+      case 12: return renderStep12(); // Parking
+      case 13: return renderStep13(); // Adresse
+      case 14: return renderStep14(); // Mode de location
+      case 15: return renderStep15(); // Prix
+      case 16: return renderStep16(); // Photos
       default: return null;
     }
   };
@@ -1013,14 +1057,14 @@ const CarWizard = ({ initialData, onComplete }) => {
           <span className="progress-text">{getProgressPercentage()}%</span>
         </div>
         <div className="progress-step-text">
-          Étape {step} sur 15
+          Étape {step} sur 16
         </div>
       </div>
       
       {saving && <div className="saving-indicator">💾 Sauvegarde en cours...</div>}
       
       <div className="wizard-progress">
-        {[...Array(15)].map((_, i) => (
+        {[...Array(16)].map((_, i) => (
           <div key={i} className={`progress-step ${step > i + 1 ? 'completed' : step === i + 1 ? 'active' : ''}`}>
             {i + 1}
           </div>
