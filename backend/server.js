@@ -130,9 +130,16 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+
+// ✅ إنشاء الخادم مع زيادة وقت المهلة
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Test URL: http://localhost:${PORT}/api/test`);
   console.log(`❤️  Health URL: http://localhost:${PORT}/api/health`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
+
+// ✅ زيادة وقت المهلة للخادم إلى 120 ثانية
+server.timeout = 120000; // 120 secondes
+
+console.log(`⏱️ Server timeout set to ${server.timeout / 1000} seconds`);
