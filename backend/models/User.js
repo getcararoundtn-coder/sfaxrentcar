@@ -44,6 +44,13 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// ✅ الفهارس (Indexes) لتسريع البحث
+userSchema.index({ email: 1 });           // للبحث السريع بالبريد الإلكتروني
+userSchema.index({ firebaseUid: 1 });     // للبحث السريع بـ Firebase UID
+userSchema.index({ role: 1 });            // للبحث حسب الدور
+userSchema.index({ status: 1 });          // للبحث حسب الحالة
+userSchema.index({ verificationStatus: 1 }); // للبحث حسب حالة التحقق
+
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
