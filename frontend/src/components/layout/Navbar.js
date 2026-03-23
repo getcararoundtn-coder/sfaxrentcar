@@ -204,7 +204,7 @@ const Navbar = () => {
                   <span className={`user-chevron ${popupMenuOpen ? 'open' : ''}`}>▼</span>
                 </button>
                 
-                {/* Popup Menu */}
+                {/* Popup Menu مع Profile */}
                 {popupMenuOpen && (
                   <div className="user-popup-menu">
                     <div className="popup-user-info">
@@ -213,6 +213,12 @@ const Navbar = () => {
                     </div>
                     
                     <div className="popup-menu-title">Menu propriétaire</div>
+                    
+                    {/* ✅ إضافة Profile */}
+                    <Link to="/profile" className="popup-menu-item" onClick={closeMenus}>
+                      <span className="popup-menu-icon">👤</span>
+                      <span>Mon profil</span>
+                    </Link>
                     
                     <Link to="/owner-cars?tab=messages" className="popup-menu-item" onClick={closeMenus}>
                       <span className="popup-menu-icon">💬</span>
@@ -234,7 +240,7 @@ const Navbar = () => {
                       <span>Voitures</span>
                     </Link>
                     
-                    {/* ✅ إضافة قسم Admin للمشرفين */}
+                    {/* إضافة قسم Admin للمشرفين */}
                     {user.role === 'admin' && (
                       <>
                         <div className="popup-menu-divider"></div>
@@ -294,7 +300,7 @@ const Navbar = () => {
                 {user && (
                   <>
                     <Link to="/profile" className="mobile-link" onClick={closeMenus}>
-                      Mon profil
+                      👤 Mon profil
                     </Link>
                     <Link to="/my-bookings" className="mobile-link" onClick={closeMenus}>
                       Mes réservations
