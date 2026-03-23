@@ -27,13 +27,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ربط حساب Firebase مع حساب محلي
-  const linkFirebaseAccount = useCallback(async (firebaseUid, email, name) => {
+  // ✅ ربط حساب Firebase مع حساب محلي (مع دعم الدور)
+  const linkFirebaseAccount = useCallback(async (firebaseUid, email, name, role) => {
     try {
+      console.log('🔵 linkFirebaseAccount called with role:', role);
       const { data } = await API.post('/auth/firebase-login', {
         firebaseUid,
         email,
-        name
+        name,
+        role // ✅ إضافة role
       });
       console.log('🔵 Firebase login response:', data);
       console.log('🔵 User role from firebase login:', data.data?.role);
@@ -46,17 +48,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // تسجيل الدخول بالبريد الإلكتروني وكلمة المرور (Firebase + Backend)
-  const loginWithFirebaseEmail = useCallback(async (email, password) => {
+  // ✅ تسجيل الدخول بالبريد الإلكتروني وكلمة المرور (مع دعم الدور)
+  const loginWithFirebaseEmail = useCallback(async (email, password, userRole) => {
     try {
+      console.log('🔵 loginWithFirebaseEmail called with role:', userRole);
       const userCredential = await loginWithEmail(email, password);
       const firebaseUser = userCredential.user;
       
-      // ربط مع Backend
+      // ربط مع Backend مع تمرير الدور
       const userData = await linkFirebaseAccount(
         firebaseUser.uid,
         firebaseUser.email,
-        firebaseUser.displayName || firebaseUser.email.split('@')[0]
+        firebaseUser.displayName || firebaseUser.email.split('@')[0],
+        userRole // ✅ تمرير الدور
       );
       
       return { success: true, user: userData };
@@ -66,17 +70,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, [linkFirebaseAccount]);
 
-  // تسجيل الدخول بحساب Google
-  const loginWithFirebaseGoogle = useCallback(async () => {
+  // ✅ تسجيل الدخول بحساب Google (مع دعم الدور)
+  const loginWithFirebaseGoogle = useCallback(async (userRole) => {
     try {
+      console.log('🔵 loginWithFirebaseGoogle called with role:', userRole);
       const result = await loginWithGoogle();
       const firebaseUser = result.user;
       
-      // ربط مع Backend
+      // ربط مع Backend مع تمرير الدور
       const userData = await linkFirebaseAccount(
         firebaseUser.uid,
         firebaseUser.email,
-        firebaseUser.displayName
+        firebaseUser.displayName,
+        userRole // ✅ تمرير الدور
       );
       
       return { success: true, user: userData };
@@ -101,17 +107,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // مراقبة حالة Firebase Auth
+  // مراقبة حالة Firebase Auth (مع دعم الدور الافتراضي)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
       
       if (firebaseUser && !user) {
         // إذا كان المستخدم مسجلاً في Firebase ولكن ليس في Backend
+        // نستخدم دور افتراضي 'user' لأنه لا يوجد دور مخزن
         await linkFirebaseAccount(
           firebaseUser.uid,
           firebaseUser.email,
-          firebaseUser.displayName || firebaseUser.email.split('@')[0]
+          firebaseUser.displayName || firebaseUser.email.split('@')[0],
+          'user' // ✅ دور افتراضي للمستخدمين الموجودين مسبقاً
         );
       }
     });
