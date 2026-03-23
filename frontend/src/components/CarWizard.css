@@ -644,3 +644,43 @@
     font-size: 20px;
   }
 }
+/* ========== Step 14 - Price Inputs Mobile Friendly ========== */
+.price-select,
+.caution-select {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  cursor: pointer;
+}
+
+.price-input-large,
+.caution-input-large {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  text-align: center;
+  background: white;
+}
+
+.price-input-large:focus,
+.caution-input-large:focus {
+  outline: none;
+  border-color: #6b46c0;
+  box-shadow: 0 0 0 3px rgba(107, 70, 192, 0.1);
+}
+
+/* تحسين للهواتف */
+@media (max-width: 768px) {
+  .price-select,
+  .caution-select,
+  .price-input-large,
+  .caution-input-large {
+    padding: 16px;
+    font-size: 18px;
+  }
+}

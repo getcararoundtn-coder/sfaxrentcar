@@ -134,16 +134,26 @@ const CarDetails = () => {
   };
 
   // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!showImageModal) return;
-      if (e.key === 'ArrowRight') nextImage();
-      if (e.key === 'ArrowLeft') prevImage();
-      if (e.key === 'Escape') closeImageModal();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showImageModal, modalImageIndex, car?.images]);
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (!showImageModal) return;
+    if (e.key === 'ArrowRight') {
+      if (car?.images && modalImageIndex < car.images.length - 1) {
+        setModalImageIndex(modalImageIndex + 1);
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      if (car?.images && modalImageIndex > 0) {
+        setModalImageIndex(modalImageIndex - 1);
+      }
+    }
+    if (e.key === 'Escape') {
+      setShowImageModal(false);
+    }
+  };
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [showImageModal, modalImageIndex, car?.images]);
 
   const renderStars = (rating) => {
     const stars = [];
