@@ -91,18 +91,43 @@ export const AuthProvider = ({ children }) => {
     }
   }, [linkFirebaseAccount]);
 
-  // تسجيل الخروج
+  // ✅ تسجيل الخروج (محسن مع معالجة الأخطاء)
   const logout = useCallback(async () => {
     try {
-      await logoutFirebase();
-      await API.post('/auth/logout');
+      setLoading(true);
+      console.log('🔵 Logging out...');
+      
+      // تسجيل الخروج من Firebase
+      try {
+        await logoutFirebase();
+        console.log('✅ Firebase logout successful');
+      } catch (firebaseErr) {
+        console.error('Firebase logout error:', firebaseErr);
+      }
+      
+      // تسجيل الخروج من Backend
+      try {
+        await API.post('/auth/logout');
+        console.log('✅ Backend logout successful');
+      } catch (backendErr) {
+        console.error('Backend logout error:', backendErr);
+      }
+      
+      // مسح البيانات المحلية
       setUser(null);
       setFirebaseUser(null);
       localStorage.removeItem('user');
-      // ✅ إعادة التوجيه إلى الصفحة الرئيسية بعد الخروج
+      
+      // ✅ إعادة التوجيه إلى الصفحة الرئيسية
+      console.log('🔵 Redirecting to home page...');
       window.location.href = '/';
     } catch (err) {
-      console.error('Logout error:', err);
+      console.error('❌ Logout error:', err);
+      // حتى لو فشل، نمسح البيانات و نعيد التوجيه
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    } finally {
+      setLoading(false);
     }
   }, []);
 
