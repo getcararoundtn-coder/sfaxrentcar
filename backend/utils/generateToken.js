@@ -7,26 +7,23 @@ const generateToken = (res, userId) => {
 
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // ✅ إعدادات الكوكيز المتوافقة مع النطاقات المختلفة
+  // ✅ إعدادات الكوكيز الصحيحة (بدون domain)
   const cookieOptions = {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 أيام
-    path: '/',
     secure: isProduction, // true في الإنتاج (HTTPS)
-    sameSite: isProduction ? 'none' : 'lax'
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 أيام
   };
   
-  // ✅ إضافة partitioned فقط للإنتاج (بدون domain)
-  if (isProduction) {
-    cookieOptions.partitioned = true;
-  }
+  // ❌ لا نضيف domain أبداً
+  // ❌ لا نضيف partitioned (ليس ضرورياً)
   
   res.cookie('token', token, cookieOptions);
   
   console.log(`🔐 Token generated for user: ${userId}`);
   console.log(`   Environment: ${isProduction ? 'production' : 'development'}`);
   console.log(`   Secure: ${cookieOptions.secure}, SameSite: ${cookieOptions.sameSite}`);
-  console.log(`   Partitioned: ${cookieOptions.partitioned || false}`);
 };
 
 module.exports = generateToken;

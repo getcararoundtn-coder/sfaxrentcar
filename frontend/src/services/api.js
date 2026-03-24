@@ -2,59 +2,41 @@ import axios from 'axios';
 
 const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-// ✅ إعدادات Axios المتوافقة مع Safari و iPhone
 const API = axios.create({
   baseURL,
-  withCredentials: true, // ✅ مهم جداً لإرسال الكوكيز (خاصة لـ Safari)
+  withCredentials: true, // ✅ موجود
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Cache-Control': 'no-cache',
     'Pragma': 'no-cache'
   },
-  timeout: 60000 // ✅ زيادة من 30 إلى 60 ثانية
+  timeout: 60000
 });
 
-// ✅ اعتراض الطلبات للتأكد من إرسال الكوكيز
 API.interceptors.request.use(
   (config) => {
     console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`);
-    
-    // ✅ للتأكد من أن withCredentials صحيح
     config.withCredentials = true;
-    
     return config;
   },
-  (error) => {
-    console.error('❌ Request error:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// ✅ اعتراض الردود لمعالجة الأخطاء
 API.interceptors.response.use(
   (response) => {
     console.log(`✅ Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
-    // ✅ معالجة خطأ timeout بشكل خاص
     if (error.code === 'ECONNABORTED' || error.message === 'timeout of 60000ms exceeded') {
-      console.error('❌ Request timeout - الخادم بطيء، حاول مرة أخرى');
-      // يمكن إظهار رسالة للمستخدم
+      console.error('❌ Request timeout');
     } else if (error.response) {
       console.error(`❌ API Error: ${error.response.status} - ${error.response.data?.message || error.message}`);
-      
-      // إذا كانت 401 (غير مصرح) أو 403 (ممنوع)
       if (error.response.status === 401 || error.response.status === 403) {
         console.log('🔴 Unauthorized - Session expirée');
-        
-        // ✅ إزالة بيانات المستخدم المحلية
         localStorage.removeItem('user');
-        
-        // ✅ إذا كان المستخدم في صفحة تتطلب تسجيل دخول، نعيده إلى login
         if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-          console.log('🔐 Redirection vers login...');
           window.location.href = '/login';
         }
       }
