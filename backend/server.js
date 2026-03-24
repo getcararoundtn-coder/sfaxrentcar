@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const fileUpload = require('express-fileupload');
+const multer = require('multer');
 
 const app = express();
 
@@ -11,22 +11,29 @@ const app = express();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
-// ✅ Middleware - الترتيب مهم جداً
-// 1. FileUpload يجب أن يكون أولاً
-app.use(fileUpload({ 
-  useTempFiles: true, 
-  tempFileDir: '/tmp',
+// ✅ إعدادات multer (بدلاً من express-fileupload)
+const upload = multer({ 
+  dest: '/tmp/',
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
-  abortOnLimit: true,
-  parseNested: true
-}));
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Type de fichier non supporté. Utilisez JPG, PNG ou WEBP.'), false);
+    }
+  }
+});
 
-// 2. JSON و URL Encoded (بعد fileUpload)
+// ✅ Middleware - الترتيب مهم
+// 1. JSON و URL Encoded
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// 3. Cookie Parser
+// 2. Cookie Parser
 app.use(cookieParser());
+
+// 3. Multer (سيتم استخدامه في routes فقط، ليس globally)
 
 // ✅ CORS configuration
 const allowedOrigins = [
@@ -162,7 +169,7 @@ const server = app.listen(PORT, () => {
   console.log(`📡 Test URL: http://localhost:${PORT}/api/test`);
   console.log(`❤️  Health URL: http://localhost:${PORT}/api/health`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📁 File upload limit: 50MB`);
+  console.log(`📁 File upload limit: 50MB (via multer)`);
   console.log(`⏱️ Server timeout: ${server.timeout / 1000} seconds`);
 });
 
@@ -170,3 +177,6 @@ const server = app.listen(PORT, () => {
 server.timeout = 120000; // 120 secondes
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 66000;
+
+// ✅ تصدير upload لاستخدامه في routes
+module.exports = { upload };
