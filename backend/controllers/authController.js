@@ -4,6 +4,13 @@ const Notification = require('../models/Notification');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
 
+// ✅ قائمة البريد الإلكتروني للمشرفين
+const ADMIN_EMAILS = [
+  'mokhles.trading@gmail.com',
+  'admin@drivetunisia.com',
+  'getcararoundtn@gmail.com'
+];
+
 // تسجيل مستخدم
 exports.register = async (req, res) => {
   try {
@@ -32,12 +39,18 @@ exports.register = async (req, res) => {
       });
     }
 
+    // ✅ تحديد الدور بناءً على البريد الإلكتروني
+    let userRole = role || 'user';
+    if (ADMIN_EMAILS.includes(normalizedEmail)) {
+      userRole = 'admin';
+    }
+
     const user = await User.create({ 
       name, 
       email: normalizedEmail, 
       password, 
       phone,
-      role: role || 'user'
+      role: userRole
     });
     generateToken(res, user._id);
 
@@ -115,7 +128,6 @@ exports.login = async (req, res) => {
 
     delete user.password;
     
-    // ✅ إضافة console.log هنا
     console.log('🔵 Before generateToken - User ID:', user._id);
     generateToken(res, user._id);
     console.log('🔵 After generateToken - Cookie should be set');
@@ -133,7 +145,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ تسجيل الدخول عبر Firebase (محسن)
+// ✅ تسجيل الدخول عبر Firebase (محسن مع التحقق من البريد الإلكتروني للمشرف)
 exports.firebaseLogin = async (req, res) => {
   try {
     console.log('🔥 Firebase login request received:', req.body);
@@ -148,6 +160,14 @@ exports.firebaseLogin = async (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase();
+    
+    // ✅ تحديد الدور بناءً على البريد الإلكتروني
+    let userRole = role || 'user';
+    if (ADMIN_EMAILS.includes(normalizedEmail)) {
+      userRole = 'admin';
+      console.log(`👑 Admin email detected: ${normalizedEmail} -> setting role to admin`);
+    }
+    
     let user = await User.findOne({ email: normalizedEmail })
       .select('_id name email role status verificationStatus firebaseUid')
       .lean()
@@ -161,7 +181,6 @@ exports.firebaseLogin = async (req, res) => {
     }
 
     if (!user) {
-      const userRole = role || 'user';
       console.log(`📝 Creating new user for: ${normalizedEmail} with role: ${userRole}`);
       
       const newUser = await User.create({
@@ -185,6 +204,13 @@ exports.firebaseLogin = async (req, res) => {
       };
       console.log('✅ New user created via Firebase:', user.email, 'Role:', user.role);
     } else {
+      // ✅ تحديث دور المستخدم إذا كان بريده مشرف
+      if (ADMIN_EMAILS.includes(normalizedEmail) && user.role !== 'admin') {
+        await User.updateOne({ _id: user._id }, { $set: { role: 'admin' } });
+        user.role = 'admin';
+        console.log(`✅ Updated user role to admin for: ${user.email}`);
+      }
+      
       if (!user.firebaseUid) {
         await User.updateOne({ _id: user._id }, { $set: { firebaseUid } });
         user.firebaseUid = firebaseUid;
