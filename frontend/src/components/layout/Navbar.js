@@ -32,10 +32,19 @@ const Navbar = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ✅ إصلاح دالة تسجيل الخروج
+  // ✅ إصلاح دالة تسجيل الخروج (توجيه بدون إعادة تحميل)
   const handleLogout = async () => {
-    await logout(); // logout في AuthContext يقوم بالتوجيه إلى '/'
-    // لا حاجة لـ navigate('/') لأن logout يقوم بذلك
+    console.log('🔴🔴🔴 LOGOUT BUTTON CLICKED 🔴🔴🔴');
+    try {
+      await logout(); // انتظار اكتمال logout (لا يقوم بتوجيه)
+      console.log('✅ Logout function completed');
+      // توجيه إلى الصفحة الرئيسية باستخدام React Router (بدون إعادة تحميل)
+      navigate('/');
+    } catch (err) {
+      console.error('❌ Logout error:', err);
+      navigate('/');
+    }
+    // إغلاق القوائم
     setMobileMenuOpen(false);
     setPopupMenuOpen(false);
     setShowLoginModal(false);
@@ -47,6 +56,7 @@ const Navbar = () => {
   };
 
   const togglePopupMenu = () => {
+    console.log('🔵 Toggling popup menu, current state:', popupMenuOpen);
     setPopupMenuOpen(!popupMenuOpen);
   };
 

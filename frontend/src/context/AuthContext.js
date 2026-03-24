@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ✅ ربط حساب Firebase مع حساب محلي (مع دعم الدور)
+  // ربط حساب Firebase مع حساب محلي
   const linkFirebaseAccount = useCallback(async (firebaseUid, email, name, role) => {
     try {
       console.log('🔵 linkFirebaseAccount called with role:', role);
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ✅ تسجيل الدخول بالبريد الإلكتروني وكلمة المرور
+  // تسجيل الدخول بالبريد الإلكتروني وكلمة المرور
   const loginWithFirebaseEmail = useCallback(async (email, password, userRole) => {
     try {
       console.log('🔵 loginWithFirebaseEmail called with role:', userRole);
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [linkFirebaseAccount]);
 
-  // ✅ تسجيل الدخول بحساب Google
+  // تسجيل الدخول بحساب Google
   const loginWithFirebaseGoogle = useCallback(async (userRole) => {
     try {
       console.log('🔵 loginWithFirebaseGoogle called with role:', userRole);
@@ -91,13 +91,13 @@ export const AuthProvider = ({ children }) => {
     }
   }, [linkFirebaseAccount]);
 
-  // ✅ تسجيل الخروج (محسن مع انتظار الطلب)
+  // ✅ تسجيل الخروج (بدون إعادة تحميل الصفحة)
   const logout = useCallback(async () => {
     try {
       setLoading(true);
       console.log('🔵 Logging out...');
       
-      // 1. تسجيل الخروج من Firebase (لا ننتظره، لكنه سريع)
+      // 1. تسجيل الخروج من Firebase
       try {
         await logoutFirebase();
         console.log('✅ Firebase logout successful');
@@ -105,13 +105,12 @@ export const AuthProvider = ({ children }) => {
         console.error('Firebase logout error:', firebaseErr);
       }
       
-      // 2. تسجيل الخروج من Backend (ننتظر النتيجة)
+      // 2. تسجيل الخروج من Backend
       try {
         const response = await API.post('/auth/logout');
         console.log('✅ Backend logout successful:', response.data);
       } catch (backendErr) {
         console.error('Backend logout error:', backendErr);
-        // حتى لو فشل الطلب، نكمل مسح البيانات
       }
       
       // 3. مسح البيانات المحلية
@@ -119,20 +118,17 @@ export const AuthProvider = ({ children }) => {
       setFirebaseUser(null);
       localStorage.removeItem('user');
       
-      // 4. إعادة التوجيه إلى الصفحة الرئيسية
-      console.log('🔵 Redirecting to home page...');
-      window.location.href = '/';
+      // لا نقوم بإعادة التوجيه هنا، نتركها للمكون الذي يستدعي logout
+      console.log('🔵 Logout completed, waiting for navigation');
     } catch (err) {
       console.error('❌ Logout error:', err);
-      // في حال حدوث خطأ غير متوقع، نمسح البيانات ونعيد التوجيه
       localStorage.removeItem('user');
-      window.location.href = '/';
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // ✅ مراقبة حالة Firebase Auth
+  // مراقبة حالة Firebase Auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
@@ -150,7 +146,7 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, [user, linkFirebaseAccount, authChecked]);
 
-  // ✅ جلب المستخدم من Backend عند تحميل الصفحة
+  // جلب المستخدم من Backend عند تحميل الصفحة
   useEffect(() => {
     const initAuth = async () => {
       setLoading(true);
@@ -163,7 +159,7 @@ export const AuthProvider = ({ children }) => {
           console.log('🔵 Stored user role:', parsedUser?.role);
           setUser(parsedUser);
           
-          // ✅ التحقق من صحة التوكن
+          // التحقق من صحة التوكن
           const userData = await fetchUser();
           if (!userData) {
             setUser(null);
@@ -175,7 +171,7 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
         }
       } else {
-        // ✅ جلب المستخدم من الـ API إذا كان هناك كوكيز
+        // جلب المستخدم من الـ API إذا كان هناك كوكيز
         const userData = await fetchUser();
         if (!userData) {
           console.log('No authenticated user found');
