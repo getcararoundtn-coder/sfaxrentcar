@@ -12,15 +12,29 @@ const NotificationBell = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [lastNotificationId, setLastNotificationId] = useState(null);
 
+  // ✅ تحديد إذا كان المستخدم Admin
+  const isAdmin = user?.role === 'admin';
+
   const fetchNotifications = useCallback(async () => {
     try {
       const { data } = await API.get('/notifications');
-      setNotifications(data.data);
-      if (data.data.length > 0) setLastNotificationId(data.data[0]._id);
+      let filteredNotifications = data.data || [];
+      
+      // ✅ إذا لم يكن Admin، قم بتصفية الإشعارات الإدارية
+      if (!isAdmin) {
+        // قائمة أنواع الإشعارات التي تظهر فقط للمشرف
+        const adminOnlyTypes = ['new_user', 'car_pending', 'car_approved', 'car_rejected'];
+        filteredNotifications = filteredNotifications.filter(
+          notif => !adminOnlyTypes.includes(notif.type)
+        );
+      }
+      
+      setNotifications(filteredNotifications);
+      if (filteredNotifications.length > 0) setLastNotificationId(filteredNotifications[0]._id);
     } catch (err) {
       console.error('Error fetching notifications:', err);
     }
-  }, []);
+  }, [isAdmin]);
 
   const fetchUnreadCount = useCallback(async () => {
     try {
@@ -34,7 +48,16 @@ const NotificationBell = () => {
   const fetchNewNotifications = useCallback(async () => {
     try {
       const { data } = await API.get('/notifications');
-      const newNotifications = data.data;
+      let newNotifications = data.data || [];
+      
+      // ✅ فلترة الإشعارات للمستخدم العادي
+      if (!isAdmin) {
+        const adminOnlyTypes = ['new_user', 'car_pending', 'car_approved', 'car_rejected'];
+        newNotifications = newNotifications.filter(
+          notif => !adminOnlyTypes.includes(notif.type)
+        );
+      }
+      
       if (newNotifications.length > 0) {
         const latestNotification = newNotifications[0];
         if (latestNotification._id !== lastNotificationId) {
@@ -57,7 +80,7 @@ const NotificationBell = () => {
     } catch (err) {
       console.error('Error fetching new notifications:', err);
     }
-  }, [lastNotificationId, fetchUnreadCount]);
+  }, [lastNotificationId, fetchUnreadCount, isAdmin]);
 
   useEffect(() => {
     if (!user) return;
@@ -89,16 +112,21 @@ const NotificationBell = () => {
 
   const getNotificationIcon = (type) => {
     switch(type) {
+      case 'booking_accepted':
       case 'booking_approved': return '✅';
+      case 'booking_refused':
       case 'booking_rejected': return '❌';
       case 'booking_completed': return '✔️';
       case 'booking_cancelled': return '✖️';
       case 'booking_pending': return '⏳';
+      case 'booking_created': return '📅';
       case 'document_verified': return '📄✅';
       case 'document_rejected': return '📄❌';
       case 'car_approved': return '🚗✅';
       case 'car_rejected': return '🚗❌';
+      case 'car_pending': return '🚗⏳';
       case 'message_reply': return '💬';
+      case 'new_message': return '💬';
       case 'new_review': return '⭐';
       case 'new_user': return '👤';
       default: return '🔔';
@@ -112,12 +140,13 @@ const NotificationBell = () => {
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (minutes < 1) return 'الآن';
-    if (minutes < 60) return `منذ ${minutes} دقيقة`;
-    if (hours < 24) return `منذ ${hours} ساعة`;
-    if (days === 1) return 'أمس';
-    if (days < 7) return `منذ ${days} أيام`;
-    return date.toLocaleDateString('ar-TN');
+    
+    if (minutes < 1) return 'À l\'instant';
+    if (minutes < 60) return `Il y a ${minutes} min`;
+    if (hours < 24) return `Il y a ${hours} h`;
+    if (days === 1) return 'Hier';
+    if (days < 7) return `Il y a ${days} jours`;
+    return date.toLocaleDateString('fr-FR');
   };
 
   if (!user) return null;
@@ -131,17 +160,21 @@ const NotificationBell = () => {
       {showDropdown && (
         <div className="notification-dropdown">
           <div className="notification-header">
-            <h3>الإشعارات</h3>
+            <h3>Notifications</h3>
             {unreadCount > 0 && (
-              <button onClick={markAllAsRead} className="mark-all-read">تحديد الكل كمقروء</button>
+              <button onClick={markAllAsRead} className="mark-all-read">Tout marquer comme lu</button>
             )}
           </div>
           <div className="notification-list">
             {notifications.length === 0 ? (
-              <p className="no-notifications">لا توجد إشعارات</p>
+              <p className="no-notifications">Aucune notification</p>
             ) : (
               notifications.slice(0, 5).map(notif => (
-                <div key={notif._id} className={`notification-item ${!notif.read ? 'unread' : ''}`} onClick={() => markAsRead(notif._id)}>
+                <div 
+                  key={notif._id} 
+                  className={`notification-item ${!notif.isRead ? 'unread' : ''}`} 
+                  onClick={() => markAsRead(notif._id)}
+                >
                   <div className="notification-icon">{getNotificationIcon(notif.type)}</div>
                   <div className="notification-content">
                     <h4>{notif.title}</h4>
@@ -153,7 +186,7 @@ const NotificationBell = () => {
             )}
           </div>
           <div className="notification-footer">
-            <Link to="/notifications" onClick={() => setShowDropdown(false)}>عرض كل الإشعارات</Link>
+            <Link to="/notifications" onClick={() => setShowDropdown(false)}>Voir toutes les notifications</Link>
           </div>
         </div>
       )}
