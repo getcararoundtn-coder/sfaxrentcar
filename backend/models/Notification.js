@@ -9,16 +9,29 @@ const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: [
-      'booking_pending', 'booking_approved', 'booking_rejected', 
-      'booking_completed', 'booking_cancelled',
-      'document_pending', 'document_verified', 'document_rejected',
-      'car_pending', 'car_approved', 'car_rejected',
+      // ✅ إشعارات الحجوزات
+      'booking_created',      // ✅ جديد - عند إنشاء حجز
+      'booking_pending', 
+      'booking_approved', 
+      'booking_rejected', 
+      'booking_completed', 
+      'booking_cancelled',
+      // ✅ إشعارات الوثائق
+      'document_pending', 
+      'document_verified', 
+      'document_rejected',
+      // ✅ إشعارات السيارات
+      'car_pending', 
+      'car_approved', 
+      'car_rejected',
+      // ✅ إشعارات الرسائل
       'message_reply',
       'new_review',
       'new_user',
       'new_message',
-      'support_new',     // ✅ إشعار للمشرف عند استلام رسالة دعم جديدة
-      'support_reply'    // ✅ إشعار للمستخدم عند رد المشرف
+      // ✅ إشعارات الدعم
+      'support_new',
+      'support_reply'
     ],
     required: true
   },
