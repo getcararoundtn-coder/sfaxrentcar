@@ -1,55 +1,57 @@
 import axios from 'axios';
 
-// ✅ تعيين الرابط مباشرة (مؤقت للاختبار)
-const baseURL = 'https://sfaxrentcar-backend.onrender.com/api';
-
+// ✅ استخدام المتغير البيئي أو المحلي
 const API = axios.create({
-  baseURL,
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache'
   },
-  timeout: 60000
+  timeout: 30000,
 });
 
-// ✅ اعتراض الطلبات للتأكد من إرسال الكوكيز
+// Request interceptor to add token
 API.interceptors.request.use(
   (config) => {
-    console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`);
-    config.withCredentials = true;
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        if (userData.token) {
+          config.headers.Authorization = `Bearer ${userData.token}`;
+        }
+      } catch (e) {
+        console.error('Error parsing user from localStorage:', e);
+      }
+    }
+    console.log(`📤 ${config.method.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
-    console.error('❌ Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// ✅ اعتراض الردود
+// Response interceptor for error handling
 API.interceptors.response.use(
   (response) => {
     console.log(`✅ Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
-    if (error.code === 'ECONNABORTED' || error.message === 'timeout of 60000ms exceeded') {
-      console.error('❌ Request timeout');
-    } else if (error.response) {
+    if (error.response) {
       console.error(`❌ API Error: ${error.response.status} - ${error.response.data?.message || error.message}`);
-      if (error.response.status === 401 || error.response.status === 403) {
-        console.log('🔴 Unauthorized - Session expirée');
-        localStorage.removeItem('user');
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-          window.location.href = '/login';
-        }
-      }
+      
+      // ✅ لا تقم بتسجيل الخروج تلقائياً - فقط للـ 401 من endpoints محددة
+      // قم بإزالة هذا السطر أو التعليق عليه
+      // if (error.response.status === 401) {
+      //   localStorage.removeItem('user');
+      //   window.location.href = '/';
+      // }
     } else if (error.request) {
-      console.error('❌ No response from server:', error.request);
+      console.error('❌ No response received:', error.request);
     } else {
-      console.error('❌ Request setup error:', error.message);
+      console.error('❌ Error setting up request:', error.message);
     }
     return Promise.reject(error);
   }

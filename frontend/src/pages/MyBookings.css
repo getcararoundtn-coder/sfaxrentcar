@@ -702,3 +702,63 @@
   margin-top: 5px;
   color: #a0aec0;
 }
+/* إضافة إلى ملف MyBookings.css */
+
+.message-button-primary {
+  background: #6b46c0;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.message-button-primary:hover {
+  background: #553c9a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 70, 193, 0.3);
+}
+
+.message-button-disabled {
+  background: #e2e3e5;
+  color: #6c757d;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: not-allowed;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-chat-hint {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #ede9fe;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #553c9a;
+}
+
+.booking-chat-hint span {
+  font-size: 20px;
+}
+
+.booking-chat-hint p {
+  margin: 0;
+  flex: 1;
+}
+
+.booking-chat-hint strong {
+  font-weight: 600;
+}

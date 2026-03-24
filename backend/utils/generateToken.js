@@ -7,17 +7,14 @@ const generateToken = (res, userId) => {
 
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // ✅ إعدادات الكوكيز الصحيحة (بدون domain)
+  // ✅ إعدادات الكوكيز للتطوير المحلي
   const cookieOptions = {
     httpOnly: true,
-    secure: isProduction, // true في الإنتاج (HTTPS)
-    sameSite: isProduction ? 'none' : 'lax',
+    secure: false,
+    sameSite: 'lax', // ✅ lax يعمل مع localhost
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 أيام
   };
-  
-  // ❌ لا نضيف domain أبداً
-  // ❌ لا نضيف partitioned (ليس ضرورياً)
   
   res.cookie('token', token, cookieOptions);
   

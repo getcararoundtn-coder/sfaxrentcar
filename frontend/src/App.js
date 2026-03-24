@@ -9,7 +9,7 @@ import About from './pages/About';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import AddCar from './pages/AddCar';
-import RentYourCar from './pages/RentYourCar'; // ✅ إضافة استيراد الصفحة الجديدة
+import RentYourCar from './pages/RentYourCar';
 import CarDetails from './pages/CarDetails';
 import Booking from './pages/Booking';
 import MyBookings from './pages/MyBookings';
@@ -21,13 +21,12 @@ import ProtectedRoute from './utils/ProtectedRoute';
 import CookieConsentBanner from './components/CookieConsent';
 
 function App() {
-  // للتأكد من تحميل الملف
   useEffect(() => {
     console.log('✅ App.js loaded successfully (full version)');
     console.log('📝 Available routes:', [
       '/', '/forgot-password', '/reset-password/:token', '/terms', '/privacy', 
       '/about', '/cars', '/car/:id', '/profile', '/my-bookings', '/owner-cars', 
-      '/add-car', '/rent-your-car', '/booking/:carId', '/messages/:bookingId', '/admin'
+      '/add-car', '/rent-your-car', '/booking/:carId', '/messages', '/messages/:bookingId', '/admin'
     ]);
   }, []);
 
@@ -77,6 +76,13 @@ function App() {
             <Booking />
           </ProtectedRoute>
         } />
+        
+        {/* ✅ مسارات المحادثات - كلاهما */}
+        <Route path="/messages" element={
+          <ProtectedRoute>
+            <Messages />
+          </ProtectedRoute>
+        } />
         <Route path="/messages/:bookingId" element={
           <ProtectedRoute>
             <Messages />
@@ -93,7 +99,6 @@ function App() {
         {/* ========== صفحة 404 للمسارات غير الموجودة ========== */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {/* شريط الموافقة على الكوكيز */}
       <CookieConsentBanner />
     </Router>
   );

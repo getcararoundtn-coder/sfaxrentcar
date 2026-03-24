@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { SettingsContext } from '../../context/SettingsContext';
@@ -14,6 +14,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [popupMenuOpen, setPopupMenuOpen] = useState(false);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   
   // Modal states
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -31,6 +32,25 @@ const Navbar = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // ✅ جلب عدد الرسائل غير المقروءة
+  useEffect(() => {
+    if (user) {
+      fetchUnreadMessagesCount();
+      // تحديث كل 30 ثانية
+      const interval = setInterval(fetchUnreadMessagesCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchUnreadMessagesCount = async () => {
+    try {
+      const { data } = await API.get('/messages/unread-count');
+      setUnreadMessagesCount(data.data || 0);
+    } catch (err) {
+      console.error('Error fetching unread count:', err);
+    }
+  };
 
   const handleLogout = async () => {
     console.log('🔴🔴🔴 LOGOUT BUTTON CLICKED 🔴🔴🔴');
@@ -230,25 +250,28 @@ const Navbar = () => {
                       <span>Mon profil</span>
                     </Link>
                     
-                    <Link to="/owner-cars?tab=messages" className="popup-menu-item" onClick={closeMenus}>
+                    {/* ✅ رابط مباشر لصفحة Messages مع عدد غير مقروء */}
+                    <Link to="/messages" className="popup-menu-item" onClick={closeMenus}>
                       <span className="popup-menu-icon">💬</span>
                       <span>Messages</span>
+                      {unreadMessagesCount > 0 && (
+                        <span className="menu-unread-badge">{unreadMessagesCount}</span>
+                      )}
                     </Link>
                     
-                    <Link to="/owner-cars?tab=bookings" className="popup-menu-item" onClick={closeMenus}>
+                    <Link to="/my-bookings" className="popup-menu-item" onClick={closeMenus}>
                       <span className="popup-menu-icon">📅</span>
-                      <span>Locations</span>
+                      <span>Mes réservations</span>
                     </Link>
                     
-                    <Link to="/owner-cars?tab=paiements" className="popup-menu-item" onClick={closeMenus}>
-                      <span className="popup-menu-icon">💰</span>
-                      <span>Paiements</span>
-                    </Link>
-                    
-                    <Link to="/owner-cars?tab=cars" className="popup-menu-item" onClick={closeMenus}>
-                      <span className="popup-menu-icon">🚗</span>
-                      <span>Voitures</span>
-                    </Link>
+                    {(user.role === 'owner' || user.role === 'company') && (
+                      <>
+                        <Link to="/owner-cars" className="popup-menu-item" onClick={closeMenus}>
+                          <span className="popup-menu-icon">🚗</span>
+                          <span>Mes voitures</span>
+                        </Link>
+                      </>
+                    )}
                     
                     {user.role === 'admin' && (
                       <>
@@ -310,24 +333,23 @@ const Navbar = () => {
                       👤 Mon profil
                     </Link>
                     <Link to="/my-bookings" className="mobile-link" onClick={closeMenus}>
-                      Mes réservations
+                      📅 Mes réservations
                     </Link>
+                    
+                    {/* ✅ رابط مباشر لصفحة Messages في الموبايل */}
+                    <Link to="/messages" className="mobile-link" onClick={closeMenus}>
+                      💬 Messages
+                      {unreadMessagesCount > 0 && (
+                        <span className="mobile-unread-badge">{unreadMessagesCount}</span>
+                      )}
+                    </Link>
+                    
                     {(user.role === 'owner' || user.role === 'company') && (
-                      <>
-                        <Link to="/owner-cars?tab=messages" className="mobile-link" onClick={closeMenus}>
-                          💬 Messages
-                        </Link>
-                        <Link to="/owner-cars?tab=bookings" className="mobile-link" onClick={closeMenus}>
-                          📅 Locations
-                        </Link>
-                        <Link to="/owner-cars?tab=paiements" className="mobile-link" onClick={closeMenus}>
-                          💰 Paiements
-                        </Link>
-                        <Link to="/owner-cars?tab=cars" className="mobile-link" onClick={closeMenus}>
-                          🚗 Voitures
-                        </Link>
-                      </>
+                      <Link to="/owner-cars" className="mobile-link" onClick={closeMenus}>
+                        🚗 Mes voitures
+                      </Link>
                     )}
+                    
                     {user.role === 'admin' && (
                       <>
                         <div className="mobile-divider"></div>

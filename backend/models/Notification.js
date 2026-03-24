@@ -10,10 +10,10 @@ const notificationSchema = new mongoose.Schema({
     type: String,
     enum: [
       // ✅ إشعارات الحجوزات
-      'booking_created',      // ✅ جديد - عند إنشاء حجز
+      'booking_created',
       'booking_pending', 
-      'booking_approved', 
-      'booking_rejected', 
+      'booking_accepted',  // ✅ تغيير من booking_approved إلى booking_accepted
+      'booking_refused',   // ✅ تغيير من booking_rejected إلى booking_refused
       'booking_completed', 
       'booking_cancelled',
       // ✅ إشعارات الوثائق
@@ -28,7 +28,7 @@ const notificationSchema = new mongoose.Schema({
       'message_reply',
       'new_review',
       'new_user',
-      'new_message',
+      'new_message',      // ✅ للإشعارات الجديدة للرسائل
       // ✅ إشعارات الدعم
       'support_new',
       'support_reply'
@@ -44,20 +44,31 @@ const notificationSchema = new mongoose.Schema({
     required: true 
   },
   relatedId: { 
-    type: mongoose.Schema.Types.ObjectId 
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: 'relatedModel'  // ✅ إضافة reference dynamic
   },
-  read: { 
+  relatedModel: {
+    type: String,
+    enum: ['Booking', 'Car', 'User', 'Document', 'Message']
+  },
+  isRead: { 
     type: Boolean, 
     default: false 
-  },
+  },  // ✅ تغيير من read إلى isRead
+  readAt: { 
+    type: Date 
+  },  // ✅ جديد: وقت القراءة
   createdAt: { 
     type: Date, 
     default: Date.now 
   }
+}, {
+  timestamps: true  // ✅ إضافة updatedAt
 });
 
 // فهرسة لتحسين الأداء
 notificationSchema.index({ userId: 1, createdAt: -1 });
-notificationSchema.index({ read: 1 });
+notificationSchema.index({ isRead: 1 });
+notificationSchema.index({ type: 1 });
 
 module.exports = mongoose.model('Notification', notificationSchema);

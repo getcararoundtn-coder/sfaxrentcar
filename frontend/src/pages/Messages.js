@@ -1,115 +1,318 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import API from '../services/api';
+import { showError } from '../utils/ToastConfig';
+import './Messages.css';
 
 const Messages = () => {
   const { bookingId } = useParams();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [booking, setBooking] = useState(null);
+  const [bookingInfo, setBookingInfo] = useState(null);
+  const [carInfo, setCarInfo] = useState(null);
+  const [otherUser, setOtherUser] = useState(null);
+  const [canChat, setCanChat] = useState(false);
+  const [error, setError] = useState(null);
+  const [conversations, setConversations] = useState([]);
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
-  const fetchMessages = useCallback(async () => {
+  const fetchConversations = useCallback(async () => {
     try {
-      const { data } = await API.get(`/messages/${bookingId}`);
-      setMessages(data.data);
-      
-      // جلب معلومات الحجز
-      if (!booking) {
-        const bookingRes = await API.get(`/bookings/${bookingId}`);
-        setBooking(bookingRes.data.data);
-      }
+      const { data } = await API.get('/messages/conversations');
+      setConversations(data.data || []);
     } catch (err) {
-      console.error('Error fetching messages:', err);
+      console.error('Error fetching conversations:', err);
     } finally {
       setLoading(false);
     }
-  }, [bookingId, booking]);
+  }, []);
+
+  const fetchMessages = useCallback(async () => {
+    if (!bookingId) return;
+    
+    try {
+      console.log('📤 Fetching messages for booking:', bookingId);
+      const { data } = await API.get(`/messages/booking/${bookingId}`);
+      console.log('✅ Response:', data);
+      
+      if (data.success) {
+        // ✅ تحويل الرسائل لقراءة كلاً من message و text
+        const formattedMessages = (data.data.messages || []).map(msg => ({
+          ...msg,
+          message: msg.message || msg.text || '', // دعم كلا الحقلين
+          text: msg.text || msg.message || ''
+        }));
+        
+        setMessages(formattedMessages);
+        setBookingInfo(data.data.booking);
+        setCarInfo(data.data.car);
+        setOtherUser(data.data.otherUser);
+        setCanChat(data.data.booking?.canChat || false);
+        
+        console.log('✅ Messages loaded:', formattedMessages.length);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching messages:', err);
+      if (err.response?.status === 403) {
+        setError(err.response?.data?.message || 'Vous ne pouvez pas accéder à cette conversation');
+      } else {
+        setError('Impossible de charger les messages');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [bookingId]);
 
   useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5000); // تحديث كل 5 ثوان
-    return () => clearInterval(interval);
-  }, [fetchMessages]);
+    if (bookingId) {
+      fetchMessages();
+    } else {
+      fetchConversations();
+    }
+  }, [bookingId, fetchMessages, fetchConversations]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  const formatMessageDate = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Hier ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    } else {
+      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+    }
+  };
+
+  const formatFullDate = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
+    if (!canChat) {
+      showError('Vous ne pouvez pas envoyer de messages avant confirmation de la réservation');
+      return;
+    }
+    
     setSending(true);
     try {
-      const { data } = await API.post('/messages', { 
-        bookingId, 
-        text: newMessage 
+      const { data } = await API.post(`/messages/booking/${bookingId}`, { 
+        message: newMessage 
       });
-      setMessages([...messages, data.data]);
-      setNewMessage('');
+      
+      if (data.success) {
+        const newMsg = {
+          ...data.data,
+          message: data.data.message || data.data.text || newMessage
+        };
+        setMessages([...messages, newMsg]);
+        setNewMessage('');
+        scrollToBottom();
+      }
     } catch (err) {
-      alert('فشل إرسال الرسالة');
+      console.error('Error sending message:', err);
+      showError(err.response?.data?.message || 'Échec de l\'envoi du message');
     } finally {
       setSending(false);
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const getStatusText = (status) => {
+    switch(status) {
+      case 'pending': return 'En attente de confirmation';
+      case 'accepted': return 'Réservation confirmée ✅';
+      case 'approved': return 'Réservation confirmée ✅';
+      case 'ongoing': return 'Location en cours';
+      case 'completed': return 'Location terminée';
+      case 'cancelled': return 'Annulée';
+      case 'refused': return 'Refusée';
+      default: return status;
+    }
   };
 
-  if (loading) return <><Navbar /><div style={styles.loading}>جاري التحميل...</div></>;
+  // صفحة قائمة المحادثات
+  if (!bookingId) {
+    return (
+      <>
+        <Navbar />
+        <div className="messages-page">
+          <div className="conversations-container">
+            <h1 className="conversations-title">Messages</h1>
+            {loading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Chargement des conversations...</p>
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="empty-conversations">
+                <div className="empty-icon">💬</div>
+                <h3>Aucune conversation</h3>
+                <p>Les messages apparaîtront ici après confirmation de vos réservations</p>
+                <Link to="/my-bookings" className="browse-link">Voir mes réservations</Link>
+              </div>
+            ) : (
+              <div className="conversations-list">
+                {conversations.map((conv) => (
+                  <div
+                    key={conv.bookingId}
+                    className={`conversation-card ${conv.unreadCount > 0 ? 'unread' : ''}`}
+                    onClick={() => navigate(`/messages/${conv.bookingId}`)}
+                  >
+                    <div className="conversation-avatar">
+                      {conv.carImage ? (
+                        <img src={conv.carImage} alt={conv.carName} />
+                      ) : (
+                        <div className="avatar-placeholder">🚗</div>
+                      )}
+                    </div>
+                    <div className="conversation-info">
+                      <div className="conversation-header">
+                        <h3>{conv.carName}</h3>
+                        {conv.unreadCount > 0 && (
+                          <span className="unread-badge">{conv.unreadCount}</span>
+                        )}
+                      </div>
+                      <p className="conversation-last-message">
+                        {conv.lastMessage ? (
+                          <>
+                            <strong>{conv.lastMessage.sender}:</strong> {conv.lastMessage.text}
+                          </>
+                        ) : (
+                          "Nouvelle conversation"
+                        )}
+                      </p>
+                      {conv.dates && conv.dates.start && conv.dates.end && (
+                        <p className="conversation-dates">
+                          📅 {formatFullDate(conv.dates.start)} - {formatFullDate(conv.dates.end)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // صفحة المحادثة
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="messages-page-loading">
+          <div className="loading-spinner"></div>
+          <p>Chargement des messages...</p>
+        </div>
+      </>
+    );
+  }
+
+  if (error && !canChat) {
+    return (
+      <>
+        <Navbar />
+        <div className="messages-page-error">
+          <div className="error-container">
+            <div className="error-icon">🔒</div>
+            <h2>Conversation non disponible</h2>
+            <p>{error}</p>
+            <Link to="/my-bookings" className="back-button">
+              ← Retour à mes réservations
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <div style={styles.header}>
-            <h1 style={styles.title}>المحادثة</h1>
-            {booking && (
-              <Link to={`/car/${booking.carId?._id}`} style={styles.carLink}>
-                {booking.carId?.brand} {booking.carId?.model}
-              </Link>
-            )}
+      <div className="messages-page">
+        <div className="messages-container">
+          <div className="messages-header">
+            <div className="header-left">
+              <button onClick={() => navigate('/messages')} className="back-button">
+                ←
+              </button>
+              <div className="car-info">
+                {carInfo?.image && (
+                  <img src={carInfo.image} alt={carInfo.name} className="car-avatar" />
+                )}
+                <div>
+                  <h2>{carInfo?.name || 'Voiture'}</h2>
+                  {bookingInfo && (
+                    <p className="booking-dates">
+                      📅 {formatFullDate(bookingInfo.startDate)} - {formatFullDate(bookingInfo.endDate)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className={`status-badge ${bookingInfo?.status}`}>
+              {getStatusText(bookingInfo?.status)}
+            </div>
           </div>
 
-          <div style={styles.messagesContainer}>
+          <div className="messages-area" ref={chatContainerRef}>
             {messages.length === 0 ? (
-              <div style={styles.emptyState}>
-                <p>لا توجد رسائل بعد</p>
-                <p>ابدأ المحادثة مع الطرف الآخر</p>
+              <div className="empty-messages">
+                <div className="empty-icon">💬</div>
+                <h3>Aucun message</h3>
+                <p>Soyez le premier à envoyer un message</p>
+                {!canChat && (
+                  <p className="chat-hint">
+                    Les messages seront disponibles après confirmation de votre réservation
+                  </p>
+                )}
               </div>
             ) : (
-              messages.map(msg => {
-                const isMe = msg.senderId?._id === JSON.parse(localStorage.getItem('user'))._id;
+              messages.map((msg, index) => {
+                const currentUser = JSON.parse(localStorage.getItem('user'));
+                const isMe = msg.senderId?._id === currentUser?._id;
+                // ✅ استخدام message الذي يحتوي على المحتوى من كلا الحقلين
+                const messageContent = msg.message || msg.text || '';
                 return (
                   <div
-                    key={msg._id}
-                    style={{
-                      ...styles.messageWrapper,
-                      justifyContent: isMe ? 'flex-end' : 'flex-start'
-                    }}
+                    key={msg._id || index}
+                    className={`message ${isMe ? 'sent' : 'received'}`}
                   >
-                    <div style={{
-                      ...styles.message,
-                      backgroundColor: isMe ? '#007bff' : '#f1f3f5',
-                      color: isMe ? 'white' : '#333'
-                    }}>
-                      {!isMe && (
-                        <span style={styles.senderName}>
-                          {msg.senderId?.name || 'مستخدم'}
-                        </span>
-                      )}
-                      <p style={styles.messageText}>{msg.text}</p>
-                      <span style={{
-                        ...styles.messageTime,
-                        color: isMe ? 'rgba(255,255,255,0.8)' : '#999'
-                      }}>
-                        {new Date(msg.createdAt).toLocaleTimeString('ar-TN')}
-                      </span>
+                    {!isMe && (
+                      <div className="message-sender">
+                        {otherUser?.name || 'Utilisateur'}
+                      </div>
+                    )}
+                    <div className="message-bubble">
+                      <div className="message-text">{messageContent}</div>
+                      <div className="message-time">
+                        {formatMessageDate(msg.createdAt)}
+                      </div>
                     </div>
                   </div>
                 );
@@ -118,143 +321,28 @@ const Messages = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div style={styles.inputArea}>
+          <div className="messages-input-area">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="اكتب رسالتك هنا..."
-              style={styles.input}
+              placeholder={canChat ? "Écrivez votre message..." : "Les messages seront disponibles après confirmation"}
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              disabled={!canChat || sending}
+              className="message-input"
             />
             <button
               onClick={sendMessage}
-              disabled={sending || !newMessage.trim()}
-              style={{
-                ...styles.sendButton,
-                backgroundColor: sending || !newMessage.trim() ? '#6c757d' : '#28a745',
-                cursor: sending || !newMessage.trim() ? 'not-allowed' : 'pointer'
-              }}
+              disabled={!canChat || sending || !newMessage.trim()}
+              className={`send-button ${(!canChat || sending || !newMessage.trim()) ? 'disabled' : ''}`}
             >
-              {sending ? 'جاري...' : 'إرسال'}
+              {sending ? '...' : 'Envoyer'}
             </button>
           </div>
         </div>
       </div>
     </>
   );
-};
-
-const styles = {
-  container: {
-    minHeight: 'calc(100vh - 60px)',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    padding: '20px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-start'
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '20px',
-    maxWidth: '800px',
-    width: '100%',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-    height: '80vh',
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-    paddingBottom: '10px',
-    borderBottom: '1px solid #ddd'
-  },
-  title: {
-    margin: 0,
-    fontSize: '24px',
-    color: '#333'
-  },
-  carLink: {
-    padding: '5px 10px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    textDecoration: 'none',
-    borderRadius: '4px',
-    fontSize: '14px'
-  },
-  messagesContainer: {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '10px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px'
-  },
-  emptyState: {
-    textAlign: 'center',
-    color: '#999',
-    marginTop: '50px'
-  },
-  messageWrapper: {
-    display: 'flex',
-    width: '100%'
-  },
-  message: {
-    maxWidth: '70%',
-    padding: '12px',
-    borderRadius: '12px',
-    position: 'relative',
-    wordBreak: 'break-word'
-  },
-  senderName: {
-    display: 'block',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    marginBottom: '4px'
-  },
-  messageText: {
-    margin: 0,
-    fontSize: '14px',
-    lineHeight: '1.4'
-  },
-  messageTime: {
-    display: 'block',
-    fontSize: '10px',
-    marginTop: '4px',
-    textAlign: 'left'
-  },
-  inputArea: {
-    display: 'flex',
-    gap: '10px',
-    marginTop: '20px',
-    paddingTop: '10px',
-    borderTop: '1px solid #ddd'
-  },
-  input: {
-    flex: 1,
-    padding: '12px',
-    borderRadius: '4px',
-    border: '1px solid #ddd',
-    fontSize: '14px'
-  },
-  sendButton: {
-    padding: '12px 24px',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontWeight: 'bold'
-  },
-  loading: {
-    textAlign: 'center',
-    padding: '50px',
-    fontSize: '18px',
-    color: '#fff'
-  }
 };
 
 export default Messages;

@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import Modal from './Modal';
 import { AuthContext } from '../context/AuthContext';
+import API from '../services/api';
 import { showSuccess, showError } from '../utils/ToastConfig';
 
 const ModalUpload = ({ isOpen, onClose }) => {
@@ -48,30 +49,27 @@ const ModalUpload = ({ isOpen, onClose }) => {
     const formData = new FormData();
     formData.append('driverLicense', driverLicenseFile);
 
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
     try {
-      const response = await fetch(`${API_URL}/documents/upload`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData
+      console.log('🔵🔵🔵 UPLOAD REQUEST (via API) 🔵🔵🔵');
+      const response = await API.post('/documents/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      const data = await response.json();
+      console.log('Response:', response);
 
-      if (data.success) {
+      if (response.data.success) {
         showSuccess('✅ تم رفع رخصة القيادة بنجاح!');
         if (user) setUser({ ...user, verificationStatus: 'pending' });
         onClose();
         setTimeout(() => window.location.reload(), 1500);
       } else {
-        setError(data.message || 'فشل رفع رخصة القيادة');
-        showError(data.message || 'فشل رفع رخصة القيادة');
+        setError(response.data.message || 'فشل رفع رخصة القيادة');
+        showError(response.data.message || 'فشل رفع رخصة القيادة');
       }
     } catch (err) {
       console.error('Upload error:', err);
-      setError('حدث خطأ في الاتصال');
-      showError('حدث خطأ في الاتصال');
+      setError(err.response?.data?.message || 'حدث خطأ في الاتصال');
+      showError(err.response?.data?.message || 'حدث خطأ في الاتصال');
     } finally {
       setLoading(false);
     }

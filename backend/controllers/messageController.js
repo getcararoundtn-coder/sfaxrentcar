@@ -5,29 +5,45 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 
 // @desc إرسال رسالة
-// @route POST /api/messages
+// @route POST /api/messages/booking/:bookingId
 // @access Private
 exports.sendMessage = async (req, res) => {
   try {
-    const { bookingId, text } = req.body;
+    const { bookingId } = req.params;
+    const { message } = req.body;
     const senderId = req.user._id;
 
-    console.log('📨 Sending message:', { bookingId, text, senderId });
+    console.log('📨 Sending message:', { bookingId, message, senderId });
+
+    if (!message || message.trim() === '') {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Le message ne peut pas être vide' 
+      });
+    }
 
     const booking = await Booking.findById(bookingId)
       .populate('carId')
-      .populate('renterId');
+      .populate('renterId', 'first_name last_name')
+      .populate('ownerId', 'first_name last_name');
     
     if (!booking) {
-      return res.status(404).json({ message: 'الحجز غير موجود' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Réservation non trouvée' 
+      });
     }
 
-    if (booking.status !== 'approved') {
-      return res.status(403).json({ message: 'لا يمكن إرسال رسائل لحجز غير موافق عليه' });
+    const allowedStatuses = ['accepted', 'approved', 'ongoing', 'completed'];
+    if (!allowedStatuses.includes(booking.status)) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'La conversation n\'est disponible qu\'après confirmation de la réservation' 
+      });
     }
 
     const car = booking.carId;
-    const ownerId = car.ownerId;
+    const ownerId = booking.ownerId._id || booking.ownerId;
     
     let receiverId;
     let receiverRole = '';
@@ -39,28 +55,34 @@ exports.sendMessage = async (req, res) => {
       receiverId = booking.renterId._id;
       receiverRole = 'renter';
     } else {
-      return res.status(403).json({ message: 'غير مصرح لك بإرسال رسائل لهذا الحجز' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Vous n\'êtes pas autorisé à envoyer des messages pour cette réservation' 
+      });
     }
 
-    const message = await Message.create({
+    const newMessage = await Message.create({
       bookingId,
+      carId: car._id,
       senderId,
       receiverId,
-      text,
-      read: false
+      message: message.trim(),
+      text: message.trim(), // ✅ حفظ أيضاً في حقل text للتوافق
+      isRead: false,
+      readAt: null
     });
 
-    const sender = await User.findById(senderId).select('name');
+    const sender = await User.findById(senderId).select('first_name last_name');
     
     let notificationTitle = '';
     let notificationMessage = '';
     
     if (receiverRole === 'owner') {
-      notificationTitle = '💬 رسالة جديدة من المستأجر';
-      notificationMessage = `لديك رسالة جديدة من المستأجر ${sender.name} بخصوص حجز سيارتك`;
+      notificationTitle = '💬 Nouveau message du locataire';
+      notificationMessage = `Vous avez reçu un nouveau message de ${sender.first_name} ${sender.last_name} concernant la réservation de votre ${car.brand} ${car.model}`;
     } else {
-      notificationTitle = '💬 رسالة جديدة من المالك';
-      notificationMessage = `لديك رسالة جديدة من المالك ${sender.name} بخصوص حجزك`;
+      notificationTitle = '💬 Nouveau message du propriétaire';
+      notificationMessage = `Vous avez reçu un nouveau message de ${sender.first_name} ${sender.last_name} concernant votre réservation pour ${car.brand} ${car.model}`;
     }
 
     try {
@@ -69,15 +91,16 @@ exports.sendMessage = async (req, res) => {
         type: 'new_message',
         title: notificationTitle,
         message: notificationMessage,
-        relatedId: bookingId
+        relatedId: bookingId,
+        relatedModel: 'Booking'
       });
       console.log('✅ Notification sent to receiver');
     } catch (notifError) {
       console.error('❌ Failed to create notification:', notifError);
     }
 
-    const populatedMessage = await Message.findById(message._id)
-      .populate('senderId', 'name');
+    const populatedMessage = await Message.findById(newMessage._id)
+      .populate('senderId', 'first_name last_name');
 
     res.status(201).json({ success: true, data: populatedMessage });
 
@@ -85,75 +108,227 @@ exports.sendMessage = async (req, res) => {
     console.error('❌ Error sending message:', error);
     res.status(500).json({ 
       success: false,
-      message: 'حدث خطأ في إرسال الرسالة',
+      message: 'Erreur lors de l\'envoi du message',
       error: error.message 
     });
   }
 };
 
 // @desc جلب رسائل حجز معين
-// @route GET /api/messages/:bookingId
+// @route GET /api/messages/booking/:bookingId
 // @access Private
-exports.getMessages = async (req, res) => {
+exports.getMessagesByBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
     const userId = req.user._id;
 
-    const booking = await Booking.findById(bookingId).populate('carId');
+    console.log('📨 Fetching messages for booking:', bookingId);
+    console.log('👤 User ID:', userId);
+
+    const booking = await Booking.findById(bookingId)
+      .populate('carId', 'brand model images ownerId')
+      .populate('renterId', 'first_name last_name')
+      .populate('ownerId', 'first_name last_name');
+      
     if (!booking) {
-      return res.status(404).json({ message: 'الحجز غير موجود' });
+      console.log('❌ Booking not found:', bookingId);
+      return res.status(404).json({ 
+        success: false,
+        message: 'Réservation non trouvée' 
+      });
+    }
+
+    console.log('📋 Booking found:', {
+      id: booking._id,
+      status: booking.status,
+      renterId: booking.renterId?._id,
+      ownerId: booking.ownerId?._id
+    });
+
+    const allowedStatuses = ['accepted', 'approved', 'ongoing', 'completed'];
+    if (!allowedStatuses.includes(booking.status)) {
+      console.log('❌ Booking not accepted, status:', booking.status);
+      return res.status(403).json({ 
+        success: false,
+        message: 'La conversation n\'est disponible qu\'après confirmation de la réservation',
+        canChat: false,
+        bookingStatus: booking.status
+      });
     }
 
     const car = booking.carId;
-    const ownerId = car.ownerId;
+    const ownerId = booking.ownerId?._id || booking.ownerId;
 
-    if (userId.toString() !== booking.renterId.toString() && 
-        userId.toString() !== ownerId.toString()) {
-      return res.status(403).json({ message: 'غير مصرح لك بمشاهدة هذه الرسائل' });
+    const isRenter = userId.toString() === booking.renterId?._id?.toString();
+    const isOwner = userId.toString() === ownerId?.toString();
+    
+    if (!isRenter && !isOwner) {
+      console.log('❌ User not authorized:', userId);
+      return res.status(403).json({ 
+        success: false,
+        message: 'Vous n\'êtes pas autorisé à voir ces messages' 
+      });
     }
 
     const messages = await Message.find({ bookingId })
-      .populate('senderId', 'name')
+      .populate('senderId', 'first_name last_name')
+      .populate('receiverId', 'first_name last_name')
       .sort('createdAt');
+
+    console.log('✅ Found raw messages:', messages.length);
+
+    // ✅ تحويل الرسائل للتأكد من وجود المحتوى
+    const formattedMessages = messages.map(msg => ({
+      _id: msg._id,
+      message: msg.message || msg.text || '', // دعم message و text
+      text: msg.text || msg.message || '',     // للتوافق
+      senderId: msg.senderId,
+      receiverId: msg.receiverId,
+      createdAt: msg.createdAt,
+      isRead: msg.isRead,
+      readAt: msg.readAt
+    }));
+
+    console.log('✅ Formatted messages:', formattedMessages.map(m => ({ id: m._id, content: m.message.substring(0, 50) })));
 
     // تحديث حالة الرسائل كمقروءة للمستلم
     await Message.updateMany(
-      { bookingId, receiverId: userId, read: false },
-      { read: true }
+      { bookingId, receiverId: userId, isRead: false },
+      { isRead: true, readAt: new Date() }
     );
 
-    res.json({ success: true, data: messages });
+    let otherUserId = null;
+    let otherUserName = 'Utilisateur';
+    
+    if (isRenter) {
+      otherUserId = ownerId;
+      if (booking.ownerId) {
+        otherUserName = `${booking.ownerId.first_name || ''} ${booking.ownerId.last_name || ''}`.trim() || 'Propriétaire';
+      }
+    } else {
+      otherUserId = booking.renterId?._id;
+      if (booking.renterId) {
+        otherUserName = `${booking.renterId.first_name || ''} ${booking.renterId.last_name || ''}`.trim() || 'Locataire';
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      data: {
+        messages: formattedMessages,
+        booking: {
+          id: booking._id,
+          status: booking.status,
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+          canChat: true
+        },
+        car: {
+          id: car._id,
+          name: `${car.brand} ${car.model}`,
+          image: car.images?.[0] || null
+        },
+        otherUser: {
+          id: otherUserId || '',
+          name: otherUserName
+        }
+      }
+    });
   } catch (error) {
     console.error('❌ Error fetching messages:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message,
+      stack: error.stack 
+    });
   }
 };
 
-// @desc جلب جميع رسائل المستخدم (لصفحة الرسائل)
-// @route GET /api/messages/my-messages
+// @desc الحصول على جميع المحادثات للمستخدم
+// @route GET /api/messages/conversations
 // @access Private
-exports.getMyMessages = async (req, res) => {
+exports.getMyConversations = async (req, res) => {
   try {
     const userId = req.user._id;
     
-    const messages = await Message.find({
-      $or: [{ senderId: userId }, { receiverId: userId }]
-    })
-      .populate('senderId', 'name email')
-      .populate('receiverId', 'name email')
-      .populate({
-        path: 'bookingId',
-        populate: {
-          path: 'carId',
-          select: 'brand model images'
-        }
-      })
-      .sort('-createdAt');
+    console.log('📨 Fetching conversations for user:', userId);
     
-    res.json({ success: true, data: messages });
+    const bookings = await Booking.find({
+      $or: [
+        { renterId: userId },
+        { ownerId: userId }
+      ],
+      status: { $in: ['accepted', 'approved', 'ongoing', 'completed'] }
+    })
+      .populate('carId', 'brand model images')
+      .populate('renterId', 'first_name last_name')
+      .populate('ownerId', 'first_name last_name')
+      .sort({ updatedAt: -1 });
+
+    console.log('📋 Found bookings:', bookings.length);
+
+    const conversations = await Promise.all(bookings.map(async (booking) => {
+      const lastMessage = await Message.findOne({ bookingId: booking._id })
+        .sort({ createdAt: -1 })
+        .populate('senderId', 'first_name last_name');
+      
+      const unreadCount = await Message.countDocuments({
+        bookingId: booking._id,
+        receiverId: userId,
+        isRead: false
+      });
+
+      let otherUserName = 'Utilisateur';
+      let otherUserId = null;
+      
+      if (userId.toString() === booking.renterId?._id?.toString()) {
+        otherUserId = booking.ownerId?._id;
+        if (booking.ownerId) {
+          otherUserName = `${booking.ownerId.first_name || ''} ${booking.ownerId.last_name || ''}`.trim() || 'Propriétaire';
+        }
+      } else {
+        otherUserId = booking.renterId?._id;
+        if (booking.renterId) {
+          otherUserName = `${booking.renterId.first_name || ''} ${booking.renterId.last_name || ''}`.trim() || 'Locataire';
+        }
+      }
+
+      // ✅ استخراج محتوى الرسالة بشكل صحيح
+      let lastMessageText = null;
+      if (lastMessage) {
+        lastMessageText = lastMessage.message || lastMessage.text || '';
+      }
+
+      return {
+        bookingId: booking._id,
+        carName: `${booking.carId.brand} ${booking.carId.model}`,
+        carImage: booking.carId.images?.[0] || null,
+        otherUser: {
+          id: otherUserId || '',
+          name: otherUserName
+        },
+        lastMessage: lastMessage ? {
+          text: lastMessageText,
+          sender: lastMessage.senderId?.first_name || 'Utilisateur',
+          createdAt: lastMessage.createdAt
+        } : null,
+        unreadCount,
+        bookingStatus: booking.status,
+        dates: {
+          start: booking.startDate,
+          end: booking.endDate
+        }
+      };
+    }));
+
+    console.log('✅ Returning conversations:', conversations.length);
+    res.json({ success: true, data: conversations });
   } catch (error) {
-    console.error('❌ Error getting my messages:', error);
-    res.status(500).json({ message: error.message });
+    console.error('❌ Error getting conversations:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 
@@ -163,129 +338,44 @@ exports.getMyMessages = async (req, res) => {
 exports.getUnreadCount = async (req, res) => {
   try {
     const userId = req.user._id;
-    const count = await Message.countDocuments({ receiverId: userId, read: false });
+    const count = await Message.countDocuments({ 
+      receiverId: userId, 
+      isRead: false 
+    });
     res.json({ success: true, data: count });
   } catch (error) {
     console.error('❌ Error getting unread count:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc الحصول على جميع المحادثات للمستخدم
-// @route GET /api/messages/conversations
-// @access Private
-exports.getConversations = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    
-    const messages = await Message.aggregate([
-      {
-        $match: {
-          $or: [{ senderId: userId }, { receiverId: userId }]
-        }
-      },
-      { $sort: { createdAt: -1 } },
-      {
-        $group: {
-          _id: '$bookingId',
-          lastMessage: { $first: '$$ROOT' },
-          unreadCount: {
-            $sum: {
-              $cond: [
-                { $and: [{ $eq: ['$receiverId', userId] }, { $eq: ['$read', false] }] },
-                1,
-                0
-              ]
-            }
-          }
-        }
-      },
-      {
-        $lookup: {
-          from: 'bookings',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'booking'
-        }
-      },
-      { $unwind: '$booking' },
-      {
-        $lookup: {
-          from: 'cars',
-          localField: 'booking.carId',
-          foreignField: '_id',
-          as: 'car'
-        }
-      },
-      { $unwind: '$car' },
-      { $sort: { 'lastMessage.createdAt': -1 } }
-    ]);
-
-    res.json({ success: true, data: messages });
-  } catch (error) {
-    console.error('❌ Error getting conversations:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc الرد على رسالة (للمشرفين)
-// @route POST /api/messages/:id/reply
-// @access Private/Admin
-exports.replyToMessage = async (req, res) => {
-  try {
-    const { reply } = req.body;
-    const originalMessage = await Message.findById(req.params.id)
-      .populate('senderId', 'name email');
-
-    if (!originalMessage) {
-      return res.status(404).json({ message: 'الرسالة غير موجودة' });
-    }
-
-    const newMessage = await Message.create({
-      bookingId: originalMessage.bookingId,
-      senderId: req.user._id,
-      receiverId: originalMessage.senderId._id,
-      text: reply,
-      reply: true,
-      read: false
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
     });
-
-    try {
-      await Notification.create({
-        userId: originalMessage.senderId._id,
-        type: 'message_reply',
-        title: '📨 رد على رسالتك',
-        message: `تم الرد على استفسارك: ${reply.substring(0, 50)}${reply.length > 50 ? '...' : ''}`,
-        relatedId: newMessage._id
-      });
-    } catch (notifError) {
-      console.error('❌ Failed to create notification:', notifError);
-    }
-
-    const populatedMessage = await Message.findById(newMessage._id)
-      .populate('senderId', 'name');
-
-    res.status(201).json({ success: true, data: populatedMessage });
-  } catch (error) {
-    console.error('❌ Error replying to message:', error);
-    res.status(500).json({ message: error.message });
   }
 };
 
 // @desc تحديث حالة الرسالة إلى مقروءة
-// @route PATCH /api/messages/:id/read
+// @route PUT /api/messages/booking/:bookingId/read
 // @access Private
 exports.markAsRead = async (req, res) => {
   try {
-    const message = await Message.findByIdAndUpdate(
-      req.params.id,
-      { read: true },
-      { new: true }
+    const { bookingId } = req.params;
+    const userId = req.user._id;
+
+    const result = await Message.updateMany(
+      { bookingId, receiverId: userId, isRead: false },
+      { isRead: true, readAt: new Date() }
     );
-    res.json({ success: true, data: message });
+
+    res.json({ 
+      success: true, 
+      data: { modifiedCount: result.modifiedCount },
+      message: 'Messages marqués comme lus'
+    });
   } catch (error) {
-    console.error('❌ Error marking message as read:', error);
-    res.status(500).json({ message: error.message });
+    console.error('❌ Error marking messages as read:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 
@@ -296,18 +386,83 @@ exports.deleteMessage = async (req, res) => {
   try {
     const message = await Message.findById(req.params.id);
     if (!message) {
-      return res.status(404).json({ message: 'الرسالة غير موجودة' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Message non trouvé' 
+      });
     }
 
-    // التحقق من الصلاحية: المشرف أو المرسل
     if (req.user.role !== 'admin' && message.senderId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'غير مصرح لك بحذف هذه الرسالة' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Vous n\'êtes pas autorisé à supprimer ce message' 
+      });
     }
 
     await Message.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: 'تم حذف الرسالة' });
+    res.json({ 
+      success: true, 
+      message: 'Message supprimé avec succès' 
+    });
   } catch (error) {
     console.error('❌ Error deleting message:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+};
+
+// @desc الرد على رسالة (للمشرفين)
+// @route POST /api/messages/:id/reply
+// @access Private/Admin
+exports.replyToMessage = async (req, res) => {
+  try {
+    const { reply } = req.body;
+    const messageId = req.params.id;
+    
+    const originalMessage = await Message.findById(messageId)
+      .populate('senderId', 'first_name last_name email');
+
+    if (!originalMessage) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Message non trouvé' 
+      });
+    }
+
+    const newMessage = await Message.create({
+      bookingId: originalMessage.bookingId,
+      carId: originalMessage.carId,
+      senderId: req.user._id,
+      receiverId: originalMessage.senderId._id,
+      message: reply,
+      text: reply,
+      isRead: false
+    });
+
+    try {
+      await Notification.create({
+        userId: originalMessage.senderId._id,
+        type: 'message_reply',
+        title: '📨 Réponse à votre message',
+        message: `Une réponse a été apportée à votre message: ${reply.substring(0, 50)}${reply.length > 50 ? '...' : ''}`,
+        relatedId: newMessage._id,
+        relatedModel: 'Message'
+      });
+    } catch (notifError) {
+      console.error('❌ Failed to create notification:', notifError);
+    }
+
+    const populatedMessage = await Message.findById(newMessage._id)
+      .populate('senderId', 'first_name last_name');
+
+    res.status(201).json({ success: true, data: populatedMessage });
+  } catch (error) {
+    console.error('❌ Error replying to message:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };

@@ -12,28 +12,23 @@ exports.createBooking = async (req, res) => {
   try {
     const { carId, startDate, endDate, totalPrice } = req.body;
 
-    // التحقق من وجود totalPrice
     if (!totalPrice || isNaN(totalPrice) || totalPrice <= 0) {
       return res.status(400).json({ message: 'السعر الإجمالي مطلوب أو غير صالح' });
     }
 
-    // التحقق من وجود التواريخ
     if (!startDate || !endDate) {
       return res.status(400).json({ message: 'تاريخ البداية والنهاية مطلوبان' });
     }
 
-    // التحقق من وجود السيارة
     const car = await Car.findById(carId);
     if (!car) {
       return res.status(404).json({ message: 'السيارة غير موجودة' });
     }
 
-    // التحقق من أن المستخدم ليس مالك السيارة
     if (car.ownerId.toString() === req.user._id.toString()) {
       return res.status(400).json({ message: 'لا يمكنك حجز سيارتك الخاصة' });
     }
 
-    // التحقق من توفر السيارة في التواريخ المطلوبة
     const existingBooking = await Booking.findOne({
       carId,
       status: { $in: ['pending', 'accepted'] },
@@ -46,7 +41,6 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'السيارة غير متاحة في هذه التواريخ' });
     }
 
-    // حساب المدة بالأيام
     const start = new Date(startDate);
     const end = new Date(endDate);
     const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
@@ -55,12 +49,10 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية' });
     }
 
-    // جلب إعدادات العمولة
     const settings = await Setting.findOne();
     const commissionRate = settings?.commissionRate || 0;
     const platformCommission = (totalPrice * commissionRate) / 100;
 
-    // إنشاء الحجز
     const booking = await Booking.create({
       carId,
       renterId: req.user._id,
@@ -76,27 +68,27 @@ exports.createBooking = async (req, res) => {
       signed: false
     });
 
-    // إشعار للمالك
     try {
       await Notification.create({
         userId: car.ownerId,
         type: 'booking_pending',
         title: '📅 حجز جديد بانتظار الموافقة',
         message: `لديك حجز جديد على سيارتك ${car.brand} ${car.model} لمدة ${days} أيام`,
-        relatedId: booking._id
+        relatedId: booking._id,
+        relatedModel: 'Booking'
       });
     } catch (notifError) {
       console.error('فشل إنشاء إشعار للمالك:', notifError);
     }
 
-    // إشعار للمستأجر
     try {
       await Notification.create({
         userId: req.user._id,
         type: 'booking_created',
         title: '📅 تم إنشاء حجزك',
         message: `تم إنشاء حجزك لسيارة ${car.brand} ${car.model} بنجاح. في انتظار موافقة المالك.`,
-        relatedId: booking._id
+        relatedId: booking._id,
+        relatedModel: 'Booking'
       });
     } catch (notifError) {
       console.error('فشل إنشاء إشعار للمستأجر:', notifError);
@@ -116,7 +108,7 @@ exports.getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ renterId: req.user._id })
       .populate('carId', 'brand model images pricePerDay location')
-      .populate('ownerId', 'name email phone')
+      .populate('ownerId', 'first_name last_name email phone')
       .sort('-createdAt');
 
     res.json({ success: true, data: bookings });
@@ -133,7 +125,7 @@ exports.getOwnerBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ ownerId: req.user._id })
       .populate('carId', 'brand model images pricePerDay location')
-      .populate('renterId', 'name email phone')
+      .populate('renterId', 'first_name last_name email phone')
       .sort('-createdAt');
 
     res.json({ success: true, data: bookings });
@@ -151,13 +143,14 @@ exports.updateBookingStatus = async (req, res) => {
     const { status } = req.body;
     const bookingId = req.params.id;
 
-    const booking = await Booking.findById(bookingId).populate('carId', 'brand model ownerId');
+    const booking = await Booking.findById(bookingId)
+      .populate('carId', 'brand model ownerId images')
+      .populate('renterId', 'first_name last_name email');
 
     if (!booking) {
       return res.status(404).json({ message: 'الحجز غير موجود' });
     }
 
-    // التحقق من أن المستخدم هو مالك السيارة
     if (booking.ownerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'غير مصرح لك بتعديل هذا الحجز' });
     }
@@ -165,37 +158,44 @@ exports.updateBookingStatus = async (req, res) => {
     booking.status = status;
     await booking.save();
 
-    // إشعار للمستأجر
     let title = '';
-    let message = '';
+    let notificationMessage = '';
+    let notificationType = '';
+
     switch (status) {
       case 'accepted':
-        title = '✅ تم قبول حجزك';
-        message = `تم قبول حجزك لسيارة ${booking.carId.brand} ${booking.carId.model}`;
+        notificationType = 'booking_accepted';
+        title = '✅ Réservation confirmée';
+        notificationMessage = `Votre réservation pour ${booking.carId.brand} ${booking.carId.model} a été acceptée. Vous pouvez maintenant contacter le propriétaire via la section "Messages".`;
         break;
       case 'refused':
-        title = '❌ تم رفض حجزك';
-        message = `تم رفض حجزك لسيارة ${booking.carId.brand} ${booking.carId.model}`;
+        notificationType = 'booking_refused';
+        title = '❌ Réservation refusée';
+        notificationMessage = `Votre réservation pour ${booking.carId.brand} ${booking.carId.model} a été refusée.`;
         break;
       case 'cancelled':
-        title = '⚠️ تم إلغاء حجزك';
-        message = `تم إلغاء حجزك لسيارة ${booking.carId.brand} ${booking.carId.model}`;
+        notificationType = 'booking_cancelled';
+        title = '⚠️ Réservation annulée';
+        notificationMessage = `Votre réservation pour ${booking.carId.brand} ${booking.carId.model} a été annulée.`;
         break;
       default:
-        title = '📅 تحديث حالة الحجز';
-        message = `تغيرت حالة حجزك لسيارة ${booking.carId.brand} ${booking.carId.model}`;
+        notificationType = 'booking_status';
+        title = '📅 Mise à jour de réservation';
+        notificationMessage = `Le statut de votre réservation pour ${booking.carId.brand} ${booking.carId.model} a changé.`;
     }
 
     try {
       await Notification.create({
-        userId: booking.renterId,
-        type: 'booking_status',
+        userId: booking.renterId._id,
+        type: notificationType,
         title,
-        message,
-        relatedId: booking._id
+        message: notificationMessage,
+        relatedId: booking._id,
+        relatedModel: 'Booking'
       });
+      console.log(`✅ Notification sent to renter: ${notificationType}`);
     } catch (notifError) {
-      console.error('فشل إنشاء إشعار:', notifError);
+      console.error('❌ Failed to create notification:', notifError);
     }
 
     res.json({ success: true, data: booking });
@@ -210,18 +210,17 @@ exports.updateBookingStatus = async (req, res) => {
 // @access  Private (المستأجر فقط)
 exports.cancelBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate('carId', 'brand model ownerId');
+    const booking = await Booking.findById(req.params.id)
+      .populate('carId', 'brand model ownerId');
 
     if (!booking) {
       return res.status(404).json({ message: 'الحجز غير موجود' });
     }
 
-    // التحقق من أن المستخدم هو المستأجر
     if (booking.renterId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'غير مصرح لك بإلغاء هذا الحجز' });
     }
 
-    // لا يمكن إلغاء الحجز إذا كان مكتملاً أو ملغى سابقاً
     if (booking.status === 'completed' || booking.status === 'cancelled') {
       return res.status(400).json({ message: 'لا يمكن إلغاء هذا الحجز' });
     }
@@ -229,17 +228,17 @@ exports.cancelBooking = async (req, res) => {
     booking.status = 'cancelled';
     await booking.save();
 
-    // إشعار للمالك
     try {
       await Notification.create({
         userId: booking.ownerId,
         type: 'booking_cancelled',
-        title: '⚠️ تم إلغاء حجز',
-        message: `تم إلغاء حجز سيارتك ${booking.carId.brand} ${booking.carId.model} من قبل المستأجر`,
-        relatedId: booking._id
+        title: '⚠️ Réservation annulée',
+        message: `La réservation de votre ${booking.carId.brand} ${booking.carId.model} a été annulée par le locataire.`,
+        relatedId: booking._id,
+        relatedModel: 'Booking'
       });
     } catch (notifError) {
-      console.error('فشل إنشاء إشعار:', notifError);
+      console.error('❌ Failed to create notification:', notifError);
     }
 
     res.json({ success: true, message: 'تم إلغاء الحجز بنجاح' });
@@ -254,13 +253,13 @@ exports.cancelBooking = async (req, res) => {
 // @access  Private (المالك فقط)
 exports.completeBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate('carId', 'brand model ownerId');
+    const booking = await Booking.findById(req.params.id)
+      .populate('carId', 'brand model ownerId');
 
     if (!booking) {
       return res.status(404).json({ message: 'الحجز غير موجود' });
     }
 
-    // التحقق من أن المستخدم هو مالك السيارة
     if (booking.ownerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'غير مصرح لك بإكمال هذا الحجز' });
     }
@@ -272,31 +271,30 @@ exports.completeBooking = async (req, res) => {
     booking.status = 'completed';
     await booking.save();
 
-    // إشعار للمستأجر
     try {
       await Notification.create({
         userId: booking.renterId,
         type: 'booking_completed',
-        title: '✅ اكتمل حجزك',
-        message: `تم إكمال حجزك لسيارة ${booking.carId.brand} ${booking.carId.model}`,
-        relatedId: booking._id
+        title: '✅ Réservation terminée',
+        message: `La réservation de votre ${booking.carId.brand} ${booking.carId.model} est terminée. Merci d'avoir utilisé DriveTunisia !`,
+        relatedId: booking._id,
+        relatedModel: 'Booking'
       });
     } catch (notifError) {
-      console.error('فشل إنشاء إشعار:', notifError);
+      console.error('❌ Failed to create notification:', notifError);
     }
 
-    // 🔔 إشعار لتقييم المؤجر
     try {
       await Notification.create({
         userId: booking.renterId,
-        type: 'review_owner',
+        type: 'new_review',
         title: '⭐ Évaluez votre expérience',
-        message: `Comment s'est passé votre location avec ${booking.carId.brand} ${booking.carId.model} ? Donnez votre avis sur le propriétaire.`,
+        message: `Comment s'est passée votre location avec ${booking.carId.brand} ${booking.carId.model} ? Donnez votre avis sur le propriétaire.`,
         relatedId: booking._id,
-        actionUrl: `/booking/${booking._id}/review-owner`
+        relatedModel: 'Booking'
       });
     } catch (notifError) {
-      console.error('فشل إنشاء إشعار تقييم المؤجر:', notifError);
+      console.error('❌ Failed to create review notification:', notifError);
     }
 
     res.json({ success: true, message: 'تم إكمال الحجز بنجاح' });
@@ -314,32 +312,27 @@ exports.reviewOwner = async (req, res) => {
     const { rating, comment } = req.body;
     const bookingId = req.params.id;
 
-    // التحقق من وجود الحجز
     const booking = await Booking.findById(bookingId)
       .populate('carId', 'brand model ownerId')
-      .populate('ownerId', 'name');
+      .populate('ownerId', 'first_name last_name');
 
     if (!booking) {
       return res.status(404).json({ message: 'الحجز غير موجود' });
     }
 
-    // التحقق من أن المستخدم هو المستأجر
     if (booking.renterId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'غير مصرح لك بتقييم هذا الحجز' });
     }
 
-    // التحقق من أن الحجز مكتمل
     if (booking.status !== 'completed') {
       return res.status(400).json({ message: 'لا يمكن تقييم الحجز إلا بعد اكتماله' });
     }
 
-    // التحقق من عدم وجود تقييم سابق
     const existingReview = await Review.findOne({ bookingId, type: 'owner' });
     if (existingReview) {
       return res.status(400).json({ message: 'تم تقييم هذا الحجز مسبقاً' });
     }
 
-    // إنشاء التقييم
     const review = await Review.create({
       type: 'owner',
       bookingId: booking._id,
@@ -350,7 +343,6 @@ exports.reviewOwner = async (req, res) => {
       comment
     });
 
-    // تحديث تقييم المؤجر في User Model
     const owner = await User.findById(booking.ownerId._id);
     const newRatingSum = (owner.ownerRating * owner.ownerRatingCount) + rating;
     const newRatingCount = owner.ownerRatingCount + 1;
@@ -375,14 +367,13 @@ exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate('carId', 'brand model images pricePerDay location')
-      .populate('renterId', 'name email phone')
-      .populate('ownerId', 'name email phone');
+      .populate('renterId', 'first_name last_name email phone')
+      .populate('ownerId', 'first_name last_name email phone');
 
     if (!booking) {
       return res.status(404).json({ message: 'الحجز غير موجود' });
     }
 
-    // التحقق من أن المستخدم هو المستأجر أو المالك أو مشرف
     if (booking.renterId._id.toString() !== req.user._id.toString() &&
         booking.ownerId._id.toString() !== req.user._id.toString() &&
         req.user.role !== 'admin') {

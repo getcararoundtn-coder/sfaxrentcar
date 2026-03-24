@@ -114,7 +114,11 @@ exports.login = async (req, res) => {
     }
 
     delete user.password;
+    
+    // ✅ إضافة console.log هنا
+    console.log('🔵 Before generateToken - User ID:', user._id);
     generateToken(res, user._id);
+    console.log('🔵 After generateToken - Cookie should be set');
 
     res.json({
       success: true,
