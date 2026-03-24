@@ -1,6 +1,8 @@
 const CarDraft = require('../models/CarDraft');
 const Car = require('../models/Car');
 const { cloudinary } = require('../config/cloudinary');
+const fs = require('fs');
+const path = require('path');
 
 // @desc    حفظ مسودة سيارة (خطوة بخطوة)
 // @route   POST /api/cars/wizard/save
@@ -53,6 +55,24 @@ exports.getDraft = async (req, res) => {
   }
 };
 
+// ✅ دالة مساعدة لرفع الصور إلى Cloudinary
+const uploadToCloudinary = async (filePath, folder) => {
+  try {
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: folder,
+      transformation: [{ width: 800, height: 600, crop: 'limit' }]
+    });
+    // حذف الملف المؤقت بعد الرفع
+    fs.unlink(filePath, (err) => {
+      if (err) console.error('Error deleting temp file:', err);
+    });
+    return result.secure_url;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    return null;
+  }
+};
+
 // @desc    إكمال الويزارد وإنشاء السيارة النهائية (مع رفع الصور)
 // @route   POST /api/cars/wizard/complete
 // @access  Private
@@ -80,9 +100,6 @@ exports.completeWizard = async (req, res) => {
     // دمج البيانات من المسودة و req.body
     const formData = { ...draft.data, ...req.body };
     console.log('📦 Combined form data keys:', Object.keys(formData));
-    console.log('Price per day:', formData.pricePerDay);
-    console.log('Delivery method:', formData.deliveryMethod);
-    console.log('Caution:', formData.caution);
 
     // التحقق من وجود جميع البيانات المطلوبة
     const requiredFields = [
@@ -111,7 +128,7 @@ exports.completeWizard = async (req, res) => {
 
     console.log('✅ All required fields are present');
 
-    // ========== استخراج روابط الصور ==========
+    // ========== رفع الصور إلى Cloudinary ==========
     let imageUrls = [];
     let insuranceFrontUrl = null;
     let insuranceBackUrl = null;
@@ -120,7 +137,11 @@ exports.completeWizard = async (req, res) => {
     if (req.files && req.files.images) {
       const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
       console.log(`📸 Found ${files.length} car images`);
-      imageUrls = files.map(file => file.path || file.secure_url || file.url);
+      
+      for (const file of files) {
+        const url = await uploadToCloudinary(file.path, 'sfaxrentcar/cars');
+        if (url) imageUrls.push(url);
+      }
       console.log('Image URLs:', imageUrls);
     } else {
       console.log('⚠️ No car images found in request');
@@ -128,13 +149,15 @@ exports.completeWizard = async (req, res) => {
 
     // البطاقة الرمادية recto
     if (req.files && req.files.insuranceFront && req.files.insuranceFront[0]) {
-      insuranceFrontUrl = req.files.insuranceFront[0].path || req.files.insuranceFront[0].secure_url;
+      const file = req.files.insuranceFront[0];
+      insuranceFrontUrl = await uploadToCloudinary(file.path, 'sfaxrentcar/documents');
       console.log('✅ Insurance front URL:', insuranceFrontUrl);
     }
 
     // البطاقة الرمادية verso
     if (req.files && req.files.insuranceBack && req.files.insuranceBack[0]) {
-      insuranceBackUrl = req.files.insuranceBack[0].path || req.files.insuranceBack[0].secure_url;
+      const file = req.files.insuranceBack[0];
+      insuranceBackUrl = await uploadToCloudinary(file.path, 'sfaxrentcar/documents');
       console.log('✅ Insurance back URL:', insuranceBackUrl);
     }
 
@@ -155,6 +178,7 @@ exports.completeWizard = async (req, res) => {
       doors: parseInt(formData.doors) || 4,
       seats: parseInt(formData.seats) || 5,
       features: formData.features || [],
+      carType: formData.carType || 'Berline', // ✅ إضافة carType
       userType: formData.userType || 'particulier',
       ownerBirthDate: formData.ownerBirthDate,
       paymentPlan: formData.paymentPlan || 'hebdomadaire',
@@ -176,6 +200,7 @@ exports.completeWizard = async (req, res) => {
     console.log('Car data to save:', {
       brand: carData.brand,
       model: carData.model,
+      carType: carData.carType,
       pricePerDay: carData.pricePerDay,
       caution: carData.caution,
       imagesCount: carData.images.length
