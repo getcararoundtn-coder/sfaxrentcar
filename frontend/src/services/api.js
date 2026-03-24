@@ -1,10 +1,11 @@
 import axios from 'axios';
 
-const baseURL = process.env.REACT_APP_API_URL;
+// ✅ تعيين الرابط مباشرة (مؤقت للاختبار)
+const baseURL = 'https://sfaxrentcar-backend.onrender.com/api';
 
 const API = axios.create({
   baseURL,
-  withCredentials: true, // ✅ موجود
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -14,15 +15,20 @@ const API = axios.create({
   timeout: 60000
 });
 
+// ✅ اعتراض الطلبات للتأكد من إرسال الكوكيز
 API.interceptors.request.use(
   (config) => {
     console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`);
     config.withCredentials = true;
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('❌ Request error:', error);
+    return Promise.reject(error);
+  }
 );
 
+// ✅ اعتراض الردود
 API.interceptors.response.use(
   (response) => {
     console.log(`✅ Response: ${response.status} ${response.config.url}`);
