@@ -23,7 +23,15 @@ const NotificationBell = () => {
       // ✅ إذا لم يكن Admin، قم بتصفية الإشعارات الإدارية
       if (!isAdmin) {
         // قائمة أنواع الإشعارات التي تظهر فقط للمشرف
-        const adminOnlyTypes = ['new_user', 'car_pending', 'car_approved', 'car_rejected'];
+        const adminOnlyTypes = [
+          'new_user', 
+          'car_pending', 
+          'car_approved', 
+          'car_rejected',
+          'document_pending',
+          'document_verified',
+          'document_rejected'
+        ];
         filteredNotifications = filteredNotifications.filter(
           notif => !adminOnlyTypes.includes(notif.type)
         );
@@ -52,7 +60,15 @@ const NotificationBell = () => {
       
       // ✅ فلترة الإشعارات للمستخدم العادي
       if (!isAdmin) {
-        const adminOnlyTypes = ['new_user', 'car_pending', 'car_approved', 'car_rejected'];
+        const adminOnlyTypes = [
+          'new_user', 
+          'car_pending', 
+          'car_approved', 
+          'car_rejected',
+          'document_pending',
+          'document_verified',
+          'document_rejected'
+        ];
         newNotifications = newNotifications.filter(
           notif => !adminOnlyTypes.includes(notif.type)
         );
@@ -122,6 +138,7 @@ const NotificationBell = () => {
       case 'booking_created': return '📅';
       case 'document_verified': return '📄✅';
       case 'document_rejected': return '📄❌';
+      case 'document_pending': return '📄⏳';
       case 'car_approved': return '🚗✅';
       case 'car_rejected': return '🚗❌';
       case 'car_pending': return '🚗⏳';
@@ -172,7 +189,7 @@ const NotificationBell = () => {
               notifications.slice(0, 5).map(notif => (
                 <div 
                   key={notif._id} 
-                  className={`notification-item ${!notif.isRead ? 'unread' : ''}`} 
+                  className={`notification-item ${!notif.read ? 'unread' : ''}`} 
                   onClick={() => markAsRead(notif._id)}
                 >
                   <div className="notification-icon">{getNotificationIcon(notif.type)}</div>
