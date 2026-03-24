@@ -32,9 +32,10 @@ const Navbar = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // ✅ إصلاح دالة تسجيل الخروج
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    await logout(); // logout في AuthContext يقوم بالتوجيه إلى '/'
+    // لا حاجة لـ navigate('/') لأن logout يقوم بذلك
     setMobileMenuOpen(false);
     setPopupMenuOpen(false);
     setShowLoginModal(false);
@@ -65,17 +66,15 @@ const Navbar = () => {
     return 'U';
   };
 
-  // ✅ Google Login Handler - مع تمرير الدور من التسجيل
+  // ✅ Google Login Handler
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
     try {
-      // ✅ الحصول على الدور المختار من نموذج التسجيل (إذا كان مفتوحاً)
-      // أو استخدام الدور الافتراضي 'user'
       const selectedRole = registerData.role || 'user';
       console.log('🔵 Google login with role:', selectedRole);
       
-      const result = await loginWithFirebaseGoogle(selectedRole); // ✅ تمرير الدور
+      const result = await loginWithFirebaseGoogle(selectedRole);
       if (result.success) {
         showSuccess('✅ تم تسجيل الدخول بنجاح');
         setShowLoginModal(false);
@@ -154,7 +153,6 @@ const Navbar = () => {
       if (response.data.success) {
         showSuccess('✅ تم إنشاء الحساب بنجاح');
         setShowRegisterModal(false);
-        // ✅ بعد التسجيل، نفتح نافذة تسجيل الدخول مع حفظ الدور
         setRegisterData({ name: '', email: '', password: '', phone: '', role: 'user', agreeToTerms: false });
         setShowLoginModal(true);
       }
@@ -185,7 +183,6 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="desktop-menu">
-            {/* زر Louer ma voiture */}
             {user ? (
               <Link to="/rent-your-car" className="rent-button">
                 Louer ma voiture
@@ -202,7 +199,6 @@ const Navbar = () => {
               </button>
             ) : (
               <div className="user-menu-container">
-                {/* Popup Menu Trigger */}
                 <button className="user-menu-trigger" onClick={togglePopupMenu}>
                   <div className="user-avatar">
                     {getInitial()}
@@ -211,7 +207,6 @@ const Navbar = () => {
                   <span className={`user-chevron ${popupMenuOpen ? 'open' : ''}`}>▼</span>
                 </button>
                 
-                {/* Popup Menu مع Profile */}
                 {popupMenuOpen && (
                   <div className="user-popup-menu">
                     <div className="popup-user-info">
@@ -246,7 +241,6 @@ const Navbar = () => {
                       <span>Voitures</span>
                     </Link>
                     
-                    {/* إضافة قسم Admin للمشرفين */}
                     {user.role === 'admin' && (
                       <>
                         <div className="popup-menu-divider"></div>
@@ -346,7 +340,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Login Modal مع زر Google */}
+      {/* Login Modal */}
       <Modal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} title="Se connecter" size="small">
         <form onSubmit={handleLoginSubmit} className="modal-form">
           {error && <div className="modal-error">{error}</div>}
