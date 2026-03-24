@@ -32,19 +32,16 @@ const Navbar = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ✅ إصلاح دالة تسجيل الخروج (توجيه بدون إعادة تحميل)
   const handleLogout = async () => {
     console.log('🔴🔴🔴 LOGOUT BUTTON CLICKED 🔴🔴🔴');
     try {
-      await logout(); // انتظار اكتمال logout (لا يقوم بتوجيه)
+      await logout();
       console.log('✅ Logout function completed');
-      // توجيه إلى الصفحة الرئيسية باستخدام React Router (بدون إعادة تحميل)
       navigate('/');
     } catch (err) {
       console.error('❌ Logout error:', err);
       navigate('/');
     }
-    // إغلاق القوائم
     setMobileMenuOpen(false);
     setPopupMenuOpen(false);
     setShowLoginModal(false);
@@ -65,7 +62,6 @@ const Navbar = () => {
     setPopupMenuOpen(false);
   };
 
-  // الحصول على أول حرف من الاسم للصورة
   const getInitial = () => {
     if (user?.name) {
       return user.name.charAt(0).toUpperCase();
@@ -76,7 +72,6 @@ const Navbar = () => {
     return 'U';
   };
 
-  // ✅ Google Login Handler
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
@@ -103,26 +98,33 @@ const Navbar = () => {
     }
   };
 
-  // Login handlers
   const handleLoginChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
     setError('');
   };
 
   const handleLoginSubmit = async (e) => {
-    e.preventDefault();
+    console.log('🔵🔵🔵 LOGIN SUBMIT CALLED 🔵🔵🔵');
+    console.log('Email:', loginData.email);
     setLoading(true);
     setError('');
 
     try {
       const response = await API.post('/auth/login', loginData);
+      console.log('Login response:', response);
+      
       if (response.data.success) {
+        console.log('✅ Login successful');
         setUser(response.data.data);
         localStorage.setItem('user', JSON.stringify(response.data.data));
         showSuccess('✅ تم تسجيل الدخول بنجاح');
         setShowLoginModal(false);
         setLoginData({ email: '', password: '' });
         navigate('/');
+      } else {
+        console.log('❌ Login failed:', response.data.message);
+        setError(response.data.message || 'فشل تسجيل الدخول');
+        showError(response.data.message || 'فشل تسجيل الدخول');
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -133,7 +135,6 @@ const Navbar = () => {
     }
   };
 
-  // Register handlers
   const handleRegisterChange = (e) => {
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
     setError('');
@@ -179,7 +180,6 @@ const Navbar = () => {
     <>
       <nav className="navbar">
         <div className="nav-container">
-          {/* Logo */}
           <div className="logo-section">
             <Link to="/" className="logo-link" onClick={closeMenus}>
               {settings?.platformName || 'DriveTunisia'}
@@ -191,7 +191,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Desktop Menu */}
           <div className="desktop-menu">
             {user ? (
               <Link to="/rent-your-car" className="rent-button">
@@ -272,12 +271,10 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button className="mobile-menu-button" onClick={toggleMobileMenu}>
             ☰
           </button>
 
-          {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="mobile-menu">
               <div className="mobile-menu-content">
@@ -352,7 +349,11 @@ const Navbar = () => {
 
       {/* Login Modal */}
       <Modal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} title="Se connecter" size="small">
-        <form onSubmit={handleLoginSubmit} className="modal-form">
+        <form onSubmit={(e) => {
+          console.log('🔵🔵🔵 FORM SUBMIT TRIGGERED 🔵🔵🔵');
+          e.preventDefault();
+          handleLoginSubmit(e);
+        }} className="modal-form">
           {error && <div className="modal-error">{error}</div>}
           
           <div className="modal-form-group">
