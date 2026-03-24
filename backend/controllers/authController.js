@@ -23,7 +23,8 @@ exports.register = async (req, res) => {
       });
     }
 
-    const userExists = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase();
+    const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
       return res.status(400).json({ 
         success: false,
@@ -33,7 +34,7 @@ exports.register = async (req, res) => {
 
     const user = await User.create({ 
       name, 
-      email, 
+      email: normalizedEmail, 
       password, 
       phone,
       role: role || 'user'
@@ -77,7 +78,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// ✅ تسجيل الدخول العادي (فائق السرعة)
+// ✅ تسجيل الدخول العادي
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -89,11 +90,11 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ✅ استعلام سريع مع lean() و select() و maxTimeMS
-    const user = await User.findOne({ email })
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail })
       .select('_id name email role verificationStatus password')
       .lean()
-      .maxTimeMS(3000); // حد أقصى 3 ثواني
+      .maxTimeMS(3000);
 
     if (!user) {
       return res.status(401).json({ 
@@ -112,13 +113,9 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ✅ إزالة كلمة المرور
     delete user.password;
-
-    // ✅ إنشاء التوكن
     generateToken(res, user._id);
 
-    // ✅ رد سريع بدون رسالة إضافية
     res.json({
       success: true,
       data: user
@@ -132,7 +129,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ تسجيل الدخول عبر Firebase (محسن وسريع)
+// ✅ تسجيل الدخول عبر Firebase (محسن)
 exports.firebaseLogin = async (req, res) => {
   try {
     console.log('🔥 Firebase login request received:', req.body);
@@ -146,13 +143,12 @@ exports.firebaseLogin = async (req, res) => {
       });
     }
 
-    // ✅ البحث عن المستخدم بالبريد الإلكتروني (محسن)
-    let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } })
+    const normalizedEmail = email.toLowerCase();
+    let user = await User.findOne({ email: normalizedEmail })
       .select('_id name email role status verificationStatus firebaseUid')
       .lean()
       .maxTimeMS(3000);
 
-    // إذا لم يوجد، جرب البحث بـ firebaseUid
     if (!user) {
       user = await User.findOne({ firebaseUid })
         .select('_id name email role status verificationStatus firebaseUid')
@@ -161,13 +157,12 @@ exports.firebaseLogin = async (req, res) => {
     }
 
     if (!user) {
-      // ✅ إنشاء مستخدم جديد
       const userRole = role || 'user';
-      console.log(`📝 Creating new user for: ${email} with role: ${userRole}`);
+      console.log(`📝 Creating new user for: ${normalizedEmail} with role: ${userRole}`);
       
       const newUser = await User.create({
         name: name || email.split('@')[0],
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         password: crypto.randomBytes(20).toString('hex'),
         phone: '',
         role: userRole,
@@ -186,7 +181,6 @@ exports.firebaseLogin = async (req, res) => {
       };
       console.log('✅ New user created via Firebase:', user.email, 'Role:', user.role);
     } else {
-      // تحديث Firebase UID إذا لم يكن موجوداً
       if (!user.firebaseUid) {
         await User.updateOne({ _id: user._id }, { $set: { firebaseUid } });
         user.firebaseUid = firebaseUid;
@@ -195,7 +189,6 @@ exports.firebaseLogin = async (req, res) => {
       console.log('✅ Existing user logged in via Firebase:', user.email, 'Role:', user.role);
     }
 
-    // إنشاء توكن للمستخدم
     generateToken(res, user._id);
 
     res.json({
@@ -220,7 +213,7 @@ exports.logout = (req, res) => {
   res.json({ success: true, message: 'تم تسجيل الخروج' });
 };
 
-// ✅ بيانات المستخدم الحالي (محسن)
+// بيانات المستخدم الحالي
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
@@ -233,7 +226,7 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// نسيت كلمة المرور - إرسال رابط إعادة التعيين
+// نسيت كلمة المرور
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
