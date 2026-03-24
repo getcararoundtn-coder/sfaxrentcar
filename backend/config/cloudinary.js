@@ -28,7 +28,7 @@ const documentStorage = new CloudinaryStorage({
   }
 });
 
-// Middleware لرفع صور السيارات (متعددة)
+// ✅ Middleware لرفع صور السيارات (متعددة) - باستخدام multer-storage-cloudinary
 const uploadCarImages = multer({ storage: carStorage }).fields([
   { name: 'images', maxCount: 10 },
   { name: 'insuranceFront', maxCount: 1 },
@@ -36,11 +36,42 @@ const uploadCarImages = multer({ storage: carStorage }).fields([
   { name: 'contractPdf', maxCount: 1 }
 ]);
 
-// Middleware لرفع مستندات المستخدم (الهوية، رخصة القيادة)
+// ✅ Middleware لرفع مستندات المستخدم (الهوية، رخصة القيادة)
 const uploadDocuments = multer({ storage: documentStorage }).fields([
   { name: 'idFront', maxCount: 1 },
   { name: 'idBack', maxCount: 1 },
   { name: 'driverLicense', maxCount: 1 }
 ]);
 
-module.exports = { cloudinary, uploadCarImages, uploadDocuments };
+// ✅ دالة مساعدة لرفع صورة مباشرة (للاستخدام في carWizardController)
+const uploadToCloudinary = async (filePath, folder) => {
+  try {
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: folder,
+      transformation: [{ width: 800, height: 600, crop: 'limit' }]
+    });
+    return result.secure_url;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    return null;
+  }
+};
+
+// ✅ دالة لحذف صورة من Cloudinary
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    const result = await cloudinary.uploader.destroy(publicId);
+    return result;
+  } catch (error) {
+    console.error('Cloudinary delete error:', error);
+    return null;
+  }
+};
+
+module.exports = { 
+  cloudinary, 
+  uploadCarImages, 
+  uploadDocuments,
+  uploadToCloudinary,
+  deleteFromCloudinary
+};
