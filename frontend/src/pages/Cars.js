@@ -8,6 +8,57 @@ import LazyLoad from 'react-lazyload';
 import ModalFilter from '../components/ModalFilter';
 import './Cars.css';
 
+// ✅ CarCard component with React.memo for performance
+const CarCard = React.memo(({ car, ownerRating, renderStars }) => {
+  // Optimize image URL with thumbnail size
+  const imageUrl = car.images?.[0] 
+    ? `${car.images[0]}?w=300&h=200&fit=crop` 
+    : '/default-car.jpg';
+  
+  return (
+    <Link to={`/car/${car._id}`} className="car-card-link" prefetch="intent">
+      <div className="car-card">
+        <LazyLoad height={200} offset={100} once>
+          <div className="car-image-container">
+            <img 
+              src={imageUrl}
+              alt={`${car.brand} ${car.model}`} 
+              className="car-image" 
+              loading="lazy"
+            />
+            {car.isFeatured && <span className="featured-badge">⭐ Mis en avant</span>}
+          </div>
+        </LazyLoad>
+        <div className="car-info">
+          <div className="car-header">
+            <h3 className="car-title">{car.brand} {car.model}</h3>
+            <span className="car-year">{car.year}</span>
+          </div>
+          <p className="car-price">
+            <span className="price">{car.pricePerDay} DT</span>
+            <span className="per-day">/ jour</span>
+          </p>
+          <div className="car-meta">
+            <div className="owner-rating">
+              <span className="stars">{renderStars(ownerRating.rating)}</span>
+              <span className="rating-value">{ownerRating.rating?.toFixed(1) || 'Nouveau'}</span>
+              <span className="review-count">({ownerRating.count || 0})</span>
+            </div>
+            <span className="car-location">
+              📍 {car.delegation || car.city || car.location}
+            </span>
+          </div>
+          <div className="car-specs-mini">
+            <span>⚙️ {car.transmission === 'Manuelle' ? 'Manuelle' : 'Auto'}</span>
+            <span>⛽ {car.fuelType}</span>
+            <span>👥 {car.seats || 5} places</span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+});
+
 const Cars = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [cars, setCars] = useState([]);
@@ -15,7 +66,7 @@ const Cars = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [sortBy, setSortBy] = useState('recent'); // 'recent', 'price_asc', 'price_desc', 'rating'
+  const [sortBy, setSortBy] = useState('recent');
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -25,7 +76,6 @@ const Cars = () => {
     hasPrevPage: false
   });
 
-  // قراءة المعاملات من URL
   const [filters, setFilters] = useState({
     city: searchParams.get('city') || '',
     delegation: searchParams.get('delegation') || '',
@@ -40,7 +90,6 @@ const Cars = () => {
     minRating: searchParams.get('minRating') || ''
   });
 
-  // تحديث URL عند تغيير الفلاتر
   const updateURL = useCallback((newFilters) => {
     const params = new URLSearchParams();
     Object.keys(newFilters).forEach(key => {
@@ -78,7 +127,6 @@ const Cars = () => {
       
       const newCars = data.data;
       
-      // جلب تقييمات المؤجرين للسيارات الجديدة
       const ratings = {};
       for (const car of newCars) {
         if (car.ownerId?._id) {
@@ -112,6 +160,26 @@ const Cars = () => {
     fetchCars(1, false);
   }, [filters, sortBy, fetchCars]);
 
+  // ✅ Preload car detail pages on hover
+  useEffect(() => {
+    const preloadLinks = () => {
+      const links = document.querySelectorAll('.car-card-link');
+      links.forEach(link => {
+        link.addEventListener('mouseenter', () => {
+          const href = link.getAttribute('href');
+          if (href) {
+            const preloadLink = document.createElement('link');
+            preloadLink.rel = 'prefetch';
+            preloadLink.href = href;
+            document.head.appendChild(preloadLink);
+          }
+        });
+      });
+    };
+    
+    preloadLinks();
+  }, [cars]);
+
   const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
     updateURL(newFilters);
@@ -144,7 +212,7 @@ const Cars = () => {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
-  const renderStars = (rating) => {
+  const renderStars = useCallback((rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
@@ -159,7 +227,7 @@ const Cars = () => {
       }
     }
     return stars;
-  };
+  }, []);
 
   const locationText = filters.delegation ? `${filters.delegation}, ${filters.city}` : filters.city;
   const hasActiveFilters = Object.values(filters).some(v => v && v !== '');
@@ -168,7 +236,6 @@ const Cars = () => {
     <>
       <Navbar />
       <div className="cars-page">
-        {/* معلومات البحث */}
         {(locationText || (filters.startDate && filters.endDate)) && (
           <div className="search-info">
             {locationText && <span className="search-location">📍 {locationText}</span>}
@@ -186,7 +253,6 @@ const Cars = () => {
         )}
 
         <div className="cars-container">
-          {/* Barre d'outils */}
           <div className="toolbar">
             <button onClick={() => setShowFilterModal(true)} className="filter-toggle-btn">
               🔍 Filtres
@@ -204,7 +270,6 @@ const Cars = () => {
             </div>
           </div>
 
-          {/* عدد النتائج */}
           <div className="results-header">
             <p className="results-count">
               {pagination.total} {pagination.total === 1 ? 'voiture disponible' : 'voitures disponibles'}
@@ -217,7 +282,6 @@ const Cars = () => {
           </div>
 
           <div className="cars-layout">
-            {/* عرض السيارات */}
             <main className="cars-grid">
               {loading ? (
                 <div className="loading-container">
@@ -243,48 +307,13 @@ const Cars = () => {
                 <>
                   {cars.map(car => {
                     const ownerRating = ownerRatings[car.ownerId?._id] || { rating: 0, count: 0 };
-                    
                     return (
-                      <div key={car._id} className="car-card">
-                        <LazyLoad height={200} offset={100} once>
-                          <div className="car-image-container">
-                            <img 
-                              src={car.images?.[0] || '/default-car.jpg'} 
-                              alt={`${car.brand} ${car.model}`} 
-                              className="car-image" 
-                            />
-                            {car.isFeatured && <span className="featured-badge">⭐ Mis en avant</span>}
-                          </div>
-                        </LazyLoad>
-                        <div className="car-info">
-                          <div className="car-header">
-                            <h3 className="car-title">{car.brand} {car.model}</h3>
-                            <span className="car-year">{car.year}</span>
-                          </div>
-                          <p className="car-price">
-                            <span className="price">{car.pricePerDay} DT</span>
-                            <span className="per-day">/ jour</span>
-                          </p>
-                          <div className="car-meta">
-                            <div className="owner-rating">
-                              <span className="stars">{renderStars(ownerRating.rating)}</span>
-                              <span className="rating-value">{ownerRating.rating?.toFixed(1) || 'Nouveau'}</span>
-                              <span className="review-count">({ownerRating.count || 0})</span>
-                            </div>
-                            <span className="car-location">
-                              📍 {car.delegation || car.city || car.location}
-                            </span>
-                          </div>
-                          <div className="car-specs-mini">
-                            <span>⚙️ {car.transmission === 'Manuelle' ? 'Manuelle' : 'Auto'}</span>
-                            <span>⛽ {car.fuelType}</span>
-                            <span>👥 {car.seats || 5} places</span>
-                          </div>
-                          <Link to={`/car/${car._id}`} className="car-details-btn">
-                            Voir les détails →
-                          </Link>
-                        </div>
-                      </div>
+                      <CarCard 
+                        key={car._id} 
+                        car={car} 
+                        ownerRating={ownerRating} 
+                        renderStars={renderStars} 
+                      />
                     );
                   })}
 
@@ -306,7 +335,6 @@ const Cars = () => {
         </div>
       </div>
 
-      {/* Modal الفلاتر */}
       <ModalFilter
         isOpen={showFilterModal}
         onClose={() => setShowFilterModal(false)}

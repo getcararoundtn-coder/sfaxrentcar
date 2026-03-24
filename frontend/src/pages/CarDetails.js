@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
-import { showError, showWarning } from '../utils/ToastConfig';
+import { showError, showWarning, showSuccess } from '../utils/ToastConfig';
 import ModalBooking from '../components/ModalBooking';
 import ModalUpload from '../components/ModalUpload';
 import './CarDetails.css';
@@ -23,18 +23,26 @@ const CarDetails = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  
-  // ✅ State for image modal
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
 
+  // ✅ Load car from cache first for faster display
   useEffect(() => {
+    // Check if car exists in sessionStorage cache
+    const cachedCar = sessionStorage.getItem(`car_${id}`);
+    if (cachedCar) {
+      setCar(JSON.parse(cachedCar));
+      setLoading(false);
+    }
+    
     const fetchCarDetails = async () => {
       try {
-        setLoading(true);
         const { data } = await API.get(`/cars/${id}`);
         setCar(data.data);
+        // Save to cache for next time
+        sessionStorage.setItem(`car_${id}`, JSON.stringify(data.data));
         
+        // Fetch reviews
         try {
           const reviewsRes = await API.get(`/reviews/car/${id}`);
           const reviewsData = reviewsRes.data?.data;
@@ -44,6 +52,7 @@ const CarDetails = () => {
           setReviews([]);
         }
         
+        // Fetch owner rating
         if (data.data?.ownerId?._id) {
           try {
             const ownerRes = await API.get(`/users/${data.data.ownerId._id}/rating`);
@@ -55,12 +64,13 @@ const CarDetails = () => {
         }
       } catch (err) {
         console.error('Error fetching car details:', err);
-        showError('فشل تحميل بيانات السيارة');
+        showError('Impossible de charger les détails de la voiture');
         navigate('/cars');
       } finally {
         setLoading(false);
       }
     };
+    
     fetchCarDetails();
   }, [id, navigate]);
 
@@ -79,19 +89,19 @@ const CarDetails = () => {
 
   const handleBookingClick = () => {
     if (!user) {
-      showWarning('يرجى تسجيل الدخول أولاً');
-      navigate('/login');
+      showWarning('Veuillez vous connecter pour réserver');
+      navigate('/');
       return;
     }
 
     if (user.verificationStatus !== 'approved') {
-      showWarning('يجب توثيق حسابك أولاً (رفع رخصة القيادة)');
+      showWarning('Veuillez vérifier votre compte (permis de conduire) avant de réserver');
       setShowUploadModal(true);
       return;
     }
 
     if (!startDate || !endDate) {
-      showWarning('يرجى اختيار تاريخ البداية والنهاية');
+      showWarning('Veuillez choisir les dates de location');
       return;
     }
 
@@ -100,7 +110,7 @@ const CarDetails = () => {
     const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
     
     if (days <= 0) {
-      showError('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
+      showError('La date de fin doit être après la date de début');
       return;
     }
 
@@ -108,10 +118,11 @@ const CarDetails = () => {
   };
 
   const handleBookingSuccess = () => {
+    setShowBookingModal(false);
+    showSuccess('Réservation créée avec succès! En attente de confirmation du propriétaire.');
     navigate('/my-bookings');
   };
 
-  // ✅ Functions for image modal
   const openImageModal = (index) => {
     setModalImageIndex(index);
     setShowImageModal(true);
@@ -133,29 +144,28 @@ const CarDetails = () => {
     }
   };
 
-  // Keyboard navigation
-useEffect(() => {
-  const handleKeyDown = (e) => {
-    if (!showImageModal) return;
-    if (e.key === 'ArrowRight') {
-      if (car?.images && modalImageIndex < car.images.length - 1) {
-        setModalImageIndex(modalImageIndex + 1);
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!showImageModal) return;
+      if (e.key === 'ArrowRight') {
+        if (car?.images && modalImageIndex < car.images.length - 1) {
+          setModalImageIndex(modalImageIndex + 1);
+        }
       }
-    }
-    if (e.key === 'ArrowLeft') {
-      if (car?.images && modalImageIndex > 0) {
-        setModalImageIndex(modalImageIndex - 1);
+      if (e.key === 'ArrowLeft') {
+        if (car?.images && modalImageIndex > 0) {
+          setModalImageIndex(modalImageIndex - 1);
+        }
       }
-    }
-    if (e.key === 'Escape') {
-      setShowImageModal(false);
-    }
-  };
-  window.addEventListener('keydown', handleKeyDown);
-  return () => window.removeEventListener('keydown', handleKeyDown);
-}, [showImageModal, modalImageIndex, car?.images]);
+      if (e.key === 'Escape') {
+        setShowImageModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showImageModal, modalImageIndex, car?.images]);
 
-  const renderStars = (rating) => {
+  const renderStars = useCallback((rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
@@ -163,7 +173,7 @@ useEffect(() => {
       );
     }
     return stars;
-  };
+  }, []);
 
   const getDeliveryMethodText = (method) => {
     if (method === 'livraison au client') {
@@ -198,14 +208,17 @@ useEffect(() => {
     : 0;
 
   const today = new Date().toISOString().split('T')[0];
+  const cautionAmount = car?.caution || 500;
+  const totalWithCaution = totalPrice + cautionAmount;
+  const images = car?.images || [];
 
-  if (loading) {
+  if (loading && !car) {
     return (
       <>
         <Navbar />
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>جاري تحميل بيانات السيارة...</p>
+          <p>Chargement...</p>
         </div>
       </>
     );
@@ -216,24 +229,21 @@ useEffect(() => {
       <>
         <Navbar />
         <div className="error-container">
-          <p>السيارة غير موجودة</p>
-          <Link to="/cars" className="back-button">العودة إلى السيارات</Link>
+          <p>Voiture non trouvée</p>
+          <Link to="/cars" className="back-button">← Retour aux voitures</Link>
         </div>
       </>
     );
   }
 
   const deliveryInfo = getDeliveryMethodText(car.deliveryMethod);
-  const cautionAmount = car.caution || 500;
-  const totalWithCaution = totalPrice + cautionAmount;
-  const images = car.images || [];
 
   return (
     <>
       <Navbar />
       <div className="car-details-container">
         <div className="car-details-grid">
-          {/* ✅ قسم الصور المحسن */}
+          {/* Image Gallery */}
           <div className="car-images-section">
             <div className="main-image" onClick={() => images.length > 0 && openImageModal(selectedImage)}>
               {images.length > 0 ? (
@@ -241,16 +251,17 @@ useEffect(() => {
                   src={images[selectedImage]} 
                   alt={`${car.brand} ${car.model}`}
                   className="main-car-image"
+                  loading="eager"
                 />
               ) : (
                 <div className="no-image-placeholder">
                   <span>🚗</span>
-                  <p>لا توجد صور</p>
+                  <p>Aucune image</p>
                 </div>
               )}
               {images.length > 0 && (
                 <div className="image-overlay">
-                  <span>🔍 اضغط للتكبير</span>
+                  <span>🔍 Cliquez pour agrandir</span>
                 </div>
               )}
             </div>
@@ -263,14 +274,14 @@ useEffect(() => {
                     className={`thumbnail ${selectedImage === idx ? 'active' : ''}`}
                     onClick={() => setSelectedImage(idx)}
                   >
-                    <img src={img} alt={`${car.brand} ${car.model} - ${idx + 1}`} />
+                    <img src={img} alt={`${car.brand} ${car.model} - ${idx + 1}`} loading="lazy" />
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* معلومات السيارة */}
+          {/* Car Info */}
           <div className="car-info-section">
             <h1 className="car-title">{car.brand} {car.model} ({car.year})</h1>
             
@@ -283,28 +294,6 @@ useEffect(() => {
             <p className="car-location">
               <span className="icon">📍</span> {car.delegation}, {car.city}
             </p>
-
-            <div className="car-price-box">
-              <span className="price">{car.pricePerDay} DT</span>
-              <span className="per-day">/ jour</span>
-            </div>
-
-            <div className="car-caution-box">
-              <span className="caution-icon">🔒</span>
-              <div className="caution-info">
-                <span className="caution-label">Dépôt de garantie (Caution)</span>
-                <span className="caution-value">{cautionAmount} DT</span>
-                <span className="caution-note">(versé en espèces le jour de la remise des clés)</span>
-              </div>
-            </div>
-
-            <div className="car-delivery-box">
-              <span className="delivery-icon">🚗</span>
-              <div className="delivery-info">
-                <span className="delivery-label">{deliveryInfo.text}</span>
-                <span className="delivery-description">{deliveryInfo.description}</span>
-              </div>
-            </div>
 
             <div className="car-specs">
               <div className="spec-item">
@@ -326,11 +315,6 @@ useEffect(() => {
                 <span className="spec-icon">🚪</span>
                 <span className="spec-label">Portes</span>
                 <span className="spec-value">{car.doors || 4}</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-icon">📊</span>
-                <span className="spec-label">Kilométrage</span>
-                <span className="spec-value">{car.mileage || '0-15000'} km</span>
               </div>
             </div>
 
@@ -361,12 +345,35 @@ useEffect(() => {
                 </div>
               </div>
             </div>
+
+            <div className="car-delivery-box">
+              <span className="delivery-icon">🚗</span>
+              <div className="delivery-info">
+                <span className="delivery-label">{deliveryInfo.text}</span>
+                <span className="delivery-description">{deliveryInfo.description}</span>
+              </div>
+            </div>
+
+            {/* Section Caution */}
+            <div className="car-caution-box">
+              <span className="caution-icon">🔒</span>
+              <div className="caution-info">
+                <span className="caution-label">Dépôt de garantie (Caution)</span>
+                <span className="caution-value">{cautionAmount} TND</span>
+                <span className="caution-note">(versé en espèces le jour de la remise des clés)</span>
+              </div>
+            </div>
           </div>
 
-          {/* قسم الحجز */}
+          {/* Booking Section */}
           <div className="booking-section">
             <h3>Réserver cette voiture</h3>
             
+            <div className="price-box">
+              <span className="price">{car.pricePerDay} TND</span>
+              <span className="per-day">/ jour</span>
+            </div>
+
             <div className="date-fields">
               <div className="date-field">
                 <label>Date de début</label>
@@ -391,39 +398,40 @@ useEffect(() => {
             {totalPrice > 0 && (
               <div className="price-breakdown">
                 <div className="breakdown-item">
-                  <span>{Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))} jours × {car.pricePerDay} DT</span>
-                  <span>{totalPrice} DT</span>
+                  <span>{Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))} jours × {car.pricePerDay} TND</span>
+                  <span>{totalPrice} TND</span>
                 </div>
                 <div className="breakdown-item caution-item">
                   <span>🔒 Caution (remboursable)</span>
-                  <span>{cautionAmount} DT</span>
+                  <span>{cautionAmount} TND</span>
                 </div>
                 <div className="breakdown-item total">
                   <span>Total à payer</span>
-                  <span>{totalWithCaution.toFixed(2)} DT</span>
-                </div>
-                <div className="caution-note-booking">
-                  <small>⚠️ La caution est versée en espèces le jour de la remise des clés et vous sera restituée après la location, sous réserve d'absence de dommages.</small>
+                  <span>{totalWithCaution.toFixed(2)} TND</span>
                 </div>
               </div>
             )}
 
             <button
               onClick={handleBookingClick}
-              disabled={!startDate || !endDate}
-              className="book-button"
+              className="book-now-btn"
             >
-              Réserver
+              Réserver maintenant
             </button>
 
-            <p className="booking-note">
-              {!user && 'Connectez-vous pour réserver'}
-              {user && user.verificationStatus !== 'approved' && 'Vérifiez votre compte pour réserver'}
-            </p>
+            {!user && (
+              <p className="booking-note warning">🔐 Connectez-vous pour réserver</p>
+            )}
+            {user && user.verificationStatus !== 'approved' && (
+              <p className="booking-note warning">📄 Vérifiez votre compte pour réserver</p>
+            )}
+            {(!startDate || !endDate) && (
+              <p className="booking-note info">📅 Sélectionnez les dates pour continuer</p>
+            )}
           </div>
         </div>
 
-        {/* قسم التقييمات */}
+        {/* Reviews Section */}
         <div className="reviews-section">
           <h2>Avis des locataires</h2>
           
@@ -455,7 +463,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* ✅ Modal لعرض الصور بشكل كبير */}
+      {/* Image Modal */}
       {showImageModal && images.length > 0 && (
         <div className="image-modal-overlay" onClick={closeImageModal}>
           <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>

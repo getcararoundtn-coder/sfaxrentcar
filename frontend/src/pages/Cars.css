@@ -322,3 +322,537 @@
     gap: 5px;
   }
 }
+/* زر الحجز المباشر في بطاقة السيارة */
+.book-now-btn-card {
+  display: block;
+  width: 100%;
+  background: #6b46c0;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 8px;
+  transition: all 0.3s ease;
+}
+
+.book-now-btn-card:hover {
+  background: #553c9a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 70, 193, 0.3);
+}
+/* ✅ مجموعة الأزرار */
+.car-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ✅ زر Voir les détails */
+.car-details-btn {
+  display: block;
+  width: 100%;
+  background: #f0f0f5;
+  color: #333;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.car-details-btn:hover {
+  background: #e0e0e5;
+  transform: translateY(-2px);
+}
+
+/* ✅ زر Réserver maintenant */
+.book-now-btn-card {
+  display: block;
+  width: 100%;
+  background: #6b46c0;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.book-now-btn-card:hover {
+  background: #553c9a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 70, 193, 0.3);
+}
+/* ✅ مجموعة الأزرار */
+.car-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ✅ زر Voir les détails */
+.car-details-btn {
+  display: block;
+  width: 100%;
+  background: #f0f0f5;
+  color: #333;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.car-details-btn:hover {
+  background: #e0e0e5;
+  transform: translateY(-2px);
+}
+
+/* ✅ زر Réserver maintenant */
+.book-now-btn-card {
+  display: block;
+  width: 100%;
+  background: #6b46c0;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.book-now-btn-card:hover {
+  background: #553c9a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 70, 193, 0.3);
+}
+/* ✅ Force les boutons à apparaître */
+.car-buttons {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.car-details-btn {
+  display: block !important;
+  width: 100% !important;
+  background: #f0f0f5 !important;
+  color: #333 !important;
+  text-align: center !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  visibility: visible !important;
+}
+
+.book-now-btn-card {
+  display: block !important;
+  width: 100% !important;
+  background: #6b46c0 !important;
+  color: white !important;
+  text-align: center !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  visibility: visible !important;
+  margin-top: 8px !important;
+}
+
+.book-now-btn-card:hover {
+  background: #553c9a !important;
+}
+/* ✅ Force les boutons à apparaître - SOLUTION FINALE */
+.car-buttons {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+}
+
+.car-details-btn {
+  display: inline-block !important;
+  width: 100% !important;
+  background: #6c5ce7 !important;
+  color: white !important;
+  text-align: center !important;
+  padding: 10px 0 !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.book-now-btn-card {
+  display: inline-block !important;
+  width: 100% !important;
+  background: #28a745 !important;
+  color: white !important;
+  text-align: center !important;
+  padding: 10px 0 !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  border: none !important;
+  cursor: pointer !important;
+  margin-top: 0 !important;
+}
+
+.car-details-btn:hover {
+  background: #5a4ad1 !important;
+}
+
+.book-now-btn-card:hover {
+  background: #218838 !important;
+}
+/* ✅ Force les boutons à apparaître - SOLUTION FINALE */
+.car-buttons {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+}
+
+.car-details-btn {
+  display: inline-block !important;
+  width: 100% !important;
+  background: #6c5ce7 !important;
+  color: white !important;
+  text-align: center !important;
+  padding: 10px 0 !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.book-now-btn-card {
+  display: inline-block !important;
+  width: 100% !important;
+  background: #28a745 !important;
+  color: white !important;
+  text-align: center !important;
+  padding: 10px 0 !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  border: none !important;
+  cursor: pointer !important;
+  margin-top: 8px !important;
+}
+
+.car-details-btn:hover {
+  background: #5a4ad1 !important;
+}
+
+.book-now-btn-card:hover {
+  background: #218838 !important;
+}
+/* أزرار السيارات */
+.car-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.car-details-btn {
+  display: block;
+  width: 100%;
+  background: #6c5ce7;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.car-details-btn:hover {
+  background: #5a4ad1;
+  transform: translateY(-2px);
+}
+
+.book-now-btn-card {
+  display: block;
+  width: 100%;
+  background: #28a745;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.book-now-btn-card:hover {
+  background: #218838;
+  transform: translateY(-2px);
+}
+/* زر Voir les détails */
+.car-details-btn {
+  display: block;
+  width: 100%;
+  background: #6c5ce7;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.car-details-btn:hover {
+  background: #5a4ad1;
+}
+/* جعل البطاقة بأكملها قابلة للنقر */
+.car-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.car-card-link:hover {
+  transform: translateY(-4px);
+}
+
+.car-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.car-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.car-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.car-card-link:hover .car-image {
+  transform: scale(1.05);
+}
+
+.car-image-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.car-info {
+  padding: 15px;
+  flex: 1;
+}
+/* ========== تحسينات سرعة النقر والانتقال ========== */
+
+/* منع الـ layout shift وتحسين الأداء */
+.car-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.15s ease;
+  cursor: pointer;
+  will-change: transform;
+  /* منع إعادة الحساب */
+  contain: layout style paint;
+}
+
+/* تأثير فوري عند النقر */
+.car-card-link:active {
+  transform: scale(0.98);
+  transition: transform 0.05s ease;
+}
+
+/* تحسين صورة السيارة */
+.car-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+  /* منع flickering */
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.car-card-link:hover .car-image {
+  transform: scale(1.05);
+}
+
+/* تحسين hover للبطاقة */
+.car-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  /* تحسين الأداء */
+  will-change: transform;
+}
+
+.car-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+}
+
+/* Skeleton Loading - تحسين مظهر التحميل */
+.skeleton-image {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}
+
+.skeleton-info {
+  padding: 15px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 70%;
+  background: #f0f0f0;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}
+
+.skeleton-price {
+  height: 24px;
+  width: 40%;
+  background: #f0f0f0;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}
+
+.skeleton-meta {
+  height: 16px;
+  width: 90%;
+  background: #f0f0f0;
+  border-radius: 4px;
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* تحسين container البطاقات للـ Grid */
+.cars-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  /* منع reflow */
+  contain: layout style;
+}
+
+/* تحسين للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .cars-grid {
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+  
+  .car-image {
+    height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cars-grid {
+    gap: 12px;
+    grid-template-columns: 1fr;
+  }
+  
+  .car-image {
+    height: 200px;
+  }
+}
+
+/* تحسين زر load more */
+.load-more-btn {
+  padding: 12px 32px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.load-more-btn:hover {
+  background: #f5f5f5;
+  border-color: #6c5ce7;
+  transform: translateY(-2px);
+}
+
+.load-more-btn:active {
+  transform: translateY(0);
+}
