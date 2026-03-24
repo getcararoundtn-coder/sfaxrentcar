@@ -91,13 +91,13 @@ export const AuthProvider = ({ children }) => {
     }
   }, [linkFirebaseAccount]);
 
-  // ✅ تسجيل الخروج (محسن مع معالجة الأخطاء)
+  // ✅ تسجيل الخروج (محسن مع انتظار الطلب)
   const logout = useCallback(async () => {
     try {
       setLoading(true);
       console.log('🔵 Logging out...');
       
-      // تسجيل الخروج من Firebase
+      // 1. تسجيل الخروج من Firebase (لا ننتظره، لكنه سريع)
       try {
         await logoutFirebase();
         console.log('✅ Firebase logout successful');
@@ -105,25 +105,26 @@ export const AuthProvider = ({ children }) => {
         console.error('Firebase logout error:', firebaseErr);
       }
       
-      // تسجيل الخروج من Backend
+      // 2. تسجيل الخروج من Backend (ننتظر النتيجة)
       try {
-        await API.post('/auth/logout');
-        console.log('✅ Backend logout successful');
+        const response = await API.post('/auth/logout');
+        console.log('✅ Backend logout successful:', response.data);
       } catch (backendErr) {
         console.error('Backend logout error:', backendErr);
+        // حتى لو فشل الطلب، نكمل مسح البيانات
       }
       
-      // مسح البيانات المحلية
+      // 3. مسح البيانات المحلية
       setUser(null);
       setFirebaseUser(null);
       localStorage.removeItem('user');
       
-      // ✅ إعادة التوجيه إلى الصفحة الرئيسية
+      // 4. إعادة التوجيه إلى الصفحة الرئيسية
       console.log('🔵 Redirecting to home page...');
       window.location.href = '/';
     } catch (err) {
       console.error('❌ Logout error:', err);
-      // حتى لو فشل، نمسح البيانات و نعيد التوجيه
+      // في حال حدوث خطأ غير متوقع، نمسح البيانات ونعيد التوجيه
       localStorage.removeItem('user');
       window.location.href = '/';
     } finally {
