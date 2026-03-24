@@ -11,10 +11,10 @@ const app = express();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
-// ✅ إعدادات multer (بدلاً من express-fileupload)
+// ✅ إعدادات multer
 const upload = multer({ 
   dest: '/tmp/',
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (allowedTypes.includes(file.mimetype)) {
@@ -25,49 +25,36 @@ const upload = multer({
   }
 });
 
-// ✅ Middleware - الترتيب مهم
-// 1. JSON و URL Encoded
+// ✅ Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// 2. Cookie Parser
 app.use(cookieParser());
 
-// 3. Multer (سيتم استخدامه في routes فقط، ليس globally)
-
-// ✅ CORS configuration
+// ✅ CORS configuration الصحيحة
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://drivetunisia.onrender.com',
-  'https://sfaxrentcar-frontend-x281.onrender.com',
-  'https://sfaxrentcar-backend.onrender.com'
+  'https://drivetunisia.onrender.com'
 ];
 
-// ✅ Middleware CORS
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  if (process.env.NODE_ENV !== 'production') {
-    res.header('Access-Control-Allow-Origin', origin || '*');
-  } else {
+app.use(cors({
+  origin: function (origin, callback) {
+    // السماح للطلبات بدون origin (مثل Postman)
+    if (!origin) return callback(null, true);
+    
     if (allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
+      return callback(null, true);
     }
-  }
-  
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept, Cache-Control, Pragma');
-  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-  res.header('Access-Control-Max-Age', '86400');
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  
-  next();
-});
+    
+    console.warn('🚫 CORS blocked origin:', origin);
+    return callback(new Error('CORS not allowed'), false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'Accept', 'Cache-Control', 'Pragma'],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 200
+}));
 
 // ✅ تحسين إعدادات MongoDB
 mongoose.set('strictQuery', true);
@@ -174,7 +161,7 @@ const server = app.listen(PORT, () => {
 });
 
 // ✅ إعدادات المهلة
-server.timeout = 120000; // 120 secondes
+server.timeout = 120000;
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 66000;
 
