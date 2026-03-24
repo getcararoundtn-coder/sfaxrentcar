@@ -7,22 +7,17 @@ const generateToken = (res, userId) => {
 
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // ✅ إعدادات الكوكيز المتوافقة مع التصفح الخاص
+  // ✅ إعدادات الكوكيز المتوافقة مع التصفح الخاص وجميع المتصفحات
   const cookieOptions = {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 أيام
-    path: '/'
+    path: '/',
+    secure: isProduction, // true في الإنتاج (HTTPS)
+    sameSite: isProduction ? 'none' : 'lax'
   };
   
-  if (!isProduction) {
-    // بيئة التطوير
-    cookieOptions.secure = false;
-    cookieOptions.sameSite = 'lax';
-  } else {
-    // بيئة الإنتاج
-    cookieOptions.secure = true;
-    cookieOptions.sameSite = 'none';
-    // ✅ إضافة partitioned لتحسين التوافق مع التصفح الخاص
+  // ✅ إضافة partitioned للتصفح الخاص (Chrome, Safari)
+  if (isProduction) {
     cookieOptions.partitioned = true;
   }
   

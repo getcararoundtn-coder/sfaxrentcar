@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [firebaseUser, setFirebaseUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // جلب المستخدم من Backend
   const fetchUser = useCallback(async () => {
@@ -98,6 +99,8 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setFirebaseUser(null);
       localStorage.removeItem('user');
+      // ✅ إعادة التوجيه إلى الصفحة الرئيسية بعد الخروج
+      window.location.href = '/';
     } catch (err) {
       console.error('Logout error:', err);
     }
@@ -108,7 +111,7 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
       
-      if (firebaseUser && !user) {
+      if (firebaseUser && !user && !authChecked) {
         await linkFirebaseAccount(
           firebaseUser.uid,
           firebaseUser.email,
@@ -119,9 +122,9 @@ export const AuthProvider = ({ children }) => {
     });
     
     return () => unsubscribe();
-  }, [user, linkFirebaseAccount]);
+  }, [user, linkFirebaseAccount, authChecked]);
 
-  // ✅ جلب المستخدم من Backend عند تحميل الصفحة (محسن)
+  // ✅ جلب المستخدم من Backend عند تحميل الصفحة
   useEffect(() => {
     const initAuth = async () => {
       setLoading(true);
@@ -146,9 +149,13 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
         }
       } else {
-        // ✅ حتى لو لم يكن هناك مستخدم مخزن، نحاول جلب المستخدم من الـ API
-        await fetchUser();
+        // ✅ جلب المستخدم من الـ API إذا كان هناك كوكيز
+        const userData = await fetchUser();
+        if (!userData) {
+          console.log('No authenticated user found');
+        }
       }
+      setAuthChecked(true);
       setLoading(false);
     };
     
@@ -160,6 +167,7 @@ export const AuthProvider = ({ children }) => {
       user, 
       setUser, 
       loading, 
+      authChecked,
       logout, 
       fetchUser,
       loginWithFirebaseEmail,
