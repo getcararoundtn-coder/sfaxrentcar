@@ -7,7 +7,7 @@ const generateToken = (res, userId) => {
 
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // ✅ إعدادات الكوكيز المتوافقة مع التصفح الخاص وجميع المتصفحات
+  // ✅ إعدادات الكوكيز المتوافقة مع النطاقات المختلفة
   const cookieOptions = {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 أيام
@@ -16,7 +16,7 @@ const generateToken = (res, userId) => {
     sameSite: isProduction ? 'none' : 'lax'
   };
   
-  // ✅ إضافة partitioned للتصفح الخاص (Chrome, Safari)
+  // ✅ إضافة partitioned فقط للإنتاج (بدون domain)
   if (isProduction) {
     cookieOptions.partitioned = true;
   }
