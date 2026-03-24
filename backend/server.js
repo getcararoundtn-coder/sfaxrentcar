@@ -8,16 +8,27 @@ const fileUpload = require('express-fileupload');
 const app = express();
 
 // ✅ تحسينات الأداء
-app.set('trust proxy', 1); // الثقة بالـ proxy (لـ Render)
-app.disable('x-powered-by'); // إخفاء معلومات الخادم
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
 
-// Middleware
-app.use(express.json({ limit: '10mb' })); // زيادة حد الحجم
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ✅ Middleware - الترتيب مهم جداً
+// 1. FileUpload يجب أن يكون أولاً
+app.use(fileUpload({ 
+  useTempFiles: true, 
+  tempFileDir: '/tmp',
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
+  abortOnLimit: true,
+  parseNested: true
+}));
+
+// 2. JSON و URL Encoded (بعد fileUpload)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// 3. Cookie Parser
 app.use(cookieParser());
-app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp' }));
 
-// ✅ CORS configuration améliorée pour tous les navigateurs
+// ✅ CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -42,7 +53,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept, Cache-Control, Pragma');
   res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-  res.header('Access-Control-Max-Age', '86400'); // 24 ساعة
+  res.header('Access-Control-Max-Age', '86400');
   
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -53,11 +64,11 @@ app.use((req, res, next) => {
 
 // ✅ تحسين إعدادات MongoDB
 mongoose.set('strictQuery', true);
-mongoose.set('debug', false); // إيقاف التصحيح في الإنتاج
+mongoose.set('debug', false);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
-  maxPoolSize: 10, // الحد الأقصى للاتصالات المتزامنة
+  maxPoolSize: 10,
   minPoolSize: 2,
   socketTimeoutMS: 30000,
   connectTimeoutMS: 10000,
@@ -145,16 +156,17 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// ✅ إنشاء الخادم مع زيادة وقت المهلة
+// ✅ إنشاء الخادم
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Test URL: http://localhost:${PORT}/api/test`);
   console.log(`❤️  Health URL: http://localhost:${PORT}/api/health`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📁 File upload limit: 50MB`);
   console.log(`⏱️ Server timeout: ${server.timeout / 1000} seconds`);
 });
 
-// ✅ زيادة وقت المهلة للخادم إلى 60 ثانية (كافٍ)
-server.timeout = 60000; // 60 secondes
-server.keepAliveTimeout = 65000; // 65 secondes
-server.headersTimeout = 66000; // 66 secondes
+// ✅ إعدادات المهلة
+server.timeout = 120000; // 120 secondes
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
