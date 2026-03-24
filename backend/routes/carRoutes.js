@@ -3,14 +3,15 @@ const router = express.Router();
 const carController = require('../controllers/carController');
 const carWizardController = require('../controllers/carWizardController');
 const { protect, admin } = require('../middleware/authMiddleware');
-const { uploadCarImages } = require('../config/cloudinary'); // ✅ إضافة استيراد uploadCarImages
+const { uploadCarImages } = require('../config/cloudinary');
+const { upload } = require('../server'); // ✅ استيراد upload من server.js
 
 // ========== المسارات العامة (لجميع المستخدمين) ==========
 router.get('/', carController.getCars);
 router.get('/featured', carController.getFeaturedCars);
 router.get('/stats', carController.getCarStats);
 
-// ========== المسارات الثابتة الخاصة بالمستخدم (تأتي قبل /:id) ==========
+// ========== المسارات الثابتة الخاصة بالمستخدم ==========
 router.get('/my-cars', protect, carController.getMyCars);
 router.get('/my-bookings', protect, carController.getMyCarBookings);
 router.get('/owner-stats', protect, carController.getOwnerStats);
@@ -25,10 +26,15 @@ router.patch('/:id/featured', protect, admin, carController.toggleFeatured);
 // ========== مسارات الويزارد (Wizard) ==========
 router.post('/wizard/save', protect, carWizardController.saveDraft);
 router.get('/wizard/get', protect, carWizardController.getDraft);
-// ✅ إضافة uploadCarImages لمعالجة رفع الصور
-router.post('/wizard/complete', protect, uploadCarImages, carWizardController.completeWizard);
 
-// ========== المسارات الديناميكية (تأتي في النهاية) ==========
+// ✅ استخدام multer لرفع الصور (بدلاً من uploadCarImages)
+router.post('/wizard/complete', protect, upload.fields([
+  { name: 'images', maxCount: 10 },
+  { name: 'insuranceFront', maxCount: 1 },
+  { name: 'insuranceBack', maxCount: 1 }
+]), carWizardController.completeWizard);
+
+// ========== المسارات الديناميكية ==========
 router.get('/:id', carController.getCarById);
 router.post('/', protect, carController.addCar);
 router.put('/:id', protect, carController.updateCar);
