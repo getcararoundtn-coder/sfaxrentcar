@@ -1,13 +1,14 @@
 import axios from 'axios';
 
 // ✅ استخدام المتغير البيئي أو المحلي
+// في Render، يجب تعيين REACT_APP_API_URL
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL || 'https://sfaxrentcar-backend.onrender.com/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 60000, // ✅ زيادة timeout إلى 60 ثانية
 });
 
 // Request interceptor to add token
@@ -25,6 +26,7 @@ API.interceptors.request.use(
       }
     }
     console.log(`📤 ${config.method.toUpperCase()} ${config.url}`);
+    console.log(`   BaseURL: ${config.baseURL}`);
     return config;
   },
   (error) => {
@@ -41,15 +43,9 @@ API.interceptors.response.use(
   (error) => {
     if (error.response) {
       console.error(`❌ API Error: ${error.response.status} - ${error.response.data?.message || error.message}`);
-      
-      // ✅ لا تقم بتسجيل الخروج تلقائياً - فقط للـ 401 من endpoints محددة
-      // قم بإزالة هذا السطر أو التعليق عليه
-      // if (error.response.status === 401) {
-      //   localStorage.removeItem('user');
-      //   window.location.href = '/';
-      // }
     } else if (error.request) {
       console.error('❌ No response received:', error.request);
+      console.error('   This might be a CORS issue or server not responding');
     } else {
       console.error('❌ Error setting up request:', error.message);
     }
