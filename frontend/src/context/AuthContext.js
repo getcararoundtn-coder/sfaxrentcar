@@ -32,14 +32,35 @@ export const AuthProvider = ({ children }) => {
   const linkFirebaseAccount = useCallback(async (firebaseUid, email, name, role) => {
     try {
       console.log('🔵 linkFirebaseAccount called with role:', role);
+      console.log('🔵 Firebase UID:', firebaseUid);
+      console.log('🔵 Email:', email);
+      
       const { data } = await API.post('/auth/firebase-login', {
         firebaseUid,
         email,
         name,
         role
       });
+      
       console.log('🔵 Firebase login response:', data);
       console.log('🔵 User role from firebase login:', data.data?.role);
+      
+      // ✅ التحقق: إذا كان هناك مستخدم مخزن محلياً والبريد مختلف، لا تقم بالتحديث
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser.email && parsedUser.email !== data.data.email) {
+            console.warn('⚠️ Email mismatch! Stored:', parsedUser.email, 'Received:', data.data.email);
+            console.warn('⚠️ Not updating user to prevent account takeover');
+            // لا نقوم بتحديث المستخدم إذا كان البريد مختلف
+            return parsedUser;
+          }
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
+        }
+      }
+      
       setUser(data.data);
       localStorage.setItem('user', JSON.stringify(data.data));
       return data.data;
@@ -91,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [linkFirebaseAccount]);
 
-  // ✅ تسجيل الخروج (بدون إعادة تحميل الصفحة)
+  // ✅ تسجيل الخروج
   const logout = useCallback(async () => {
     try {
       setLoading(true);
@@ -118,7 +139,6 @@ export const AuthProvider = ({ children }) => {
       setFirebaseUser(null);
       localStorage.removeItem('user');
       
-      // لا نقوم بإعادة التوجيه هنا، نتركها للمكون الذي يستدعي logout
       console.log('🔵 Logout completed, waiting for navigation');
     } catch (err) {
       console.error('❌ Logout error:', err);
@@ -128,25 +148,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // مراقبة حالة Firebase Auth
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setFirebaseUser(firebaseUser);
-      
-      if (firebaseUser && !user && !authChecked) {
-        await linkFirebaseAccount(
-          firebaseUser.uid,
-          firebaseUser.email,
-          firebaseUser.displayName || firebaseUser.email.split('@')[0],
-          'user'
-        );
-      }
-    });
-    
-    return () => unsubscribe();
-  }, [user, linkFirebaseAccount, authChecked]);
-
-  // جلب المستخدم من Backend عند تحميل الصفحة
+  // ✅ تعطيل onAuthStateChanged التلقائي لمنع التبديل العشوائي للمستخدمين
+  // هذا هو السبب الرئيسي للمشكلة - عندما يتم تحديث الصفحة،
+  // onAuthStateChanged كان يقوم بتسجيل الدخول تلقائياً بأي حساب Firebase موجود
+  // ونحن الآن نعطله ونعتمد فقط على localStorage و fetchUser
+  
+  // ✅ نستخدم useEffect فقط لتحميل المستخدم من localStorage و fetchUser
   useEffect(() => {
     const initAuth = async () => {
       setLoading(true);
@@ -183,6 +190,10 @@ export const AuthProvider = ({ children }) => {
     
     initAuth();
   }, [fetchUser]);
+
+  // ✅ لا نستخدم onAuthStateChanged التلقائي لأنه يسبب مشاكل
+  // يمكن تفعيله إذا أردنا مزامنة Firebase مع الحالة، ولكن بحذر
+  // تم تعطيله لمنع التبديل العشوائي للمستخدمين
 
   return (
     <AuthContext.Provider value={{ 
