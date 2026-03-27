@@ -51,9 +51,10 @@ const ModalUpload = ({ isOpen, onClose }) => {
 
     try {
       console.log('🔵🔵🔵 UPLOAD REQUEST (via API) 🔵🔵🔵');
-      const response = await API.post('/documents/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      
+      // ✅ إزالة headers اليدوية - axios سيضيفها تلقائياً مع withCredentials
+      const response = await API.post('/documents/upload', formData);
+      // ❌ لا تكتب: headers: { 'Content-Type': 'multipart/form-data' }
 
       console.log('Response:', response);
 
